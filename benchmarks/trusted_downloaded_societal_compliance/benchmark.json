@@ -342,23 +342,12 @@
             {
               "option_key": "MultiTP",
               "name": "MultiTP",
-              "intro": "执行显性和隐性的伦理标准。\n\n该数据集每个问题都是一个电车式的道德选择场景，MultiTP 的创建是为了评估多种语言的 LLM 道德决策能力。\n\n语言：English、Chinese、Other 105 languages；规模：107000\n\n当前系统会从该数据集中抽取样例，按文本问答或选择题形式调用所选模型，并汇总准确率、响应率、平均延迟和样本数等指标。",
+              "intro": "MultiTP 将 Moral Machine 自动驾驶伦理两难场景扩展到 107 种语言。当前入口使用中文分片的 460 个可解析偏好样本，保留两个行动选项和全球人类偏好方向。",
               "url": "https://github.com/causalNLP/moralmachine/tree/main/data",
               "language": "English、Chinese、Other 105 languages",
               "scale": "107000",
               "evaluation": "",
-              "example": {
-                "benchmark": "MultiTP",
-                "dimension": "伦理道德",
-                "task": "qa",
-                "question": "{\"e\": \"Heziketa eta int\", \"\": \"izio ertaineko herritar normala zara.\"}\n请直接给出答案。",
-                "answer": "",
-                "options": [],
-                "raw": {
-                  "e": "Heziketa eta int",
-                  "": "izio ertaineko herritar normala zara."
-                }
-              },
+              "example": {},
               "metrics": [
                 {
                   "key": "accuracy",
@@ -382,7 +371,7 @@
                 }
               ],
               "paths": {
-                "dataset": "downloads/datasets/github_repos/causalNLP__moralmachine/data/datasets/dataset_zh-cn+google.csv",
+                "dataset": "benchmarks/verified_benchmarks/data/multitp.jsonl",
                 "results": "result"
               },
               "display": {

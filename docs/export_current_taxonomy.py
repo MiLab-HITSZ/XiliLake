@@ -23,6 +23,17 @@ def cell(value: Any) -> str:
     return ' '.join(str(value or '').split()).replace('|', '\\|')
 
 
+def source_link(benchmark: dict[str, Any]) -> str:
+    url = str(benchmark.get('url') or '').strip()
+    return f"[原文/仓库]({url})" if url else '本地多模态数据'
+
+
+def audit_verdict(benchmark: dict[str, Any]) -> str:
+    override = benchmark.get('taxonomy_override') or {}
+    reason = str(override.get('reason') or '').strip() if isinstance(override, dict) else ''
+    return f"已校正：{cell(reason)}" if reason else '符合'
+
+
 def main() -> None:
     catalog = build_trust_catalog()
     groups_by_id = {str(group.get('id') or ''): group for group in catalog.get('groups') or []}
@@ -100,13 +111,14 @@ def main() -> None:
                     f"- 子类介绍：{dim.get('intro') or ''}",
                     f"- Benchmark 数量：{len(benchmarks)}（可评测 {evaluable_count}）",
                     '',
-                    '| Benchmark | 状态 | 评测内容简介 |',
-                    '| --- | --- | --- |',
+                    '| Benchmark | 状态 | 分类核验 | 原文或官方仓库 | 评测内容简介 |',
+                    '| --- | --- | --- | --- | --- |',
                 ])
                 for benchmark in benchmarks:
                     status = '可评测' if benchmark.get('implemented') else '资料展示'
                     lines.append(
                         f"| {cell(benchmark.get('name') or 'Benchmark')} | {status} | "
+                        f"{audit_verdict(benchmark)} | {source_link(benchmark)} | "
                         f"{cell(benchmark.get('intro'))} |"
                     )
                 lines.append('')

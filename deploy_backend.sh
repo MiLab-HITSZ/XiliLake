@@ -3,6 +3,7 @@
 set -euo pipefail
 
 BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$BASE_DIR"
 RUNTIME_DIR="$BASE_DIR/runtime"
 PID_FILE="$RUNTIME_DIR/web_backend.pid"
 LOG_FILE="$RUNTIME_DIR/web_backend.log"
@@ -26,6 +27,16 @@ fi
 
 echo "[INFO] Using python: $PYTHON_BIN"
 "$PYTHON_BIN" -m pip install -q -r "$BASE_DIR/requirements-web.txt"
+
+# Rebuild deterministic, source-verified views from the locally downloaded
+# official datasets before the catalog is loaded.
+"$PYTHON_BIN" "$BASE_DIR/prepare_verified_benchmarks.py" --skip-missing
+if [[ -f "$BASE_DIR/benchmarks/custom_privacy/prepare_xsafety_multilingual.py" ]]; then
+  "$PYTHON_BIN" "$BASE_DIR/benchmarks/custom_privacy/prepare_xsafety_multilingual.py"
+fi
+if [[ -f "$BASE_DIR/benchmarks/trusted_downloaded_harmful_capability/prepare_rules_confidentiality.py" ]]; then
+  "$PYTHON_BIN" "$BASE_DIR/benchmarks/trusted_downloaded_harmful_capability/prepare_rules_confidentiality.py"
+fi
 
 if [[ -f "$PID_FILE" ]]; then
   OLD_PID="$(cat "$PID_FILE" 2>/dev/null || true)"

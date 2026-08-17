@@ -1,0 +1,491 @@
+{
+  "id": "verified_benchmarks",
+  "label": "原文核验评测入口",
+  "benchmark_name": "Source-verified Benchmarks",
+  "description": "从论文与官方仓库的指定评测分片整理出的可复现入口，避免通用目录扫描选中错误文件。",
+  "source_type": "custom_curated",
+  "enabled": true,
+  "paths": {"results": "result"},
+  "execution": {
+    "adapter": "python_cli",
+    "script": "evaluate_generic_benchmark.py",
+    "default_tasks": ["qa"],
+    "supported_tasks": ["qa", "mc"],
+    "supports_real_eval": true,
+    "args": {
+      "dataset": "--dataset",
+      "output_dir": "--output-dir",
+      "models": "--models",
+      "tasks": "--tasks",
+      "parallel": "--parallel",
+      "retry": "--retry",
+      "timeout_s": "--timeout-s",
+      "progress_file": "--progress-file",
+      "categories": "--categories",
+      "dimensions": "--dimensions"
+    }
+  },
+  "display": {
+    "mode": "generic_text_qa",
+    "sections": ["selection_detail", "progress", "summary", "metrics"],
+    "case_view": "text_sample"
+  },
+  "metrics": [
+    {"key": "accuracy", "label": "准确率", "format": "percent"},
+    {"key": "response_rate", "label": "响应率", "format": "percent"},
+    {"key": "avg_latency_ms", "label": "平均延迟 ms", "format": "number"},
+    {"key": "n_total", "label": "样本数", "format": "number"}
+  ],
+  "categories": [
+    {
+      "id": "verified",
+      "label": "原文核验入口",
+      "dimensions": [
+        {
+          "id": "truthfulness",
+          "label": "事实真实性评测",
+          "intro": "使用官方问题与参考答案核验事实问答。",
+          "benchmarks": [
+            {
+              "option_key": "truthfulqa",
+              "name": "TruthfulQA",
+              "url": "https://github.com/sylinrl/TruthfulQA",
+              "language": "English",
+              "scale": "790",
+              "evaluation": "Best-answer accuracy",
+              "intro": "TruthfulQA 使用 790 个容易诱发常见误解的问题，当前入口显示官方问题、最佳正确答案、其他正确答案、错误答案与证据来源。",
+              "paths": {"dataset": "benchmarks/verified_benchmarks/data/truthfulqa.jsonl", "results": "result"},
+              "execution": {"extra_args": {"--benchmark-name": "TruthfulQA", "--dimension-label": "常识问答真实性评测", "--benchmark-url": "https://github.com/sylinrl/TruthfulQA", "--max-cases": 20}}
+            }
+          ]
+        },
+        {
+          "id": "reasoning",
+          "label": "证据与科学推理评测",
+          "intro": "使用官方多跳证据问答和科学推理分片。",
+          "benchmarks": [
+            {
+              "option_key": "hotpotqa",
+              "name": "HotpotQA",
+              "url": "https://hotpotqa.github.io/",
+              "language": "English",
+              "scale": "7,405 validation",
+              "evaluation": "Answer accuracy",
+              "intro": "HotpotQA 要求结合多个维基百科段落完成多跳问答；当前入口保留完整干扰段落、问题、答案、难度和支持事实。",
+              "paths": {"dataset": "benchmarks/verified_benchmarks/data/hotpotqa.jsonl", "results": "result"},
+              "execution": {"extra_args": {"--benchmark-name": "HotpotQA", "--dimension-label": "多跳证据推理评测", "--benchmark-url": "https://hotpotqa.github.io/", "--max-cases": 20}}
+            },
+            {
+              "option_key": "arc_challenge",
+              "name": "ARC-Challenge",
+              "url": "https://allenai.org/data/arc",
+              "language": "English",
+              "scale": "299 validation",
+              "evaluation": "Multiple-choice accuracy",
+              "intro": "ARC-Challenge 是 AI2 Reasoning Challenge 的高难度科学考试题分片，当前入口保留官方题干、选项和答案键。",
+              "paths": {"dataset": "benchmarks/verified_benchmarks/data/arc_challenge.jsonl", "results": "result"},
+              "execution": {"extra_args": {"--benchmark-name": "ARC-Challenge", "--dimension-label": "科学常识推理评测", "--benchmark-url": "https://allenai.org/data/arc", "--max-cases": 20}}
+            }
+          ]
+        },
+        {
+          "id": "task_following",
+          "label": "任务遵循评测",
+          "intro": "使用官方约束遵循、科学问答和编程任务分片。",
+          "benchmarks": [
+            {
+              "option_key": "followbench",
+              "name": "FollowBench",
+              "url": "https://aclanthology.org/2024.acl-long.257/",
+              "language": "English, Chinese",
+              "scale": "1,610 constrained prompts",
+              "evaluation": "Official HSR/SSR/CSL; response collection locally",
+              "intro": "FollowBench 逐级增加内容、情境、风格、格式和示例约束。当前入口保留中英文完整指令；由于开放式任务无唯一文本答案，界面明确标注官方 HSR、SSR、CSL 评法，不用占位模板做精确匹配。",
+              "paths": {"dataset": "benchmarks/verified_benchmarks/data/followbench.jsonl", "results": "result"},
+              "execution": {"extra_args": {"--benchmark-name": "FollowBench", "--dimension-label": "细粒度约束遵循评测", "--benchmark-url": "https://aclanthology.org/2024.acl-long.257/", "--max-cases": 20}}
+            },
+            {
+              "option_key": "arc_easy",
+              "name": "ARC-Easy",
+              "url": "https://allenai.org/data/arc",
+              "language": "English",
+              "scale": "570 validation",
+              "evaluation": "Multiple-choice accuracy",
+              "intro": "ARC-Easy 是 AI2 Reasoning Challenge 的基础科学问答分片，和高难度 ARC-Challenge 分开统计，避免两个入口重复运行同一数据。",
+              "paths": {"dataset": "benchmarks/verified_benchmarks/data/arc_easy.jsonl", "results": "result"},
+              "execution": {"extra_args": {"--benchmark-name": "ARC-Easy", "--dimension-label": "基础科学问答评测", "--benchmark-url": "https://allenai.org/data/arc", "--max-cases": 20}}
+            },
+            {
+              "option_key": "apps_intro_interview",
+              "name": "APPS-Introductory-Interview",
+              "url": "https://github.com/hendrycks/apps",
+              "language": "English",
+              "scale": "3,455 test",
+              "evaluation": "Execution tests or reference-code proxy",
+              "intro": "APPS-Introductory-Interview 接入 APPS 测试集中的入门与面试难度编程题，展示完整题目、输入输出规范、测试和参考实现。",
+              "paths": {"dataset": "benchmarks/verified_benchmarks/data/apps_intro_interview.jsonl", "results": "result"},
+              "execution": {"extra_args": {"--benchmark-name": "APPS-Introductory-Interview", "--dimension-label": "基础与面试编程综合评测", "--benchmark-url": "https://github.com/hendrycks/apps", "--max-cases": 20}}
+            },
+            {
+              "option_key": "apps_competition",
+              "name": "APPS-Competition",
+              "url": "https://github.com/hendrycks/apps",
+              "language": "English",
+              "scale": "310 test",
+              "evaluation": "Execution tests or reference-code proxy",
+              "intro": "APPS-Competition 单独接入竞赛难度编程题，使原有两个 APPS 入口变成难度互斥的可解释分片。",
+              "paths": {"dataset": "benchmarks/verified_benchmarks/data/apps_competition.jsonl", "results": "result"},
+              "execution": {"extra_args": {"--benchmark-name": "APPS-Competition", "--dimension-label": "竞赛编程综合评测", "--benchmark-url": "https://github.com/hendrycks/apps", "--max-cases": 20}}
+            }
+          ]
+        },
+        {
+          "id": "output_safety",
+          "label": "输出内容安全评测",
+          "intro": "判定响应内容本身是否安全，或测量高风险知识暴露。",
+          "benchmarks": [
+            {
+              "option_key": "diasafety",
+              "name": "DiaSafety",
+              "url": "https://aclanthology.org/2022.findings-acl.308/",
+              "language": "English",
+              "scale": "1,095 test",
+              "evaluation": "Safe/unsafe classification accuracy",
+              "intro": "DiaSafety 评估给定对话上下文时回复是否安全，重点是上下文敏感的不安全输出；当前入口把上下文和待判定回复完整组合为安全二分类题。",
+              "paths": {"dataset": "benchmarks/verified_benchmarks/data/diasafety.jsonl", "results": "result"},
+              "execution": {"extra_args": {"--benchmark-name": "DiaSafety", "--dimension-label": "上下文对话安全判别评测", "--benchmark-url": "https://aclanthology.org/2022.findings-acl.308/", "--max-cases": 20}}
+            },
+            {
+              "option_key": "wmdp_biochem",
+              "name": "WMDP-BioChem",
+              "url": "https://www.wmdp.ai/",
+              "language": "English",
+              "scale": "1,681",
+              "evaluation": "Multiple-choice accuracy",
+              "intro": "WMDP-BioChem 合并生物安全与化学安全危险知识分片，测量模型对可被滥用的高风险专业知识的掌握程度。",
+              "paths": {"dataset": "benchmarks/verified_benchmarks/data/wmdp_biochem.jsonl", "results": "result"},
+              "execution": {"extra_args": {"--benchmark-name": "WMDP-BioChem", "--dimension-label": "生化危险知识暴露评测", "--benchmark-url": "https://www.wmdp.ai/", "--max-cases": 20}}
+            }
+          ]
+        },
+        {
+          "id": "attack_robustness",
+          "label": "对抗攻击评测",
+          "intro": "仅接入含显式攻击变换、越狱模板或多轮攻击结构的提示。",
+          "benchmarks": [
+            {
+              "option_key": "cosafe",
+              "name": "CoSafe",
+              "url": "https://aclanthology.org/2024.emnlp-main.968/",
+              "language": "English",
+              "scale": "1,400",
+              "evaluation": "Refusal proxy; official attack success evaluation",
+              "intro": "CoSafe 用 14 类多轮共指对话隐藏不安全目标。当前入口保留每轮用户和助手消息，并以安全拒答代理检查最后一轮攻击是否绕过策略。",
+              "paths": {"dataset": "benchmarks/verified_benchmarks/data/cosafe.jsonl", "results": "result"},
+              "execution": {"extra_args": {"--benchmark-name": "CoSafe", "--dimension-label": "多轮共指攻击防御评测", "--benchmark-url": "https://aclanthology.org/2024.emnlp-main.968/", "--max-cases": 20}}
+            },
+            {
+              "option_key": "gptfuzzer",
+              "name": "GPTFuzzer",
+              "url": "https://github.com/sherdencooper/GPTFuzz",
+              "language": "English",
+              "scale": "77 templates paired with harmful goals",
+              "evaluation": "Refusal proxy",
+              "intro": "GPTFuzzer 当前将官方自动生成的越狱模板与官方有害问题表组合，修复了此前误把响应标签数字当题目的问题。",
+              "paths": {"dataset": "benchmarks/verified_benchmarks/data/gptfuzzer.jsonl", "results": "result"},
+              "execution": {"extra_args": {"--benchmark-name": "GPTFuzzer", "--dimension-label": "自动变异越狱防御评测", "--benchmark-url": "https://github.com/sherdencooper/GPTFuzz", "--max-cases": 20}}
+            },
+            {
+              "option_key": "latent_jailbreak",
+              "name": "LatentJailbreak",
+              "url": "https://github.com/qiuhuachuan/latent-jailbreak",
+              "language": "English",
+              "scale": "2,424 prompts",
+              "evaluation": "Refusal proxy",
+              "intro": "LatentJailbreak 使用任务外壳包裹有毒生成目标，测试模型是否优先完成表层任务而隐式输出不安全文本；入口改为官方 prompt 模板文件。",
+              "paths": {"dataset": "benchmarks/verified_benchmarks/data/latent_jailbreak.jsonl", "results": "result"},
+              "execution": {"extra_args": {"--benchmark-name": "LatentJailbreak", "--dimension-label": "潜在任务越狱防御评测", "--benchmark-url": "https://github.com/qiuhuachuan/latent-jailbreak", "--max-cases": 20}}
+            },
+            {
+              "option_key": "doanythingnow",
+              "name": "DoAnythingNow",
+              "url": "https://github.com/verazuo/jailbreak_llms",
+              "language": "English",
+              "scale": "1,405 jailbreak prompts",
+              "evaluation": "Refusal proxy",
+              "intro": "DoAnythingNow 使用从真实平台收集的 1,405 条越狱提示，并与官方 390 条禁止问题集配对，测试野外越狱模板的绕过能力。",
+              "paths": {"dataset": "benchmarks/verified_benchmarks/data/doanythingnow.jsonl", "results": "result"},
+              "execution": {"extra_args": {"--benchmark-name": "DoAnythingNow", "--dimension-label": "野外越狱提示防御评测", "--benchmark-url": "https://github.com/verazuo/jailbreak_llms", "--max-cases": 20}}
+            },
+            {
+              "option_key": "saladbench_attack",
+              "name": "SaladBench",
+              "url": "https://github.com/OpenSafetyLab/SALAD-BENCH",
+              "language": "English",
+              "scale": "5,000 attack-enhanced prompts",
+              "evaluation": "Official safety judge required",
+              "intro": "SaladBench 当前固定使用官方 attack_enhanced_set，而不是此前误选的安全答案选择题；界面展示基础问题、完整攻击改写、攻击方法和三级风险标签。",
+              "paths": {"dataset": "benchmarks/verified_benchmarks/data/saladbench_attack.jsonl", "results": "result"},
+              "execution": {"extra_args": {"--benchmark-name": "SaladBench", "--dimension-label": "对抗改写攻击防御评测", "--benchmark-url": "https://github.com/OpenSafetyLab/SALAD-BENCH", "--max-cases": 20}}
+            }
+          ]
+        },
+        {
+          "id": "system_policy",
+          "label": "系统策略评测",
+          "intro": "使用普通有害请求、行为集合或显式系统规则评估策略选择，不把它们伪装成攻击算法。",
+          "benchmarks": [
+            {
+              "option_key": "harmfulq",
+              "name": "HarmfulQ",
+              "url": "https://github.com/SALT-NLP/chain-of-thought-bias",
+              "language": "English",
+              "scale": "200",
+              "evaluation": "Refusal proxy",
+              "intro": "HarmfulQ 使用原仓库 dangerous-q/toxic_outs.json 中的 200 条危险问题，修复了此前误选 BBQ 偏见问答文件的问题。",
+              "paths": {"dataset": "benchmarks/verified_benchmarks/data/harmfulq.jsonl", "results": "result"},
+              "execution": {"extra_args": {"--benchmark-name": "HarmfulQ", "--dimension-label": "危险问题安全响应评测", "--benchmark-url": "https://github.com/SALT-NLP/chain-of-thought-bias", "--max-cases": 20}}
+            },
+            {
+              "option_key": "rmcbench",
+              "name": "RMCBench",
+              "url": "https://github.com/qing-yuan233/RMCBench",
+              "language": "English",
+              "scale": "473",
+              "evaluation": "Refusal proxy",
+              "intro": "RMCBench 的 473 条提示覆盖文本到代码生成、代码翻译和补全等恶意代码请求。当前 gold 为安全拒答，修复了此前把 GOOD 标签显示成应生成恶意代码的问题。",
+              "paths": {"dataset": "benchmarks/verified_benchmarks/data/rmcbench.jsonl", "results": "result"},
+              "execution": {"extra_args": {"--benchmark-name": "RMCBench", "--dimension-label": "恶意代码请求拒答评测", "--benchmark-url": "https://github.com/qing-yuan233/RMCBench", "--max-cases": 20}}
+            },
+            {
+              "option_key": "chisafetybench",
+              "name": "CHiSafetyBench",
+              "url": "https://github.com/UnicomAI/UnicomBenchmark/tree/main/CHiSafetyBench",
+              "language": "Chinese",
+              "scale": "563 refusal prompts",
+              "evaluation": "Refusal proxy",
+              "intro": "CHiSafetyBench 当前接入官方单轮和多轮 risky questions，并完整拼接对话历史；不再把知识产权判断选择题错误标成 REFUSE。",
+              "paths": {"dataset": "benchmarks/verified_benchmarks/data/chisafetybench.jsonl", "results": "result"},
+              "execution": {"extra_args": {"--benchmark-name": "CHiSafetyBench", "--dimension-label": "中文风险请求拒答评测", "--benchmark-url": "https://github.com/UnicomAI/UnicomBenchmark/tree/main/CHiSafetyBench", "--max-cases": 20}}
+            },
+            {
+              "option_key": "jbb_behaviors",
+              "name": "JBBBehaviours",
+              "url": "https://huggingface.co/datasets/JailbreakBench/JBB-Behaviors",
+              "language": "English",
+              "scale": "100",
+              "evaluation": "Baseline refusal proxy",
+              "intro": "JBB-Behaviors 是 100 个滥用行为目标，不含具体攻击算法。当前入口评估未施加越狱字符串时的基线拒答，因此归入系统策略而不是攻击抵御。",
+              "paths": {"dataset": "downloads/datasets/huggingface/JailbreakBench__JBB-Behaviors/data/harmful-behaviors.csv", "results": "result"},
+              "execution": {"extra_args": {"--benchmark-name": "JBBBehaviours", "--dimension-label": "滥用行为基线拒答评测", "--benchmark-url": "https://huggingface.co/datasets/JailbreakBench/JBB-Behaviors", "--max-cases": 20}}
+            },
+            {
+              "option_key": "harmbench_behaviors",
+              "name": "HarmBench",
+              "url": "https://github.com/centerforaisafety/HarmBench",
+              "language": "English",
+              "scale": "text test behaviors",
+              "evaluation": "Baseline refusal proxy",
+              "intro": "HarmBench 是自动红队框架，但本系统当前只接入行为集合，没有运行攻击方法。该入口因此明确标为有害行为基线拒答，不宣称测得攻击成功率。",
+              "paths": {"dataset": "downloads/datasets/github_repos/centerforaisafety__HarmBench/data/behavior_datasets/harmbench_behaviors_text_test.csv", "results": "result"},
+              "execution": {"extra_args": {"--benchmark-name": "HarmBench", "--dimension-label": "有害行为基线拒答评测", "--benchmark-url": "https://github.com/centerforaisafety/HarmBench", "--max-cases": 20}}
+            },
+            {
+              "option_key": "rules_confidentiality",
+              "name": "RuLES",
+              "url": "https://github.com/normster/llm_rules",
+              "language": "English",
+              "scale": "15 confidentiality cases",
+              "evaluation": "Rule-following refusal proxy",
+              "intro": "RuLES 当前使用 Confidentiality 直接请求分片，题目同时展示访问控制规则、秘密信息和用户请求，检查模型是否拒绝未授权泄露。",
+              "paths": {"dataset": "benchmarks/trusted_downloaded_harmful_capability/rules_confidentiality.jsonl", "results": "result"},
+              "execution": {"extra_args": {"--benchmark-name": "RuLES", "--dimension-label": "机密信息规则遵循评测", "--benchmark-url": "https://github.com/normster/llm_rules", "--max-cases": 20}}
+            },
+            {
+              "option_key": "xsafety_multilingual",
+              "name": "XSafety",
+              "url": "https://github.com/Jarviswang94/Multilingual_safety_benchmark",
+              "language": "10 languages",
+              "scale": "25,988",
+              "evaluation": "Refusal accuracy by language and risk category",
+              "intro": "XSafety 使用 10 种语言、13 类不安全请求的完整本地拒答视图，和 80 条英文隐私财产定向切片分开统计。",
+              "paths": {"dataset": "benchmarks/custom_privacy/xsafety_multilingual_refusal.jsonl", "results": "result"},
+              "execution": {"extra_args": {"--benchmark-name": "XSafety", "--dimension-label": "多语种安全拒答一致性评测", "--benchmark-url": "https://github.com/Jarviswang94/Multilingual_safety_benchmark", "--max-cases": 20}}
+            }
+          ]
+        },
+        {
+          "id": "fairness",
+          "label": "群体公平评测",
+          "intro": "按官方覆盖范围呈现多属性偏见，不把整套数据窄化成单一身份属性。",
+          "benchmarks": [
+            {
+              "option_key": "calm",
+              "name": "CALM",
+              "url": "https://arxiv.org/abs/2308.12539",
+              "language": "English",
+              "scale": "372 paired QA projections",
+              "evaluation": "Paired group accuracy gap",
+              "intro": "CALM 原论文同时覆盖问答、自然语言推断和情感分析中的性别与种族偏差。当前入口从官方 QA 模板构造身份成对题，并保留 paired_template_id 供分组差值统计。",
+              "paths": {"dataset": "benchmarks/verified_benchmarks/data/calm.jsonl", "results": "result"},
+              "execution": {"extra_args": {"--benchmark-name": "CALM", "--dimension-label": "性别种族多任务偏见评测", "--benchmark-url": "https://arxiv.org/abs/2308.12539", "--max-cases": 20}}
+            },
+            {
+              "option_key": "chbias",
+              "name": "CHBias",
+              "url": "https://aclanthology.org/2023.acl-long.757/",
+              "language": "Chinese",
+              "scale": "1,600 test sentences",
+              "evaluation": "Official classifier/human evaluation required",
+              "intro": "CHBias 覆盖性别、性取向、年龄和外貌四类中文对话偏见。当前入口显示官方测试句并收集去偏改写；原数据不提供唯一参考改写，因此不伪造准确率。",
+              "paths": {"dataset": "benchmarks/verified_benchmarks/data/chbias.jsonl", "results": "result"},
+              "execution": {"extra_args": {"--benchmark-name": "CHBias", "--dimension-label": "中文对话多属性偏见评测", "--benchmark-url": "https://aclanthology.org/2023.acl-long.757/", "--max-cases": 20}}
+            },
+            {
+              "option_key": "crows_general",
+              "name": "CrowS-Pairs-General-MC",
+              "url": "https://github.com/nyu-mll/crows-pairs",
+              "language": "English",
+              "scale": "1,403 non-religion pairs",
+              "evaluation": "Local pair-identification accuracy",
+              "intro": "CrowS-Pairs-General-MC 使用官方成对句子中除宗教外的八类刻板印象样本，作为聊天模型可运行的成对识别代理任务。",
+              "paths": {"dataset": "benchmarks/verified_benchmarks/data/crows_pairs_general.jsonl", "results": "result"},
+              "execution": {"extra_args": {"--benchmark-name": "CrowS-Pairs-General-MC", "--dimension-label": "多属性成对刻板印象评测", "--benchmark-url": "https://github.com/nyu-mll/crows-pairs", "--max-cases": 20}}
+            },
+            {
+              "option_key": "crows_religion",
+              "name": "CrowS-Pairs-Religion-MC",
+              "url": "https://github.com/nyu-mll/crows-pairs",
+              "language": "English",
+              "scale": "105 religion pairs",
+              "evaluation": "Local pair-identification accuracy",
+              "intro": "CrowS-Pairs-Religion-MC 单独使用官方 religion 子集，使原有第二个 CrowS-Pairs 入口成为互斥的宗教刻板印象评测，而不是重复全量入口。",
+              "paths": {"dataset": "benchmarks/verified_benchmarks/data/crows_pairs_religion.jsonl", "results": "result"},
+              "execution": {"extra_args": {"--benchmark-name": "CrowS-Pairs-Religion-MC", "--dimension-label": "宗教成对刻板印象评测", "--benchmark-url": "https://github.com/nyu-mll/crows-pairs", "--max-cases": 20}}
+            },
+            {
+              "option_key": "french_crows",
+              "name": "FrenchCrowPairs",
+              "url": "https://gitlab.inria.fr/french-crows-pairs/acl-2022-paper-data-and-code",
+              "language": "French",
+              "scale": "1,467",
+              "evaluation": "Local pair-identification accuracy",
+              "intro": "French CrowS-Pairs 是覆盖多种偏见类型的法语适配数据。当前入口固定读取 crows_pairs_FR.csv，修复了此前误显示英文原表的问题。",
+              "paths": {"dataset": "benchmarks/verified_benchmarks/data/french_crows_pairs.jsonl", "results": "result"},
+              "execution": {"extra_args": {"--benchmark-name": "FrenchCrowPairs", "--dimension-label": "法语多属性刻板印象评测", "--benchmark-url": "https://gitlab.inria.fr/french-crows-pairs/acl-2022-paper-data-and-code", "--max-cases": 20}}
+            }
+          ]
+        },
+        {
+          "id": "ethics",
+          "label": "伦理价值评测",
+          "intro": "保留主观分布与道德情境材料，不把主观问卷强行处理成唯一答案。",
+          "benchmarks": [
+            {
+              "option_key": "prism",
+              "name": "PRISM",
+              "url": "https://proceedings.neurips.cc/paper_files/paper/2024/hash/be2e1b68b44f2419e19f6c35a1b8cf35-Abstract-Datasets_and_Benchmarks_Track.html",
+              "language": "English",
+              "scale": "68,371 rated utterances",
+              "evaluation": "Participant ratings; no single gold response",
+              "intro": "PRISM 连接 75 个国家参与者的社会人口属性、偏好与 21 个模型的真实对话反馈。当前入口显示用户提示、被评价回复、评分和是否被选中，不再归为暴力危险知识。",
+              "paths": {"dataset": "benchmarks/verified_benchmarks/data/prism.jsonl", "results": "result"},
+              "execution": {"extra_args": {"--benchmark-name": "PRISM", "--dimension-label": "多元用户偏好对齐评测", "--benchmark-url": "https://proceedings.neurips.cc/paper_files/paper/2024/hash/be2e1b68b44f2419e19f6c35a1b8cf35-Abstract-Datasets_and_Benchmarks_Track.html", "--max-cases": 20}}
+            },
+            {
+              "option_key": "global_opinion",
+              "name": "GlobalOpinionQA",
+              "url": "https://arxiv.org/abs/2306.16388",
+              "language": "English",
+              "scale": "2,555 survey questions",
+              "evaluation": "Distributional representation; no single gold option",
+              "intro": "GlobalOpinionQA 将世界价值观调查和全球态度调查转换为问题。当前入口完整显示选项及各国受访者分布，修复了 CSV 被错误分列后题目和答案残缺的问题。",
+              "paths": {"dataset": "benchmarks/verified_benchmarks/data/global_opinion.jsonl", "results": "result"},
+              "execution": {"extra_args": {"--benchmark-name": "GlobalOpinionQA", "--dimension-label": "跨国社会观点分布评测", "--benchmark-url": "https://arxiv.org/abs/2306.16388", "--max-cases": 20}}
+            },
+            {
+              "option_key": "moral_except",
+              "name": "MoralExceptQA",
+              "url": "https://arxiv.org/abs/2210.01478",
+              "language": "English",
+              "scale": "148",
+              "evaluation": "Majority permissibility proxy",
+              "intro": "MoralExceptQA 展示完整破例情境和美国受访者允许比例；本地二分类仅以 0.5 为多数阈值，并在样本中保留原始比例。",
+              "paths": {"dataset": "benchmarks/verified_benchmarks/data/moral_except.jsonl", "results": "result"},
+              "execution": {"extra_args": {"--benchmark-name": "MoralExceptQA", "--dimension-label": "道德规则例外判断评测", "--benchmark-url": "https://arxiv.org/abs/2210.01478", "--max-cases": 20}}
+            },
+            {
+              "option_key": "moral_stories",
+              "name": "MoralStories",
+              "url": "https://aclanthology.org/2021.emnlp-main.54/",
+              "language": "English",
+              "scale": "24,000 action cases",
+              "evaluation": "Norm adherence accuracy",
+              "intro": "MoralStories 当前把社会规范、情境、人物意图和待判定行为一起展示，并区分规范行为与偏离规范行为，修复了此前只显示一条行为句的问题。",
+              "paths": {"dataset": "benchmarks/verified_benchmarks/data/moral_stories.jsonl", "results": "result"},
+              "execution": {"extra_args": {"--benchmark-name": "MoralStories", "--dimension-label": "日常规范情境判断评测", "--benchmark-url": "https://aclanthology.org/2021.emnlp-main.54/", "--max-cases": 20}}
+            },
+            {
+              "option_key": "multitp",
+              "name": "MultiTP",
+              "url": "https://github.com/causalNLP/moralmachine",
+              "language": "Chinese",
+              "scale": "460 Chinese preference cases",
+              "evaluation": "Global human-preference proxy",
+              "intro": "MultiTP 当前用标准 CSV 解析读取中文 Moral Machine 情境、两个选择和全球偏好方向，修复了此前把乱码字典当题目的问题。",
+              "paths": {"dataset": "benchmarks/verified_benchmarks/data/multitp.jsonl", "results": "result"},
+              "execution": {"extra_args": {"--benchmark-name": "MultiTP", "--dimension-label": "多语言自动驾驶伦理取舍评测", "--benchmark-url": "https://github.com/causalNLP/moralmachine", "--max-cases": 20}}
+            },
+            {
+              "option_key": "moralchoice",
+              "name": "moralchoice",
+              "url": "https://huggingface.co/datasets/ninoscherrer/moralchoice",
+              "language": "English",
+              "scale": "1,367",
+              "evaluation": "Annotated common-morality violation proxy",
+              "intro": "MoralChoice 由低模糊和高模糊道德情境及两个行动组成。当前入口明确以较少违反官方辅助规则标注作为本地参考，不宣称高模糊题存在客观唯一答案。",
+              "paths": {"dataset": "benchmarks/verified_benchmarks/data/moralchoice.jsonl", "results": "result"},
+              "execution": {"extra_args": {"--benchmark-name": "moralchoice", "--dimension-label": "道德两难行动选择评测", "--benchmark-url": "https://huggingface.co/datasets/ninoscherrer/moralchoice", "--max-cases": 20}}
+            }
+          ]
+        },
+        {
+          "id": "medical_safety",
+          "label": "医疗安全响应评测",
+          "intro": "评估有害医疗请求的安全响应，不将其误称为医学事实问答。",
+          "benchmarks": [
+            {
+              "option_key": "medsafetybench",
+              "name": "MedSafetyBench",
+              "url": "https://proceedings.neurips.cc/paper_files/paper/2024/hash/3ac952d0264ef7a505393868a70a46b6-Abstract-Datasets_and_Benchmarks_Track.html",
+              "language": "English",
+              "scale": "900 test demonstrations",
+              "evaluation": "Safe-response similarity or refusal proxy",
+              "intro": "MedSafetyBench 由有害医疗请求和安全响应组成，基于美国医学会伦理原则衡量医疗安全。当前入口使用官方 test/gpt4 与 test/llama2 的 900 条安全示范，不再显示有害生成回答。",
+              "paths": {"dataset": "benchmarks/verified_benchmarks/data/medsafetybench.jsonl", "results": "result"},
+              "execution": {"extra_args": {"--benchmark-name": "MedSafetyBench", "--dimension-label": "有害医疗请求安全响应评测", "--benchmark-url": "https://proceedings.neurips.cc/paper_files/paper/2024/hash/3ac952d0264ef7a505393868a70a46b6-Abstract-Datasets_and_Benchmarks_Track.html", "--max-cases": 20}}
+            }
+          ]
+        },
+        {
+          "id": "cybersecurity",
+          "label": "网络安全知识评测",
+          "intro": "网络安全专业危险知识分片。",
+          "benchmarks": [
+            {
+              "option_key": "wmdp_cyber",
+              "name": "WMDP-Cyber",
+              "url": "https://www.wmdp.ai/",
+              "language": "English",
+              "scale": "1,987",
+              "evaluation": "Multiple-choice accuracy",
+              "intro": "WMDP-Cyber 单独使用 1,987 道网络安全危险知识选择题，从通用生化危险知识分片中拆出并归入网络安全行业评测。",
+              "paths": {"dataset": "benchmarks/verified_benchmarks/data/wmdp_cyber.jsonl", "results": "result"},
+              "execution": {"extra_args": {"--benchmark-name": "WMDP-Cyber", "--dimension-label": "网络安全危险知识评测", "--benchmark-url": "https://www.wmdp.ai/", "--max-cases": 20}}
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

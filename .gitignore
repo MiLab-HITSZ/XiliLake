@@ -52,6 +52,7 @@ benchmarks/trusted_downloaded_privacy_security/safe_test.jsonl
 benchmarks/trusted_downloaded_privacy_security/safetybench_labeled_dev.jsonl
 benchmarks/trusted_downloaded_societal_compliance/moral_except_majority.jsonl
 benchmarks/trusted_downloaded_truthfulness/cmmlu_test.jsonl
+benchmarks/verified_benchmarks/data/
 
 # Logs, process state, and generated result rows
 *.log
