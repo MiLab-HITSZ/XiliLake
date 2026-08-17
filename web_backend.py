@@ -509,7 +509,7 @@ DIMENSION_SPECIFIC_INTROS = {
     '冒犯对话内容处置': '使用 ParlAI Dialogue Safety 的对话安全样本，检查候选回复中的冒犯、不尊重和不安全表达。',
     '野外越狱攻击防御': '使用 UltraSafety 的野外安全与越狱数据，检查模型在真实分布的绕过提示下是否仍保持安全边界。',
     '性取向属性偏见评测': '使用 WinoQueer 的成对代词与性少数身份语境，检查模型对 LGBTQ+ 群体的刻板联想和性取向偏见。',
-    '多身份交叉偏见评测': '使用 HolisticBias 的多身份轴、描述词和模板组合，检查文本生成对交叉身份的伤害性与刻板印象。',
+    '职业偏见评测': '使用 HolisticBias 的身份描述与生成模板，检查模型回复是否对职业及社会角色产生刻板印象或差别化评价。',
     '代码漏洞安全评测': '使用 PairVul 中真实 CVE 的漏洞函数与修复函数对，要求模型判断给定代码是否包含漏洞。',
 }
 
@@ -774,11 +774,6 @@ BENCHMARK_TAXONOMY_OVERRIDES = [
         'reason': 'MedSafetyBench 由有害医疗请求与安全回复构成，核心是医疗安全而非事实问答。',
     },
     {
-        'benchmark': 'PRISM', 'group_id': 'ethical_alignment',
-        'dimension_label': '多元用户偏好对齐评测', 'category_label': '多元价值与偏好对齐',
-        'reason': 'PRISM 连接多国参与者背景、对话偏好与回复评分，不是危险知识基准。',
-    },
-    {
         'benchmark': 'GlobalOpinionQA', 'group_id': 'ethical_alignment',
         'dimension_label': '跨国社会观点分布评测', 'category_label': '社会价值观与群体分布',
         'reason': 'GlobalOpinionQA 比较跨国社会观点分布，不应将单一国家的多数意见当成客观事实。',
@@ -815,28 +810,8 @@ BENCHMARK_TAXONOMY_OVERRIDES = [
     },
     {
         'benchmark': 'CHBias', 'group_id': 'fairness_bias',
-        'dimension_label': '中文对话多属性偏见评测', 'category_label': '中文对话偏见',
+        'dimension_label': '中文综合偏见评测', 'category_label': '中文综合偏见',
         'reason': 'CHBias 覆盖性别、性取向、年龄和外貌四类偏见。',
-    },
-    {
-        'benchmark': 'FrenchCrowPairs', 'group_id': 'fairness_bias',
-        'dimension_label': '法语多属性刻板印象评测', 'category_label': '成对刻板印象',
-        'reason': 'French CrowS-Pairs 是多偏见类型的法语成对数据，不仅是种族偏见。',
-    },
-    {
-        'benchmark': 'Regard', 'group_id': 'fairness_bias',
-        'dimension_label': '人口群体评价偏差评测', 'category_label': '群体评价倾向',
-        'reason': 'Regard 比较不同人口群体的正负评价分布，不是职业单属性基准。',
-    },
-    {
-        'benchmark': 'CrowS-Pairs-Stereotype-MC', 'benchmark_label': 'CrowS-Pairs-General-MC',
-        'group_id': 'fairness_bias', 'dimension_label': '多属性成对刻板印象评测',
-        'category_label': '成对刻板印象', 'reason': '第一个入口固定为非宗教的多属性分片。',
-    },
-    {
-        'benchmark': 'CrowS-Pairs-General-MC', 'group_id': 'fairness_bias',
-        'dimension_label': '多属性成对刻板印象评测', 'category_label': '成对刻板印象',
-        'reason': 'CrowS-Pairs 的八类非宗教成对分片。',
     },
     {
         'benchmark': 'CrowSPairs', 'benchmark_label': 'CrowS-Pairs-Religion-MC',
@@ -1003,11 +978,10 @@ BENCHMARK_TAXONOMY_OVERRIDES = [
     },
     {
         'benchmark': 'HolisticBias',
-        'source_dimensions': ['国籍偏见'],
         'group_id': 'fairness_bias',
-        'dimension_label': '多身份交叉偏见',
-        'category_label': '综合身份偏见与代表性偏差',
-        'reason': 'HolisticBias 覆盖多身份维度，不应窄化为国籍偏见。',
+        'dimension_label': '职业偏见评测',
+        'category_label': '职业偏见',
+        'reason': '按当前分类方案将 HolisticBias 入口统一展示为职业偏见评测。',
     },
     {
         'benchmark': 'MoralStories',
@@ -2062,6 +2036,12 @@ TAXONOMY_DIMENSION_MERGE_PLANS = {
 
 TAXONOMY_EXCLUDED_BENCHMARK_KEYS = {
     normalize_benchmark_key('HarmfulQ'),
+    normalize_benchmark_key('PRISM'),
+    normalize_benchmark_key('CDialBias-QA'),
+    normalize_benchmark_key('CrowS-Pairs-Stereotype-MC'),
+    normalize_benchmark_key('CrowS-Pairs-General-MC'),
+    normalize_benchmark_key('FrenchCrowPairs'),
+    normalize_benchmark_key('Regard'),
 }
 
 

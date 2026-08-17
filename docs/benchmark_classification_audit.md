@@ -1,6 +1,6 @@
 # Benchmark 原文与分类核验报告
 
-> 核验日期：2026-08-17。核验对象为网页实际加载的 107 个 Benchmark 实例（94 个唯一名称）。逐子类、逐 Benchmark 的当前归属、介绍、分类核验结论和原文链接见 [current_taxonomy_full.md](current_taxonomy_full.md)。
+> 核验日期：2026-08-17。核验对象为网页实际加载的 102 个 Benchmark 实例（89 个唯一名称）。逐子类、逐 Benchmark 的当前归属、介绍、分类核验结论和原文链接见 [current_taxonomy_full.md](current_taxonomy_full.md)。
 
 ## 核验方法
 
@@ -43,12 +43,13 @@
 | GPTFuzzer / LatentJailbreak / DoAnythingNow / CoSafe | 部分入口误选标签、响应或不完整文件 | 分别固定到越狱模板+有害目标、潜在任务模板、野外越狱+禁止问题、完整多轮共指对话 | [GPTFuzz](https://github.com/sherdencooper/GPTFuzz) / [LatentJailbreak](https://github.com/qiuhuachuan/latent-jailbreak) / [DoAnythingNow](https://github.com/verazuo/jailbreak_llms) / [CoSafe](https://aclanthology.org/2024.emnlp-main.968/) |
 | RMCBench / CHiSafetyBench | 存在选错文件或错误 gold（如恶意请求对应 GOOD） | 固定到官方风险提示，gold 改为安全拒答 | [RMCBench](https://github.com/qing-yuan233/RMCBench) / [CHiSafetyBench](https://github.com/UnicomAI/UnicomBenchmark/tree/main/CHiSafetyBench) |
 | MedSafetyBench | 误称为医疗信息真实性 | 移入独立的医疗安全可靠性；使用 900 条有害医疗请求与安全回复示范 | [NeurIPS 2024](https://proceedings.neurips.cc/paper_files/paper/2024/hash/3ac952d0264ef7a505393868a70a46b6-Abstract-Datasets_and_Benchmarks_Track.html) |
-| PRISM | 误放在暴力与危险知识 | 移入多元用户偏好对齐；评分按参与者分布展示，无唯一 gold | [NeurIPS 2024](https://proceedings.neurips.cc/paper_files/paper/2024/hash/be2e1b68b44f2419e19f6c35a1b8cf35-Abstract-Datasets_and_Benchmarks_Track.html) |
-| BBQ / CALM / CHBias / FrenchCrowPairs / Regard | 整套数据被窄化为单一身份属性 | 按原文改为多属性歧义问答、性别种族多任务、中文四属性、法语多属性成对偏见和人口群体评价偏差 | [BBQ](https://aclanthology.org/2022.findings-acl.165/) / [CALM](https://arxiv.org/abs/2308.12539) / [CHBias](https://aclanthology.org/2023.acl-long.757/) / [Regard](https://aclanthology.org/D19-1339/) |
+| BBQ / CALM / CHBias | 整套数据被窄化为单一身份属性 | 按原文保留多属性歧义问答、性别种族多任务和中文四属性偏见任务；CHBias 统一命名为中文综合偏见评测 | [BBQ](https://aclanthology.org/2022.findings-acl.165/) / [CALM](https://arxiv.org/abs/2308.12539) / [CHBias](https://aclanthology.org/2023.acl-long.757/) |
 | CrowS-Pairs | 两个入口重复读全量数据 | 固定为非宗教的 General 分片和 Religion 分片，互不重叠 | [官方仓库](https://github.com/nyu-mll/crows-pairs) |
 | APPS | 两个入口会扫描同一全量目录 | 固定为 Introductory-Interview 和 Competition 两个难度互斥分片 | [APPS 官方仓库](https://github.com/hendrycks/apps) |
 | HumanEval+ / MBPP / MathQA-Python / ClassEval / CoderEval / DS-1000 / HumanEval / APPS 两个难度入口 | 同一代码生成构念按基础、复杂、入门面试和竞赛重复分成四个子类 | 合并为代码生成综合任务，九个 Benchmark 继续独立计分 | 各 Benchmark 官方仓库 |
 | HarmfulQ | 与多个风险请求拒答数据重复，且自身没有稳定细粒度类别 | 从当前评测目录移除，保留本地原始数据以便追溯 | [数据来源](https://github.com/SALT-NLP/chain-of-thought-bias) |
+| PRISM / CDialBias-QA / CrowS-Pairs-General-MC / FrenchCrowPairs / Regard | 与当前精简后的伦理或公平性目录范围重复 | 从当前评测目录移除，保留本地原始数据以便追溯 | 各 Benchmark 原始论文或仓库 |
+| HolisticBias | 原目录名为多身份交叉偏见评测 | 按当前目录命名改为职业偏见评测；介绍仍注明官方数据实际覆盖多个身份轴 | [HolisticBias](https://github.com/facebookresearch/ResponsibleNLP/tree/main/holistic_bias) |
 | ARC-Easy / ARC-Challenge / CMRC2018 | 按普通任务完成展示，未突出答案的事实与证据准确性 | 两个 ARC 分片改为科学知识准确性；CMRC2018 改为篇章证据问答准确性，统一移入基本事实准确性 | [AI2 ARC](https://allenai.org/data/arc) / [CMRC2018](https://github.com/ymcui/cmrc2018) |
 | sycophancy | 放在基本事实准确性，容易和独立知识正确率混淆 | 更名为反谄媚策略评测，移入系统策略安全性，强调面对用户立场诱导时的响应策略 | [原始数据](https://github.com/nrimsky/LM-exp/tree/main/datasets/sycophancy) |
 | RMCBench | 按风险请求拒答放在系统策略安全性 | 因目标产物是可执行恶意代码，改为恶意代码生成抑制评测并移入输出内容无害性 | [RMCBench](https://github.com/qing-yuan233/RMCBench) |
@@ -57,9 +58,9 @@
 ## 数据与评分协议结论
 
 - 新增 `verified_benchmarks` 可重建视图，对 34 个易误选文件的 Benchmark 固定官方分片；部署时由 `prepare_verified_benchmarks.py` 从本地官方下载源生成。
-- FollowBench、CHBias、PRISM、GlobalOpinionQA 和 SALAD-Bench 的当前本地入口不冒充论文完整官方评分器；页面会显示“非评分收集”或代理指标说明。
+- FollowBench、CHBias、GlobalOpinionQA 和 SALAD-Bench 的当前本地入口不冒充论文完整官方评分器；页面会显示“非评分收集”或代理指标说明。
 - MedSafetyBench 使用明确拒答或安全回复相似度代理；JBB-Behaviors 和 HarmBench behaviors 仅报告基线拒答；这些结果不等同于原论文的全部 judge 指标。
-- 当前网页实际计数为 3 个评测领域、12 个可见大类、93 个子类、107 个 Benchmark，全部标记为可评测。“医疗基本事实准确性”暂无符合定义的本地 Benchmark，因此不用 MedSafetyBench 填充该类。
+- 当前网页实际计数为 3 个评测领域、12 个可见大类、88 个子类、102 个 Benchmark，全部标记为可评测。“医疗基本事实准确性”暂无符合定义的本地 Benchmark，因此不用 MedSafetyBench 填充该类。
 
 ## 系统策略安全性边界
 

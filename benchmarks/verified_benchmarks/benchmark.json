@@ -328,18 +328,7 @@
               "evaluation": "Official classifier/human evaluation required",
               "intro": "CHBias 覆盖性别、性取向、年龄和外貌四类中文对话偏见。当前入口显示官方测试句并收集去偏改写；原数据不提供唯一参考改写，因此不伪造准确率。",
               "paths": {"dataset": "benchmarks/verified_benchmarks/data/chbias.jsonl", "results": "result"},
-              "execution": {"extra_args": {"--benchmark-name": "CHBias", "--dimension-label": "中文对话多属性偏见评测", "--benchmark-url": "https://aclanthology.org/2023.acl-long.757/", "--max-cases": 20}}
-            },
-            {
-              "option_key": "crows_general",
-              "name": "CrowS-Pairs-General-MC",
-              "url": "https://github.com/nyu-mll/crows-pairs",
-              "language": "English",
-              "scale": "1,403 non-religion pairs",
-              "evaluation": "Local pair-identification accuracy",
-              "intro": "CrowS-Pairs-General-MC 使用官方成对句子中除宗教外的八类刻板印象样本，作为聊天模型可运行的成对识别代理任务。",
-              "paths": {"dataset": "benchmarks/verified_benchmarks/data/crows_pairs_general.jsonl", "results": "result"},
-              "execution": {"extra_args": {"--benchmark-name": "CrowS-Pairs-General-MC", "--dimension-label": "多属性成对刻板印象评测", "--benchmark-url": "https://github.com/nyu-mll/crows-pairs", "--max-cases": 20}}
+              "execution": {"extra_args": {"--benchmark-name": "CHBias", "--dimension-label": "中文综合偏见评测", "--benchmark-url": "https://aclanthology.org/2023.acl-long.757/", "--max-cases": 20}}
             },
             {
               "option_key": "crows_religion",
@@ -351,17 +340,6 @@
               "intro": "CrowS-Pairs-Religion-MC 单独使用官方 religion 子集，使原有第二个 CrowS-Pairs 入口成为互斥的宗教刻板印象评测，而不是重复全量入口。",
               "paths": {"dataset": "benchmarks/verified_benchmarks/data/crows_pairs_religion.jsonl", "results": "result"},
               "execution": {"extra_args": {"--benchmark-name": "CrowS-Pairs-Religion-MC", "--dimension-label": "宗教成对刻板印象评测", "--benchmark-url": "https://github.com/nyu-mll/crows-pairs", "--max-cases": 20}}
-            },
-            {
-              "option_key": "french_crows",
-              "name": "FrenchCrowPairs",
-              "url": "https://gitlab.inria.fr/french-crows-pairs/acl-2022-paper-data-and-code",
-              "language": "French",
-              "scale": "1,467",
-              "evaluation": "Local pair-identification accuracy",
-              "intro": "French CrowS-Pairs 是覆盖多种偏见类型的法语适配数据。当前入口固定读取 crows_pairs_FR.csv，修复了此前误显示英文原表的问题。",
-              "paths": {"dataset": "benchmarks/verified_benchmarks/data/french_crows_pairs.jsonl", "results": "result"},
-              "execution": {"extra_args": {"--benchmark-name": "FrenchCrowPairs", "--dimension-label": "法语多属性刻板印象评测", "--benchmark-url": "https://gitlab.inria.fr/french-crows-pairs/acl-2022-paper-data-and-code", "--max-cases": 20}}
             }
           ]
         },
@@ -370,17 +348,6 @@
           "label": "伦理价值评测",
           "intro": "保留主观分布与道德情境材料，不把主观问卷强行处理成唯一答案。",
           "benchmarks": [
-            {
-              "option_key": "prism",
-              "name": "PRISM",
-              "url": "https://proceedings.neurips.cc/paper_files/paper/2024/hash/be2e1b68b44f2419e19f6c35a1b8cf35-Abstract-Datasets_and_Benchmarks_Track.html",
-              "language": "English",
-              "scale": "68,371 rated utterances",
-              "evaluation": "Participant ratings; no single gold response",
-              "intro": "PRISM 连接 75 个国家参与者的社会人口属性、偏好与 21 个模型的真实对话反馈。当前入口显示用户提示、被评价回复、评分和是否被选中，不再归为暴力危险知识。",
-              "paths": {"dataset": "benchmarks/verified_benchmarks/data/prism.jsonl", "results": "result"},
-              "execution": {"extra_args": {"--benchmark-name": "PRISM", "--dimension-label": "多元用户偏好对齐评测", "--benchmark-url": "https://proceedings.neurips.cc/paper_files/paper/2024/hash/be2e1b68b44f2419e19f6c35a1b8cf35-Abstract-Datasets_and_Benchmarks_Track.html", "--max-cases": 20}}
-            },
             {
               "option_key": "global_opinion",
               "name": "GlobalOpinionQA",
