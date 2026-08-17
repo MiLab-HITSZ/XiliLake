@@ -498,9 +498,6 @@ DIMENSION_SPECIFIC_INTROS = {
     '代码提交摘要生成任务': '输入真实 Git 代码差异，要求生成准确概括修改内容或修改意图的提交信息，并分开统计显式与隐式代理分片。',
     '代码注释生成任务': '使用 ByteCue 的真实代码与参考注释，检查生成注释是否正确描述程序行为并保留必要的实现细节。',
     '代码生成综合任务': '统一评估函数级、类级、仓库级、数据科学和竞赛编程场景下从自然语言规格生成可执行代码的可靠性，各 Benchmark 仍分别记录结果。',
-    '基础代码生成任务': '使用 HumanEval+、MBPP 和 MathQA-Python 的函数级编程题，评估从问题描述到可执行代码的正确性。',
-    '复杂编程综合任务': '使用 ClassEval、CoderEval、DS-1000 和 HumanEval 等数据，检查类级实现、仓库上下文、数据科学代码和函数生成的综合可靠性。',
-    '竞赛编程综合评测': '使用 APPS 测试集的 competition 难度互斥分片，展示完整题面、输入输出规格和参考实现。',
     '高难科学知识准确性评测': '使用 ARC-Challenge 的高难度科学考试选择题，直接统计模型对科学知识问题的答案准确率。',
     '基础科学知识准确性评测': '使用 ARC-Easy 的基础科学考试选择题，直接统计模型对科学知识问题的答案准确率。',
     '篇章证据问答准确性评测': '使用 CMRC2018 的篇章、问题与抽取式答案，检查模型回答是否能由给定材料直接支持。',
@@ -723,22 +720,17 @@ BENCHMARK_TAXONOMY_OVERRIDES = [
     },
     {
         'benchmark': 'JBBBehaviours', 'group_id': 'privacy_security',
-        'dimension_label': '滥用行为基线拒答评测', 'category_label': '有害请求拒答策略',
+        'dimension_label': '滥用行为基线请求拒答评测', 'category_label': '有害请求拒答策略',
         'reason': '当前入口只有行为目标，没有越狱攻击字符串，只能测量基线拒答。',
     },
     {
         'benchmark': 'HarmBench', 'group_id': 'privacy_security',
-        'dimension_label': '有害行为基线拒答评测', 'category_label': '有害请求拒答策略',
+        'dimension_label': '有害行为基线请求拒答评测', 'category_label': '有害请求拒答策略',
         'reason': '本地入口只接入 HarmBench 行为集，未运行其攻击算法。',
     },
     {
-        'benchmark': 'HarmfulQ', 'group_id': 'privacy_security',
-        'dimension_label': '危险问题安全响应评测', 'category_label': '有害请求拒答策略',
-        'reason': 'HarmfulQ 给出普通危险问题，目标是选择拒答或安全响应策略。',
-    },
-    {
         'benchmark': 'HarmfulQA', 'group_id': 'privacy_security',
-        'dimension_label': '通用有害问答拒答评测', 'category_label': '有害请求拒答策略',
+        'dimension_label': '多学科知识滥用请求拒答评测', 'category_label': '多学科知识滥用请求拒答',
         'reason': 'HarmfulQA 以普通有害请求的拒答覆盖为目标。',
     },
     {
@@ -753,7 +745,7 @@ BENCHMARK_TAXONOMY_OVERRIDES = [
     },
     {
         'benchmark': 'CHiSafetyBench', 'group_id': 'privacy_security',
-        'dimension_label': '单轮与多轮风险对话拒答一致性评测', 'category_label': '风险对话拒答一致性',
+        'dimension_label': '单轮与多轮风险对话请求拒答一致性评测', 'category_label': '风险对话请求拒答一致性',
         'reason': '当前入口使用官方单轮与多轮 risky questions，只测量拒答覆盖和多轮一致性，不评价参考回复质量。',
     },
     {
@@ -768,7 +760,7 @@ BENCHMARK_TAXONOMY_OVERRIDES = [
     },
     {
         'benchmark': 'XSafety', 'group_id': 'privacy_security',
-        'dimension_label': '跨语种非隐私风险拒答一致性评测', 'category_label': '非隐私风险跨语种一致性',
+        'dimension_label': '跨语种非隐私风险请求拒答一致性评测', 'category_label': '非隐私风险请求拒答一致性',
         'reason': '当前 XSafety 入口仅含 12 类非隐私风险，用于测量 10 种语言间的拒答一致性。',
     },
     {
@@ -881,29 +873,29 @@ BENCHMARK_TAXONOMY_OVERRIDES = [
     {
         'benchmark': 'APPS', 'source_groups': ['custom_apps'],
         'benchmark_label': 'APPS-Introductory-Interview', 'group_id': 'task_control',
-        'dimension_label': '基础与面试编程综合评测', 'category_label': '代码任务可靠性',
-        'reason': '第一个 APPS 入口固定为 introductory/interview 分片。',
+        'dimension_label': '代码生成综合任务', 'category_label': '代码任务可靠性',
+        'reason': '第一个 APPS 入口固定为 introductory/interview 分片，并入代码生成综合任务。',
     },
     {
         'benchmark': 'APPS', 'source_groups': ['capability'],
         'benchmark_label': 'APPS-Competition', 'group_id': 'task_control',
-        'dimension_label': '竞赛编程综合评测', 'category_label': '代码任务可靠性',
-        'reason': '第二个 APPS 入口固定为 competition 分片。',
+        'dimension_label': '代码生成综合任务', 'category_label': '代码任务可靠性',
+        'reason': '第二个 APPS 入口固定为 competition 分片，并入代码生成综合任务。',
     },
     {
         'benchmark': 'APPS', 'benchmark_label': 'APPS-Competition', 'group_id': 'task_control',
-        'dimension_label': '竞赛编程综合评测', 'category_label': '代码任务可靠性',
-        'reason': '合并后的旧 APPS 镜像统一为 competition 分片，避免与基础分片重复。',
+        'dimension_label': '代码生成综合任务', 'category_label': '代码任务可靠性',
+        'reason': '合并后的旧 APPS 镜像统一为 competition 分片，并入代码生成综合任务。',
     },
     {
         'benchmark': 'APPS-Introductory-Interview', 'group_id': 'task_control',
-        'dimension_label': '基础与面试编程综合评测', 'category_label': '代码任务可靠性',
-        'reason': 'APPS 的入门与面试难度互斥分片。',
+        'dimension_label': '代码生成综合任务', 'category_label': '代码任务可靠性',
+        'reason': 'APPS 的入门与面试难度互斥分片，并入代码生成综合任务。',
     },
     {
         'benchmark': 'APPS-Competition', 'group_id': 'task_control',
-        'dimension_label': '竞赛编程综合评测', 'category_label': '代码任务可靠性',
-        'reason': 'APPS 的竞赛难度互斥分片。',
+        'dimension_label': '代码生成综合任务', 'category_label': '代码任务可靠性',
+        'reason': 'APPS 的竞赛难度互斥分片，并入代码生成综合任务。',
     },
     {
         'benchmark': 'CMRC2018',
@@ -1850,16 +1842,18 @@ TAXONOMY_DIMENSION_MERGE_PLANS = {
     'task_control': [
         {
             'label': '代码生成综合任务',
-            'intro': '统一评估从自然语言规格生成可执行代码的可靠性，覆盖 HumanEval+/HumanEval 与 MBPP 的函数级题目、MathQA-Python 的数学程序生成、ClassEval 的类级实现、CoderEval 的仓库上下文、DS-1000 的数据科学代码，以及 APPS Competition 的竞赛题。各 Benchmark 保留独立结果，不再按“基础、复杂、竞赛”重复设置近义子类。',
+            'intro': '统一评估从自然语言规格生成可执行代码的可靠性，覆盖 HumanEval+/HumanEval 与 MBPP 的函数级题目、MathQA-Python 的数学程序生成、ClassEval 的类级实现、CoderEval 的仓库上下文、DS-1000 的数据科学代码，以及 APPS 的入门、面试与竞赛题。各 Benchmark 保留独立结果，不再按难度或代码范围设置近义子类。',
             'category_label': '代码任务可靠性',
             'sort_rank': 2,
             'benchmark_names': [
                 'Humaneval+', 'MBPP', 'MathQA-Python', 'Classeval',
-                'CoderEval', 'DS-1000', 'humaneval', 'APPS-Competition',
+                'CoderEval', 'DS-1000', 'humaneval',
+                'APPS-Introductory-Interview', 'APPS-Competition',
             ],
             'dimension_ids': [
                 'benchmark::capability::downloaded::代码生成能力',
                 'benchmark::capability::downloaded::代码综合能力',
+                'benchmark::verified_benchmarks::verified::task_following::p0::eval-run::APPS-Introductory-Interview',
                 'benchmark::verified_benchmarks::verified::task_following::p0::eval-run::APPS-Competition',
             ],
             'include_benchmark_names_only': True,
@@ -1896,9 +1890,9 @@ TAXONOMY_DIMENSION_MERGE_PLANS = {
             ],
         },
         {
-            'label': '单轮与多轮风险对话拒答一致性评测',
+            'label': '单轮与多轮风险对话请求拒答一致性评测',
             'intro': '使用 CHiSafetyBench 的 462 条无历史风险问题和 101 条含完整历史的多轮风险对话，评估模型在上下文变化时能否稳定拒答。本子类只评估拒答覆盖和多轮一致性，不使用参考回复评估安全建议质量。',
-            'category_label': '风险对话拒答一致性',
+            'category_label': '风险对话请求拒答一致性',
             'sort_rank': 2,
             'benchmark_names': ['CHiSafetyBench'],
             'merged_dimension_id': 'taxonomy::privacy_security::chinese_dialogue_refusal',
@@ -1931,7 +1925,7 @@ TAXONOMY_DIMENSION_MERGE_PLANS = {
             'merged_dimension_id': 'taxonomy::privacy_security::seval_eight_domains',
         },
         {
-            'label': '信息危害、恶意用途与交互风险拒答评测',
+            'label': '信息危害、恶意用途与交互风险请求拒答评测',
             'intro': '使用 Do-Not-Answer 的 939 条英文禁止问题，覆盖信息危害、恶意用途、歧视与毒性、错误信息危害、人机交互危害五个风险领域及 12 类具体伤害。当前直接对官方指令集统一检查拒答，不读取既有模型回复作为问题。',
             'category_label': '五类禁止问答风险',
             'sort_rank': 5,
@@ -1943,34 +1937,25 @@ TAXONOMY_DIMENSION_MERGE_PLANS = {
             'merged_dimension_id': 'taxonomy::privacy_security::do_not_answer_five_domains',
         },
         {
-            'label': '通用危险问题拒答评测',
-            'intro': '使用 HarmfulQ 的 200 条无攻击包装危险问题，检查模型面对账号入侵、伤害操作、违法活动及其他高风险问题时是否拒绝提供可执行帮助。原数据没有稳定的细粒度类别标签，因此不伪造领域分组。',
-            'category_label': '通用危险问题拒答',
-            'sort_rank': 6,
-            'benchmark_names': ['HarmfulQ'],
-            'include_benchmark_names_only': True,
-            'merged_dimension_id': 'taxonomy::privacy_security::harmfulq_general',
-        },
-        {
-            'label': '细粒度不安全指令拒答评测',
+            'label': '细粒度不安全指令请求拒答评测',
             'intro': '使用 SORRY-Bench 2024-06 基础集的 450 条指令，按 45 个细粒度不安全类别均衡覆盖，每类 10 条。该入口检查原始不安全指令的拒答，不包含越狱模板。',
-            'category_label': '细粒度不安全指令拒答',
+            'category_label': '细粒度不安全指令请求拒答',
             'sort_rank': 7,
             'benchmark_names': ['SorryBench'],
             'include_benchmark_names_only': True,
             'merged_dimension_id': 'taxonomy::privacy_security::sorrybench_fine_grained',
         },
         {
-            'label': '跨学科知识滥用请求拒答评测',
+            'label': '多学科知识滥用请求拒答评测',
             'intro': '使用 HarmfulQA 的 1,960 条问题，覆盖社会科学、数学与逻辑、商业经济、健康医学、地理环境、文学语言、教育、历史文化、科学技术、哲学伦理十个知识领域，检查模型是否拒绝把专业知识用于伤害、欺骗、歧视或违法目的。',
-            'category_label': '专业知识滥用请求拒答',
+            'category_label': '多学科知识滥用请求拒答',
             'sort_rank': 8,
             'benchmark_names': ['HarmfulQA'],
             'include_benchmark_names_only': True,
             'merged_dimension_id': 'taxonomy::privacy_security::harmfulqa_academic_domains',
         },
         {
-            'label': '标准化有害行为基线拒答评测',
+            'label': '标准化有害行为基线请求拒答评测',
             'intro': '使用 JailbreakBench 和 HarmBench 的标准化有害行为目标集，测量在未附加任何越狱模板或攻击改写时的基线拒答。它与普通禁止问题的差别是输入来自红队框架的标准行为目标；与攻击抵御的差别是本入口不含攻击机制。',
             'category_label': '红队行为集基线',
             'sort_rank': 9,
@@ -2022,9 +2007,9 @@ TAXONOMY_DIMENSION_MERGE_PLANS = {
             'merged_dimension_id': 'taxonomy::privacy_security::confidentiality_rule_following',
         },
         {
-            'label': '跨语种非隐私风险拒答一致性评测',
+            'label': '跨语种非隐私风险请求拒答一致性评测',
             'intro': '使用 XSafety 的 23,988 条非隐私风险请求，覆盖 10 种语言和 12 类风险，评估同一拒答策略是否因语言和风险类型变化而弱化。Privacy And Property 的 2,000 条样本全部归入独立隐私入口，因此两项评测互不重叠。',
-            'category_label': '非隐私风险跨语种一致性',
+            'category_label': '非隐私风险请求拒答一致性',
             'sort_rank': 14,
             'benchmark_names': ['XSafety'],
             'dimension_ids': [
@@ -2073,6 +2058,10 @@ TAXONOMY_DIMENSION_MERGE_PLANS = {
             'merged_dimension_id': 'taxonomy::ethical_alignment::moral_dilemmas',
         },
     ],
+}
+
+TAXONOMY_EXCLUDED_BENCHMARK_KEYS = {
+    normalize_benchmark_key('HarmfulQ'),
 }
 
 
@@ -2271,6 +2260,13 @@ def apply_scientific_taxonomy(groups: List[Dict[str, Any]]) -> List[Dict[str, An
     for source_group in groups:
         for source_dim in source_group.get('dimensions') or []:
             dim = dict(source_dim)
+            dim['benchmarks'] = [
+                bench for bench in (source_dim.get('benchmarks') or [])
+                if isinstance(bench, dict)
+                and normalize_benchmark_key(bench.get('name') or '') not in TAXONOMY_EXCLUDED_BENCHMARK_KEYS
+            ]
+            if not dim['benchmarks']:
+                continue
             dim['source_group_id'] = source_group.get('id') or ''
             dim['source_group_label'] = source_group.get('label') or ''
             apply_dimension_display_alias(dim)

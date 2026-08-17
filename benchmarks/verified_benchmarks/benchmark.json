@@ -124,7 +124,7 @@
               "evaluation": "Execution tests or reference-code proxy",
               "intro": "APPS-Introductory-Interview 接入 APPS 测试集中的入门与面试难度编程题，展示完整题目、输入输出规范、测试和参考实现。",
               "paths": {"dataset": "benchmarks/verified_benchmarks/data/apps_intro_interview.jsonl", "results": "result"},
-              "execution": {"extra_args": {"--benchmark-name": "APPS-Introductory-Interview", "--dimension-label": "基础与面试编程综合评测", "--benchmark-url": "https://github.com/hendrycks/apps", "--max-cases": 20}}
+              "execution": {"extra_args": {"--benchmark-name": "APPS-Introductory-Interview", "--dimension-label": "代码生成综合任务", "--benchmark-url": "https://github.com/hendrycks/apps", "--max-cases": 20}}
             },
             {
               "option_key": "apps_competition",
@@ -135,7 +135,7 @@
               "evaluation": "Execution tests or reference-code proxy",
               "intro": "APPS-Competition 单独接入竞赛难度编程题，使原有两个 APPS 入口变成难度互斥的可解释分片。",
               "paths": {"dataset": "benchmarks/verified_benchmarks/data/apps_competition.jsonl", "results": "result"},
-              "execution": {"extra_args": {"--benchmark-name": "APPS-Competition", "--dimension-label": "竞赛编程综合评测", "--benchmark-url": "https://github.com/hendrycks/apps", "--max-cases": 20}}
+              "execution": {"extra_args": {"--benchmark-name": "APPS-Competition", "--dimension-label": "代码生成综合任务", "--benchmark-url": "https://github.com/hendrycks/apps", "--max-cases": 20}}
             }
           ]
         },
@@ -236,17 +236,6 @@
           "intro": "使用普通有害请求、行为集合或显式系统规则评估策略选择，不把它们伪装成攻击算法。",
           "benchmarks": [
             {
-              "option_key": "harmfulq",
-              "name": "HarmfulQ",
-              "url": "https://github.com/SALT-NLP/chain-of-thought-bias",
-              "language": "English",
-              "scale": "200",
-              "evaluation": "Refusal proxy",
-              "intro": "HarmfulQ 使用原仓库 dangerous-q/toxic_outs.json 中的 200 条危险问题，修复了此前误选 BBQ 偏见问答文件的问题。",
-              "paths": {"dataset": "benchmarks/verified_benchmarks/data/harmfulq.jsonl", "results": "result"},
-              "execution": {"extra_args": {"--benchmark-name": "HarmfulQ", "--dimension-label": "通用危险问题拒答评测", "--benchmark-url": "https://github.com/SALT-NLP/chain-of-thought-bias", "--max-cases": 20}}
-            },
-            {
               "option_key": "rmcbench",
               "name": "RMCBench",
               "url": "https://github.com/qing-yuan233/RMCBench",
@@ -266,7 +255,7 @@
               "evaluation": "Refusal proxy",
               "intro": "CHiSafetyBench 当前接入官方单轮和多轮 risky questions，并完整拼接对话历史；不再把知识产权判断选择题错误标成 REFUSE。",
               "paths": {"dataset": "benchmarks/verified_benchmarks/data/chisafetybench.jsonl", "results": "result"},
-              "execution": {"extra_args": {"--benchmark-name": "CHiSafetyBench", "--dimension-label": "单轮与多轮风险对话拒答一致性评测", "--benchmark-url": "https://github.com/UnicomAI/UnicomBenchmark/tree/main/CHiSafetyBench", "--max-cases": 20}}
+              "execution": {"extra_args": {"--benchmark-name": "CHiSafetyBench", "--dimension-label": "单轮与多轮风险对话请求拒答一致性评测", "--benchmark-url": "https://github.com/UnicomAI/UnicomBenchmark/tree/main/CHiSafetyBench", "--max-cases": 20}}
             },
             {
               "option_key": "jbb_behaviors",
@@ -277,7 +266,7 @@
               "evaluation": "Baseline refusal proxy",
               "intro": "JBB-Behaviors 是 100 个滥用行为目标，不含具体攻击算法。当前入口评估未施加越狱字符串时的基线拒答，因此归入系统策略而不是攻击抵御。",
               "paths": {"dataset": "downloads/datasets/huggingface/JailbreakBench__JBB-Behaviors/data/harmful-behaviors.csv", "results": "result"},
-              "execution": {"extra_args": {"--benchmark-name": "JBBBehaviours", "--dimension-label": "标准化有害行为基线拒答评测", "--benchmark-url": "https://huggingface.co/datasets/JailbreakBench/JBB-Behaviors", "--max-cases": 20}}
+              "execution": {"extra_args": {"--benchmark-name": "JBBBehaviours", "--dimension-label": "标准化有害行为基线请求拒答评测", "--benchmark-url": "https://huggingface.co/datasets/JailbreakBench/JBB-Behaviors", "--max-cases": 20}}
             },
             {
               "option_key": "harmbench_behaviors",
@@ -288,7 +277,7 @@
               "evaluation": "Baseline refusal proxy",
               "intro": "HarmBench 是自动红队框架，但本系统当前只接入行为集合，没有运行攻击方法。该入口因此明确标为有害行为基线拒答，不宣称测得攻击成功率。",
               "paths": {"dataset": "downloads/datasets/github_repos/centerforaisafety__HarmBench/data/behavior_datasets/harmbench_behaviors_text_test.csv", "results": "result"},
-              "execution": {"extra_args": {"--benchmark-name": "HarmBench", "--dimension-label": "标准化有害行为基线拒答评测", "--benchmark-url": "https://github.com/centerforaisafety/HarmBench", "--max-cases": 20}}
+              "execution": {"extra_args": {"--benchmark-name": "HarmBench", "--dimension-label": "标准化有害行为基线请求拒答评测", "--benchmark-url": "https://github.com/centerforaisafety/HarmBench", "--max-cases": 20}}
             },
             {
               "option_key": "rules_confidentiality",
@@ -310,7 +299,7 @@
               "evaluation": "Refusal accuracy by language and risk category",
               "intro": "XSafety 使用 10 种语言、12 类非隐私安全请求的 23,988 条本地拒答视图。Privacy And Property 的 2,000 条样本全部转入隐私与财产定向入口，两者不重复。",
               "paths": {"dataset": "benchmarks/custom_privacy/xsafety_multilingual_refusal.jsonl", "results": "result"},
-              "execution": {"extra_args": {"--benchmark-name": "XSafety", "--dimension-label": "跨语种非隐私风险拒答一致性评测", "--benchmark-url": "https://github.com/Jarviswang94/Multilingual_safety_benchmark", "--max-cases": 20}}
+              "execution": {"extra_args": {"--benchmark-name": "XSafety", "--dimension-label": "跨语种非隐私风险请求拒答一致性评测", "--benchmark-url": "https://github.com/Jarviswang94/Multilingual_safety_benchmark", "--max-cases": 20}}
             }
           ]
         },
