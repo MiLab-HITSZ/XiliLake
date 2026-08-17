@@ -84,7 +84,7 @@
               "evaluation": "Multiple-choice accuracy",
               "intro": "ARC-Challenge 是 AI2 Reasoning Challenge 的高难度科学考试题分片，当前入口保留官方题干、选项和答案键。",
               "paths": {"dataset": "benchmarks/verified_benchmarks/data/arc_challenge.jsonl", "results": "result"},
-              "execution": {"extra_args": {"--benchmark-name": "ARC-Challenge", "--dimension-label": "科学常识推理评测", "--benchmark-url": "https://allenai.org/data/arc", "--max-cases": 20}}
+              "execution": {"extra_args": {"--benchmark-name": "ARC-Challenge", "--dimension-label": "高难科学知识准确性评测", "--benchmark-url": "https://allenai.org/data/arc", "--max-cases": 20}}
             }
           ]
         },
@@ -113,7 +113,7 @@
               "evaluation": "Multiple-choice accuracy",
               "intro": "ARC-Easy 是 AI2 Reasoning Challenge 的基础科学问答分片，和高难度 ARC-Challenge 分开统计，避免两个入口重复运行同一数据。",
               "paths": {"dataset": "benchmarks/verified_benchmarks/data/arc_easy.jsonl", "results": "result"},
-              "execution": {"extra_args": {"--benchmark-name": "ARC-Easy", "--dimension-label": "基础科学问答评测", "--benchmark-url": "https://allenai.org/data/arc", "--max-cases": 20}}
+              "execution": {"extra_args": {"--benchmark-name": "ARC-Easy", "--dimension-label": "基础科学知识准确性评测", "--benchmark-url": "https://allenai.org/data/arc", "--max-cases": 20}}
             },
             {
               "option_key": "apps_intro_interview",
@@ -244,7 +244,7 @@
               "evaluation": "Refusal proxy",
               "intro": "HarmfulQ 使用原仓库 dangerous-q/toxic_outs.json 中的 200 条危险问题，修复了此前误选 BBQ 偏见问答文件的问题。",
               "paths": {"dataset": "benchmarks/verified_benchmarks/data/harmfulq.jsonl", "results": "result"},
-              "execution": {"extra_args": {"--benchmark-name": "HarmfulQ", "--dimension-label": "多领域禁止请求拒答覆盖评测", "--benchmark-url": "https://github.com/SALT-NLP/chain-of-thought-bias", "--max-cases": 20}}
+              "execution": {"extra_args": {"--benchmark-name": "HarmfulQ", "--dimension-label": "通用危险问题拒答评测", "--benchmark-url": "https://github.com/SALT-NLP/chain-of-thought-bias", "--max-cases": 20}}
             },
             {
               "option_key": "rmcbench",
@@ -255,7 +255,7 @@
               "evaluation": "Refusal proxy",
               "intro": "RMCBench 的 473 条提示覆盖文本到代码生成、代码翻译和补全等恶意代码请求。当前 gold 为安全拒答，修复了此前把 GOOD 标签显示成应生成恶意代码的问题。",
               "paths": {"dataset": "benchmarks/verified_benchmarks/data/rmcbench.jsonl", "results": "result"},
-              "execution": {"extra_args": {"--benchmark-name": "RMCBench", "--dimension-label": "恶意代码生成请求拒答评测", "--benchmark-url": "https://github.com/qing-yuan233/RMCBench", "--max-cases": 20}}
+              "execution": {"extra_args": {"--benchmark-name": "RMCBench", "--dimension-label": "恶意代码生成抑制评测", "--benchmark-url": "https://github.com/qing-yuan233/RMCBench", "--max-cases": 20}}
             },
             {
               "option_key": "chisafetybench",
