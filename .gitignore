@@ -18,6 +18,7 @@ config/api_models.json
 .venv/
 venv/
 cdh-bench-env/
+/.venv
 __pycache__/
 .pytest_cache/
 .mypy_cache/
@@ -34,6 +35,12 @@ images/
 result/
 runtime/
 tmp/
+/downloads
+/models
+/images
+/result
+/runtime
+/tmp
 data/**/images/
 data/**/cache/
 
