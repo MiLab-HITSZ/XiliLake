@@ -54,4 +54,23 @@
 - 新增 `verified_benchmarks` 可重建视图，对 34 个易误选文件的 Benchmark 固定官方分片；部署时由 `prepare_verified_benchmarks.py` 从本地官方下载源生成。
 - FollowBench、CHBias、PRISM、GlobalOpinionQA 和 SALAD-Bench 的当前本地入口不冒充论文完整官方评分器；页面会显示“非评分收集”或代理指标说明。
 - MedSafetyBench 使用明确拒答或安全回复相似度代理；JBB-Behaviors 和 HarmBench behaviors 仅报告基线拒答；这些结果不等同于原论文的全部 judge 指标。
-- 当前网页实际计数为 3 个评测领域、12 个可见大类、97 个子类、108 个 Benchmark，全部标记为可评测。“医疗基本事实准确性”暂无符合定义的本地 Benchmark，因此不用 MedSafetyBench 填充该类。
+- 当前网页实际计数为 3 个评测领域、12 个可见大类、92 个子类、108 个 Benchmark，全部标记为可评测。“医疗基本事实准确性”暂无符合定义的本地 Benchmark，因此不用 MedSafetyBench 填充该类。
+
+## 系统策略安全性去重
+
+系统策略安全性按“输入结构 + 目标输出 + 评分口径”划为 10 个互斥子类，17 个 Benchmark 实例全部保留：
+
+| 子类 | 唯一判定边界 | Benchmark |
+| --- | --- | --- |
+| 综合安全知识与责任判断评测 | 给定选择题，判断安全知识和责任风险；不直接测试拒答 | SafetyBench、CValuesResponsibilityMC |
+| 单轮参考安全回复质量评测 | 单轮风险场景带安全参考回复，评价拒答、纠偏或替代建议质量 | SafetyPrompts |
+| 单轮与多轮风险对话拒答一致性评测 | 不使用参考回复，只检查单轮拒答覆盖和多轮上下文一致性 | CHiSafetyBench |
+| 多领域禁止请求拒答覆盖评测 | 普通禁止请求，无越狱变换，统一统计明确拒答 | StrongREJECT、Do-Not-Answer、S-Eval、HarmfulQ、HarmfulQA、SORRY-Bench |
+| 标准化有害行为基线拒答评测 | 红队框架的标准行为目标，但未附加攻击模板，用作攻击前基线 | JailbreakBench Behaviors、HarmBench |
+| 安全请求过度拒答评测 | 输入应当允许回答，检查误拒绝 | XSTest |
+| 跨语种隐私与财产侵害防护评测 | 只含 Privacy And Property，覆盖 10 种语言 | XSafety-Privacy-Refusal |
+| 机密信息规则遵循评测 | 给出显式访问规则，检查是否向未授权主体泄密 | RuLES |
+| 跨语种非隐私风险拒答一致性评测 | 只含 12 类非隐私风险，比较 10 种语言间的策略一致性 | XSafety |
+| 恶意代码生成请求拒答评测 | 目标产物限定为可执行恶意代码 | RMCBench |
+
+XSafety 的两个入口已在数据层拆分：隐私与财产分片为 2,000 条，非隐私风险分片为 23,988 条，样本 ID 交集为 0。原来多个同样统计普通禁止请求拒答率的子类已合并，不再以“有害请求”“危险问答”“细粒度请求”等近义名称重复展示。

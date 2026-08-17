@@ -747,8 +747,8 @@ BENCHMARK_TAXONOMY_OVERRIDES = [
     },
     {
         'benchmark': 'CHiSafetyBench', 'group_id': 'privacy_security',
-        'dimension_label': '中文风险请求拒答评测', 'category_label': '有害请求拒答策略',
-        'reason': '当前入口使用官方单轮与多轮 risky questions，测量安全拒答。',
+        'dimension_label': '单轮与多轮风险对话拒答一致性评测', 'category_label': '风险对话拒答一致性',
+        'reason': '当前入口使用官方单轮与多轮 risky questions，只测量拒答覆盖和多轮一致性，不评价参考回复质量。',
     },
     {
         'benchmark': 'CValuesResponsibilityMC', 'group_id': 'privacy_security',
@@ -762,8 +762,13 @@ BENCHMARK_TAXONOMY_OVERRIDES = [
     },
     {
         'benchmark': 'XSafety', 'group_id': 'privacy_security',
-        'dimension_label': '多语种安全拒答一致性评测', 'category_label': '跨语言与多语种安全一致性',
-        'reason': 'XSafety 测量多语种与多类风险上的安全策略一致性。',
+        'dimension_label': '跨语种非隐私风险拒答一致性评测', 'category_label': '非隐私风险跨语种一致性',
+        'reason': '当前 XSafety 入口仅含 12 类非隐私风险，用于测量 10 种语言间的拒答一致性。',
+    },
+    {
+        'benchmark': 'XSafety-Privacy-Refusal', 'group_id': 'privacy_security',
+        'dimension_label': '跨语种隐私与财产侵害防护评测', 'category_label': '隐私与财产侵害防护',
+        'reason': '该入口只含 XSafety 的 Privacy And Property 类，与非隐私风险入口按样本互斥。',
     },
     {
         'benchmark': 'MedSafetyBench', 'group_id': 'medical_safety_reliability',
@@ -1302,12 +1307,12 @@ BENCHMARK_SPECIFIC_INTRO_OVERRIDES = {
     'CMRC2018': 'CMRC2018 是面向阅读理解的跨度抽取问答数据集，问题答案通常需要从给定篇章中定位证据片段。当前用于评估模型能否基于文本证据回答，而不是脱离材料生成看似合理的答案。',
     'HarmfulQ': 'HarmfulQ 包含以问答形式提出的有害请求，覆盖违法、危险、伤害性建议等安全风险。当前用于评估模型是否识别这些请求的风险，并以拒答或安全替代建议进行响应。',
     'SAFE': 'SAFE 将模型回答分别按有害性、敏感性、真实性、自然度、信息完整性、指令遵循性和整体安全性七个轴作二分类。系统汇总官方七个测试分片的 15,334 条有效样本，并明确展示当前样本所判断的具体轴，避免把不同标签含义混为同一个安全二分类。',
-    'CValuesResponsibilityMC': 'CValuesResponsibilityMC 以选择题形式考察模型对责任、公共安全、社会价值和风险场景的判断。当前用于观察模型在暴力伤害、危险行为和社会责任相关问题上是否能选择稳妥、合规的答案。',
+    'CValuesResponsibilityMC': 'CValuesResponsibilityMC 以选择题形式考察模型对责任、公共安全、社会价值和风险场景的判断。当前与 SafetyBench 同归安全知识判断子类，用于观察模型能否识别风险并选择稳妥、合规的答案；它不直接测试面对有害请求时是否拒答。',
     'PRISM': 'PRISM 将 75 个国家的参与者背景、主观偏好与对 21 个模型对话的逐轮评分联系起来。当前入口展示用户提示、被评回复、评分与选中状态，用于分析多元用户偏好对齐；该数据没有唯一标准回复。',
     'WMDP': 'WMDP 聚焦生物安全、网络安全和化学安全等高风险知识，题目由相关领域专家编写。当前用于评估模型是否掌握或暴露可被滥用的危险知识，并支持高风险能力边界检查。',
     'HarmfulQA': 'HarmfulQA 由大量有害问题组成，覆盖非法行为、伤害建议、危险操作和其他不应直接满足的请求。当前用于评估模型面对普通表述的有害问答时是否能稳定拒答并给出安全替代。',
-    'XSafety': 'XSafety 本地评测文件包含 25,988 条多语种不安全请求，覆盖英语、中文、印地语、西班牙语、法语、阿拉伯语、孟加拉语、俄语、日语和德语，以及违法、隐私财产、伤害、歧视、提示泄漏和目标劫持等 13 类风险；官方常识基线类未纳入此拒答配置。系统统计模型在不同语言和风险类型下的安全拒答表现。',
-    'XSafety-Privacy-Refusal': 'XSafety-Privacy-Refusal 是从 XSafety 单独整理的 80 条英文 Privacy And Property 请求，检查模型是否拒绝泄露个人信息、协助破解凭据或实施财产侵害。它是隐私与财产保护的定向评测切片，不代表完整 XSafety 的多语种安全一致性。',
+    'XSafety': 'XSafety 的非隐私风险入口包含 23,988 条不安全请求，覆盖英语、中文、印地语、西班牙语、法语、阿拉伯语、孟加拉语、俄语、日语和德语，以及违法、伤害、歧视、提示泄漏和目标劫持等 12 类风险。Privacy And Property 的 2,000 条样本全部转入独立隐私入口，因此两项评测没有重复样本。',
+    'XSafety-Privacy-Refusal': 'XSafety-Privacy-Refusal 包含 XSafety 全部 10 种语言的 2,000 条 Privacy And Property 请求，检查模型是否拒绝泄露个人信息、协助破解凭据或实施财产侵害。该分片与非隐私风险 XSafety 入口按类别互斥。',
     'SafetyBench': 'SafetyBench 是中英双语安全知识多项选择基准，官方全集含 11,435 道题，覆盖冒犯、偏见、身体健康、心理健康、违法活动、伦理道德、隐私与财产七类风险。由于官方测试集不公开答案，系统接入中英文各七类共 70 道有标签开发题进行可复现评分。',
     'GPTFuzzer': 'GPTFuzzer 由自动红队方法生成或筛选攻击提示，用于测试模型安全策略在自动化变体攻击下是否失守。当前关注攻击提示的绕过效果和模型防御稳定性。',
     'DiaSafety': 'DiaSafety 以对话历史和候选回复为输入，判断该回复在当前上下文中是否安全。它强调同一句话可能因前文而改变安全属性；当前入口保留完整历史和待判定回复，做安全/不安全二分类。',
@@ -1318,7 +1323,8 @@ BENCHMARK_SPECIFIC_INTRO_OVERRIDES = {
     'XsTest': 'XSTest 包含 450 条成对设计的英文提示：安全提示常含“kill process”等表面敏感词，对照提示则表达真实不安全意图。系统分别把安全样本标为应回答、对照样本标为应拒绝；XsTest 与 XSTest 是同一数据集的大小写重复入口。',
     'SEval': 'S-Eval 官方数据包含中英文基础风险提示及十种攻击方法扩写的约 22 万条样本。当前系统策略子类固定接入其中 1,000 条中文基础风险小型分片，检查模型对明确危险请求的拒答；攻击扩写分片不在此入口中，避免与攻击抵御鲁棒性混淆。',
     'ConvAbuse': 'ConvAbuse 是面向对话场景的辱骂和滥用语言语料，关注攻击性、骚扰、冒犯和对话中的伤害性表达。当前用于评估模型能否识别或处理会话中的滥用内容。',
-    'SafetyPrompts': 'SafetyPrompts 官方数据由 70,000 条中文典型安全场景和 30,000 条指令攻击场景组成。当前入口只接入前者，覆盖违法活动、偏见歧视、心理健康、身体健康、隐私财产、伦理道德和冒犯七类请求，并以安全参考回复相似度或明确拒答作为本地代理评分；30,000 条攻击样本归入攻击类入口。',
+    'SafetyPrompts': 'SafetyPrompts 官方数据由 70,000 条中文典型安全场景和 30,000 条指令攻击场景组成。当前入口只接入前者及其安全参考回复，覆盖违法活动、偏见歧视、心理健康、身体健康、隐私财产、伦理道德和冒犯七类请求，以参考回复相似度或明确拒答作为安全回复质量的本地代理；它不等同于只统计拒答与否的 CHiSafetyBench。',
+    'CHiSafetyBench': 'CHiSafetyBench 当前入口包含 462 条无历史风险问题和 101 条带完整历史的多轮风险对话，统一检查模型是否拒绝不安全请求。它侧重单轮拒答覆盖和多轮上下文一致性，不使用参考安全回复评价建议内容的质量。',
     'Do-Not-Answer': 'Do-Not-Answer 的核心指令集包含 939 条英文问题，并按五个风险领域和 12 种危害类型标注。系统直接使用问题而不读取既有模型回答，将目标统一为应拒绝，用于检查禁止请求的拒答覆盖率。',
     'StrongREJECT': 'StrongREJECT 包含 313 条按六类禁止意图组织的英文请求，官方评测还会判断非拒答回答的说服力和具体性。当前系统策略入口只统计是否明确拒答，作为拒答有效性的可复现代理指标，不将其等同于官方完整自动评分器。',
     'CHBias': 'CHBias 是中文对话偏见基准，官方数据覆盖性别、性取向、年龄和外貌四类属性。当前入口展示官方测试句并收集去偏改写；由于原始测试集不提供唯一标准改写，该开放任务不伪造精确匹配准确率。',
@@ -1822,11 +1828,11 @@ def taxonomy_secondary_label(group_id: str, source_group: Dict[str, Any], dim: D
 TAXONOMY_DIMENSION_MERGE_PLANS = {
     'privacy_security': [
         {
-            'label': '综合安全知识判别评测',
-            'intro': '使用 SafetyBench 中英双语选择题检查模型对冒犯、偏见、身心健康、违法活动、伦理道德以及隐私财产等风险的知识判断。已有回答的多轴安全质量判定由 SAFE 独立放在输出内容无害性。',
+            'label': '综合安全知识与责任判断评测',
+            'intro': '使用 SafetyBench 和 CValuesResponsibilityMC 的选择题，检查模型能否识别冒犯、偏见、身心健康、违法活动、伦理道德、隐私财产和社会责任风险。本子类只评估安全知识判断，不使用有害提示直接测量拒答。',
             'category_label': '安全风险识别与判别',
             'sort_rank': 0,
-            'benchmark_names': ['SafetyBench'],
+            'benchmark_names': ['SafetyBench', 'CValuesResponsibilityMC'],
             'dimension_ids': [
                 'benchmark::harmful_capability::downloaded::综合安全性::p0::eval-run::SAFE',
                 'benchmark::fairness_bias::downloaded::其他偏见::p0::eval-run::SafetyBench',
@@ -1836,9 +1842,9 @@ TAXONOMY_DIMENSION_MERGE_PLANS = {
             ],
         },
         {
-            'label': '中文典型安全响应评测',
-            'intro': '使用 SafetyPrompts 的 70,000 条中文典型安全场景，评估模型面对七类日常风险请求时能否给出拒答、纠偏或安全替代建议。指令攻击部分不在本子类中，避免和攻击抵御鲁棒性重叠。',
-            'category_label': '中文安全响应策略',
+            'label': '单轮参考安全回复质量评测',
+            'intro': '使用 SafetyPrompts 的 70,000 条中文单轮典型安全场景和安全参考回复，评估模型能否给出拒答、纠偏或安全替代建议。它以参考回复为依据评价安全回复质量；只判断拒答与多轮一致性的 CHiSafetyBench 另列。官方 30,000 条指令攻击不在本入口。',
+            'category_label': '参考安全回复质量',
             'sort_rank': 1,
             'benchmark_names': ['SafetyPrompts'],
             'dimension_ids': [
@@ -1850,11 +1856,21 @@ TAXONOMY_DIMENSION_MERGE_PLANS = {
             ],
         },
         {
-            'label': '有害请求拒答有效性评测',
-            'intro': '评估模型面对明确不应满足的请求时能否稳定拒答。StrongREJECT、Do-Not-Answer 和 S-Eval 当前均按明确拒答进行本地代理评分；攻击改写和越狱成功率不在本子类统计。',
-            'category_label': '有害请求拒答策略',
+            'label': '单轮与多轮风险对话拒答一致性评测',
+            'intro': '使用 CHiSafetyBench 的 462 条无历史风险问题和 101 条含完整历史的多轮风险对话，评估模型在上下文变化时能否稳定拒答。本子类只评估拒答覆盖和多轮一致性，不使用参考回复评估安全建议质量。',
+            'category_label': '风险对话拒答一致性',
             'sort_rank': 2,
-            'benchmark_names': ['StrongREJECT', 'Do-Not-Answer', 'SEval'],
+            'benchmark_names': ['CHiSafetyBench'],
+            'merged_dimension_id': 'taxonomy::privacy_security::chinese_dialogue_refusal',
+        },
+        {
+            'label': '多领域禁止请求拒答覆盖评测',
+            'intro': '合并同样以“对普通禁止请求明确拒答”为本地指标的 StrongREJECT、Do-Not-Answer、S-Eval、HarmfulQ、HarmfulQA 和 SORRY-Bench。六个 Benchmark 提供不同风险分类和语言覆盖，但测量的构念相同，因此不再拆成多个同义子类。该子类不包含越狱攻击变换。',
+            'category_label': '普通禁止请求拒答',
+            'sort_rank': 3,
+            'benchmark_names': [
+                'StrongREJECT', 'Do-Not-Answer', 'SEval', 'HarmfulQ', 'HarmfulQA', 'SorryBench',
+            ],
             'dimension_ids': [
                 'benchmark::privacy_security::downloaded::跨语言安全一致性::p0::eval-run::StrongREJECT',
                 'benchmark::privacy_security::downloaded::安全拒答边界与过度拒答::p0::eval-run::SEval',
@@ -1865,10 +1881,18 @@ TAXONOMY_DIMENSION_MERGE_PLANS = {
             ],
         },
         {
+            'label': '标准化有害行为基线拒答评测',
+            'intro': '使用 JailbreakBench 和 HarmBench 的标准化有害行为目标集，测量在未附加任何越狱模板或攻击改写时的基线拒答。它与普通禁止问题的差别是输入来自红队框架的标准行为目标；与攻击抵御的差别是本入口不含攻击机制。',
+            'category_label': '红队行为集基线',
+            'sort_rank': 4,
+            'benchmark_names': ['JBBBehaviours', 'HarmBench'],
+            'merged_dimension_id': 'taxonomy::privacy_security::harmful_behavior_baseline',
+        },
+        {
             'label': '安全请求过度拒答评测',
             'intro': '评估模型是否会把正常、无害或仅表面敏感的请求错误拒绝。XSTest 与 XsTest 是同一测试集的大小写及镜像重复项，系统统一为一个 XSTest 评测入口。',
             'category_label': '正常请求放行策略',
-            'sort_rank': 3,
+            'sort_rank': 5,
             'benchmark_names': ['XSTest', 'XsTest'],
             'dimension_ids': [
                 'benchmark::privacy_security::downloaded::安全拒答边界与过度拒答',
@@ -1882,10 +1906,10 @@ TAXONOMY_DIMENSION_MERGE_PLANS = {
             ],
         },
         {
-            'label': '隐私与财产请求保护评测',
-            'intro': '使用 XSafety 的英文 Privacy And Property 定向子集，评估模型面对索取、推断或滥用个人信息，以及破解凭据、侵害财产等请求时，能否执行保护策略。该子类不与完整多语种 XSafety 的统计口径合并。',
-            'category_label': '隐私与财产保护策略',
-            'sort_rank': 4,
+            'label': '跨语种隐私与财产侵害防护评测',
+            'intro': '使用 XSafety 全部 10 种语言的 2,000 条 Privacy And Property 请求，评估模型面对个人信息泄露、凭据破解和财产侵害请求时能否执行拒答策略。这些样本已从非隐私风险 XSafety 入口排除，两项评测互不重叠。',
+            'category_label': '隐私与财产侵害防护',
+            'sort_rank': 6,
             'benchmark_names': ['XSafety-Privacy-Refusal'],
             'dimension_ids': [
                 'benchmark::custom_privacy::privacy_security::privacy_refusal',
@@ -1895,15 +1919,15 @@ TAXONOMY_DIMENSION_MERGE_PLANS = {
             'label': '机密信息规则遵循评测',
             'intro': '使用 RuLES 的 Confidentiality 直接请求场景，评估模型能否在多用户交互中持续遵循明确的秘密访问规则，不向未授权主体泄露他人的机密信息。当前入口展示完整规则和用户请求，并按是否拒绝越权索取进行评分。',
             'category_label': '系统规则与机密保护',
-            'sort_rank': 5,
+            'sort_rank': 7,
             'benchmark_names': ['RuLES'],
             'merged_dimension_id': 'taxonomy::privacy_security::confidentiality_rule_following',
         },
         {
-            'label': '多语种安全拒答一致性评测',
-            'intro': '使用 XSafety 本地拒答配置的 25,988 条样本，覆盖 10 种语言和 13 类不安全请求，评估同一拒答策略是否因语言和风险类型变化而弱化。它与英文隐私财产定向切片共享来源，但范围和统计口径不同。',
-            'category_label': '跨语言拒答一致性',
-            'sort_rank': 6,
+            'label': '跨语种非隐私风险拒答一致性评测',
+            'intro': '使用 XSafety 的 23,988 条非隐私风险请求，覆盖 10 种语言和 12 类风险，评估同一拒答策略是否因语言和风险类型变化而弱化。Privacy And Property 的 2,000 条样本全部归入独立隐私入口，因此两项评测互不重叠。',
+            'category_label': '非隐私风险跨语种一致性',
+            'sort_rank': 8,
             'benchmark_names': ['XSafety'],
             'dimension_ids': [
                 'benchmark::harmful_capability::downloaded::内容安全性评估::p0::eval-run::XSafety',
@@ -1911,6 +1935,14 @@ TAXONOMY_DIMENSION_MERGE_PLANS = {
             'consume_dimension_ids': [
                 'trusted::commonDataset::31::eval-run::p0::eval-run::XSafety',
             ],
+        },
+        {
+            'label': '恶意代码生成请求拒答评测',
+            'intro': '使用 RMCBench 的恶意代码生成、翻译、补全和改写请求，评估模型是否拒绝提供可直接执行的攻击或滥用代码。该子类仅限代码产物的滥用策略，不与一般危险知识问答合并。',
+            'category_label': '代码滥用安全策略',
+            'sort_rank': 9,
+            'benchmark_names': ['RMCBench'],
+            'merged_dimension_id': 'taxonomy::privacy_security::malicious_code_refusal',
         },
     ],
     'ethical_alignment': [
@@ -2025,10 +2057,7 @@ def merge_taxonomy_dimensions(group: Dict[str, Any]) -> None:
                 ):
                     existing_position = benchmark_positions[benchmark_name]
                     existing = benchmarks[existing_position]
-                    if (
-                        'benchopt::verified_benchmarks::' in str(benchmark.get('id') or '')
-                        and 'benchopt::verified_benchmarks::' not in str(existing.get('id') or '')
-                    ):
+                    if benchmark_dedup_rank(benchmark) < benchmark_dedup_rank(existing):
                         replacement = dict(benchmark)
                         replacement['result_label'] = existing.get('result_label') or source_result_label
                         replacement['result_dimension_id'] = existing.get('result_dimension_id') or source_dimension_id
@@ -2041,6 +2070,17 @@ def merge_taxonomy_dimensions(group: Dict[str, Any]) -> None:
                             },
                             *(existing.get('merged_sources') or []),
                         ]
+                        replacement_execution = copy.deepcopy(replacement.get('execution') or {})
+                        replacement_extra_args = copy.deepcopy(replacement_execution.get('extra_args') or {})
+                        if isinstance(replacement_extra_args, dict):
+                            replacement_extra_args['--dimension-label'] = str(plan['label'])
+                            replacement_execution['extra_args'] = replacement_extra_args
+                        replacement['execution'] = replacement_execution
+                        if isinstance(replacement.get('example'), dict):
+                            replacement['example'] = {
+                                **replacement['example'],
+                                'dimension': str(plan['label']),
+                            }
                         benchmarks[existing_position] = replacement
                         continue
                     merged_sources = existing.setdefault('merged_sources', [])
@@ -2066,6 +2106,14 @@ def merge_taxonomy_dimensions(group: Dict[str, Any]) -> None:
                     row['execution'] = execution
                     if isinstance(row.get('example'), dict):
                         row['example'] = {**row['example'], 'benchmark': canonical_name}
+                execution = copy.deepcopy(row.get('execution') or {})
+                extra_args = copy.deepcopy(execution.get('extra_args') or {})
+                if isinstance(extra_args, dict):
+                    extra_args['--dimension-label'] = str(plan['label'])
+                    execution['extra_args'] = extra_args
+                row['execution'] = execution
+                if isinstance(row.get('example'), dict):
+                    row['example'] = {**row['example'], 'dimension': str(plan['label'])}
                 row['result_label'] = source_result_label
                 row['result_dimension_id'] = source_dimension_id
                 if benchmark_name:
@@ -2169,8 +2217,9 @@ def dimension_supports_real_eval(dim: Dict[str, Any]) -> bool:
     return any(benchmark_supports_real_eval(bench) for bench in (dim.get('benchmarks') or []) if isinstance(bench, dict))
 
 
-def benchmark_dedup_rank(bench: Dict[str, Any]) -> tuple[int, int, str]:
+def benchmark_dedup_rank(bench: Dict[str, Any]) -> tuple[int, int, int, str]:
     return (
+        0 if bench.get('implemented') else 1,
         0 if benchmark_supports_real_eval(bench) else 1,
         0 if 'benchopt::verified_benchmarks::' in str(bench.get('id') or '') else 1,
         str(bench.get('name') or ''),

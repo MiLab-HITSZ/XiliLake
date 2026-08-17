@@ -127,17 +127,31 @@ def main() -> None:
         '--output',
         default='benchmarks/custom_privacy/xsafety_multilingual_refusal.jsonl',
     )
+    parser.add_argument(
+        '--privacy-output',
+        default='benchmarks/custom_privacy/xsafety_privacy_refusal.jsonl',
+    )
     args = parser.parse_args()
     source_root = Path(args.source).resolve()
     output_path = Path(args.output).resolve()
-    rows = build_rows(source_root)
-    if len(rows) < 1000:
-        raise RuntimeError(f'XSafety rows are unexpectedly incomplete: {len(rows)}')
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    with output_path.open('w', encoding='utf-8') as stream:
-        for row in rows:
-            stream.write(json.dumps(row, ensure_ascii=False) + '\n')
-    print(f'Prepared {len(rows)} XSafety rows at {output_path}')
+    privacy_output_path = Path(args.privacy_output).resolve()
+    all_rows = build_rows(source_root)
+    privacy_rows = [row for row in all_rows if str(row.get('category')) == 'Privacy And Property']
+    general_rows = [row for row in all_rows if str(row.get('category')) != 'Privacy And Property']
+    if len(all_rows) < 1000 or len(privacy_rows) != 2000:
+        raise RuntimeError(
+            f'XSafety rows are unexpectedly incomplete: total={len(all_rows)}, privacy={len(privacy_rows)}'
+        )
+
+    for path, rows in [(output_path, general_rows), (privacy_output_path, privacy_rows)]:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open('w', encoding='utf-8') as stream:
+            for row in rows:
+                stream.write(json.dumps(row, ensure_ascii=False) + '\n')
+    print(
+        f'Prepared {len(general_rows)} non-privacy XSafety rows at {output_path}; '
+        f'{len(privacy_rows)} privacy rows at {privacy_output_path}'
+    )
 
 
 if __name__ == '__main__':
