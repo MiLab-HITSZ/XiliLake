@@ -26,6 +26,9 @@ LANGUAGE_LABELS = {
     'zh': 'Chinese',
 }
 
+ATTACK_CATEGORIES = {'Goal Hijacking'}
+EXCLUDED_CATEGORIES = {'Prompt Leaking', 'Role Play Instruction'}
+
 
 def clean_prompt(value: str) -> str:
     return str(value or '').replace('\ufeff', '').strip().strip('"').strip()
@@ -131,26 +134,51 @@ def main() -> None:
         '--privacy-output',
         default='benchmarks/custom_privacy/xsafety_privacy_refusal.jsonl',
     )
+    parser.add_argument(
+        '--attack-output',
+        default='benchmarks/custom_privacy/xsafety_attack_refusal.jsonl',
+    )
     args = parser.parse_args()
     source_root = Path(args.source).resolve()
     output_path = Path(args.output).resolve()
     privacy_output_path = Path(args.privacy_output).resolve()
+    attack_output_path = Path(args.attack_output).resolve()
     all_rows = build_rows(source_root)
     privacy_rows = [row for row in all_rows if str(row.get('category')) == 'Privacy And Property']
-    general_rows = [row for row in all_rows if str(row.get('category')) != 'Privacy And Property']
-    if len(all_rows) < 1000 or len(privacy_rows) != 2000:
+    attack_rows = [row for row in all_rows if str(row.get('category')) in ATTACK_CATEGORIES]
+    excluded_rows = [row for row in all_rows if str(row.get('category')) in EXCLUDED_CATEGORIES]
+    policy_rows = [
+        row for row in all_rows
+        if str(row.get('category')) != 'Privacy And Property'
+        and str(row.get('category')) not in ATTACK_CATEGORIES
+        and str(row.get('category')) not in EXCLUDED_CATEGORIES
+    ]
+    if (
+        len(all_rows) < 1000
+        or len(privacy_rows) != 2000
+        or len(attack_rows) != 2000
+        or len(excluded_rows) != 3998
+    ):
         raise RuntimeError(
-            f'XSafety rows are unexpectedly incomplete: total={len(all_rows)}, privacy={len(privacy_rows)}'
+            'XSafety rows are unexpectedly incomplete: '
+            f'total={len(all_rows)}, privacy={len(privacy_rows)}, '
+            f'attack={len(attack_rows)}, excluded={len(excluded_rows)}'
         )
 
-    for path, rows in [(output_path, general_rows), (privacy_output_path, privacy_rows)]:
+    for path, rows in [
+        (output_path, policy_rows),
+        (privacy_output_path, privacy_rows),
+        (attack_output_path, attack_rows),
+    ]:
         path.parent.mkdir(parents=True, exist_ok=True)
         with path.open('w', encoding='utf-8') as stream:
             for row in rows:
                 stream.write(json.dumps(row, ensure_ascii=False) + '\n')
     print(
-        f'Prepared {len(general_rows)} non-privacy XSafety rows at {output_path}; '
-        f'{len(privacy_rows)} privacy rows at {privacy_output_path}'
+        f'Prepared {len(policy_rows)} policy XSafety rows at {output_path}; '
+        f'{len(privacy_rows)} privacy rows at {privacy_output_path}; '
+        f'{len(attack_rows)} attack rows at {attack_output_path}; '
+        f'excluded {len(excluded_rows)} ambiguous prompt-leaking/role-play rows'
     )
 
 

@@ -44,7 +44,7 @@
 | RMCBench / CHiSafetyBench | 存在选错文件或错误 gold（如恶意请求对应 GOOD） | 固定到官方风险提示，gold 改为安全拒答 | [RMCBench](https://github.com/qing-yuan233/RMCBench) / [CHiSafetyBench](https://github.com/UnicomAI/UnicomBenchmark/tree/main/CHiSafetyBench) |
 | MedSafetyBench | 误称为医疗信息真实性 | 移入独立的医疗安全可靠性；使用 900 条有害医疗请求与安全回复示范 | [NeurIPS 2024](https://proceedings.neurips.cc/paper_files/paper/2024/hash/3ac952d0264ef7a505393868a70a46b6-Abstract-Datasets_and_Benchmarks_Track.html) |
 | BBQ / CALM / CHBias | 整套数据被窄化为单一身份属性 | 按原文保留多属性歧义问答、性别种族多任务和中文四属性偏见任务；CHBias 统一命名为中文综合偏见评测 | [BBQ](https://aclanthology.org/2022.findings-acl.165/) / [CALM](https://arxiv.org/abs/2308.12539) / [CHBias](https://aclanthology.org/2023.acl-long.757/) |
-| CrowS-Pairs | 两个入口重复读全量数据 | 固定为非宗教的 General 分片和 Religion 分片，互不重叠 | [官方仓库](https://github.com/nyu-mll/crows-pairs) |
+| CrowS-Pairs | 两个入口重复读全量数据 | 当前目录仅保留 Religion 分片，General 分片已移除 | [官方仓库](https://github.com/nyu-mll/crows-pairs) |
 | APPS | 两个入口会扫描同一全量目录 | 固定为 Introductory-Interview 和 Competition 两个难度互斥分片 | [APPS 官方仓库](https://github.com/hendrycks/apps) |
 | HumanEval+ / MBPP / MathQA-Python / ClassEval / CoderEval / DS-1000 / HumanEval / APPS 两个难度入口 | 同一代码生成构念按基础、复杂、入门面试和竞赛重复分成四个子类 | 合并为代码生成综合任务，九个 Benchmark 继续独立计分 | 各 Benchmark 官方仓库 |
 | HarmfulQ | 与多个风险请求拒答数据重复，且自身没有稳定细粒度类别 | 从当前评测目录移除，保留本地原始数据以便追溯 | [数据来源](https://github.com/SALT-NLP/chain-of-thought-bias) |
@@ -60,27 +60,24 @@
 - 新增 `verified_benchmarks` 可重建视图，对 34 个易误选文件的 Benchmark 固定官方分片；部署时由 `prepare_verified_benchmarks.py` 从本地官方下载源生成。
 - FollowBench、CHBias、GlobalOpinionQA 和 SALAD-Bench 的当前本地入口不冒充论文完整官方评分器；页面会显示“非评分收集”或代理指标说明。
 - MedSafetyBench 使用明确拒答或安全回复相似度代理；JBB-Behaviors 和 HarmBench behaviors 仅报告基线拒答；这些结果不等同于原论文的全部 judge 指标。
-- 当前网页实际计数为 3 个评测领域、12 个可见大类、88 个子类、102 个 Benchmark，全部标记为可评测。“医疗基本事实准确性”暂无符合定义的本地 Benchmark，因此不用 MedSafetyBench 填充该类。
+- 当前网页实际计数为 3 个评测领域、12 个可见大类、82 个子类、102 个 Benchmark，全部标记为可评测。“医疗基本事实准确性”暂无符合定义的本地 Benchmark，因此不用 MedSafetyBench 填充该类。
 
 ## 系统策略安全性边界
 
-系统策略安全性按“输入结构 + 风险领域 + 目标输出 + 评分口径”划为 14 个子类，16 个 Benchmark 实例全部可评测：
+系统策略安全性只纳入未经攻击改写的普通请求、用户立场和显式系统规则，按系统应采取的响应行动划为 9 个子类、15 个 Benchmark。所有子类统一以“策略评测”结尾：
 
 | 子类 | 唯一判定边界 | Benchmark |
 | --- | --- | --- |
-| 综合安全知识与责任判断评测 | 给定选择题，判断安全知识和责任风险；不直接测试拒答 | SafetyBench、CValuesResponsibilityMC |
-| 单轮参考安全回复质量评测 | 单轮风险场景带安全参考回复，评价拒答、纠偏或替代建议质量 | SafetyPrompts |
-| 单轮与多轮风险对话请求拒答一致性评测 | 不使用参考回复，只检查单轮拒答覆盖和多轮上下文一致性 | CHiSafetyBench |
-| 犯罪暴力、欺骗仇恨与色情请求拒答评测 | StrongREJECT 六类基础禁止行为，不含越狱变换 | StrongREJECT |
-| 违法、隐私、仇恨与身心风险请求拒答评测 | S-Eval 八类中文基础风险，固定 base_risk 分片 | S-Eval |
-| 信息危害、恶意用途与交互风险请求拒答评测 | 五个风险领域、12 类具体伤害 | Do-Not-Answer |
-| 细粒度不安全指令请求拒答评测 | 45 个细粒度类别，每类 10 条 | SORRY-Bench |
-| 多学科知识滥用请求拒答评测 | 十个知识领域中的专业知识滥用 | HarmfulQA |
-| 标准化有害行为基线请求拒答评测 | 红队框架的标准行为目标，但未附加攻击模板，用作攻击前基线 | JailbreakBench Behaviors、HarmBench |
-| 安全请求过度拒答评测 | 输入应当允许回答，检查误拒绝 | XSTest |
+| 安全风险判断策略评测 | 在安全与责任选择题中选择合适的处理方案，不判断既有文本毒性 | SafetyBench、CValuesResponsibilityMC |
+| 风险对话拒答策略评测 | 普通单轮及带历史的多轮风险对话，不含共指攻击结构 | CHiSafetyBench |
+| 综合有害请求拒答策略评测 | 合并普通有害请求和未附加攻击模板的标准行为目标，各 Benchmark 独立计分 | StrongREJECT、S-Eval、Do-Not-Answer、SORRY-Bench、JailbreakBench Behaviors、HarmBench |
+| 多学科知识滥用拒答策略评测 | 十个知识领域中的专业知识滥用请求 | HarmfulQA |
+| 安全请求放行策略评测 | 输入应当允许回答，检查模型是否发生过度拒答 | XSTest |
 | 反谄媚策略评测 | 用户表达偏好后仍坚持有依据的答案 | sycophancy |
-| 跨语种隐私与财产侵害防护评测 | 只含 Privacy And Property，覆盖 10 种语言 | XSafety-Privacy-Refusal |
-| 机密信息规则遵循评测 | 给出显式访问规则，检查是否向未授权主体泄密 | RuLES |
-| 跨语种非隐私风险请求拒答一致性评测 | 只含 12 类非隐私风险，比较 10 种语言间的策略一致性 | XSafety |
+| 跨语种隐私与财产防护策略评测 | 只含 Privacy And Property，覆盖 10 种语言 | XSafety-Privacy-Refusal |
+| 机密信息保护策略评测 | 给出显式访问规则，检查是否向未授权主体泄密 | RuLES |
+| 跨语种风险拒答一致性策略评测 | 比较 10 种语言、9 类普通风险请求的拒答策略一致性 | XSafety |
 
-XSafety 的两个入口已在数据层拆分：隐私与财产分片为 2,000 条，非隐私风险分片为 23,988 条，样本 ID 交集为 0。原“多领域禁止请求拒答覆盖评测”按五套仍在用数据的真实风险领域展开；Do-Not-Answer、S-Eval 和 StrongREJECT 同时固定到官方目标文件，避免目录扫描误选既有模型回复或攻击增强数据。RMCBench 因直接约束恶意代码产出，移入输出内容无害性。
+SafetyPrompts 因参考回复质量与普通拒答构念重复而从当前目录移除。JailbreakBench Behaviors 和 HarmBench Behaviors 没有附加攻击字符串，因此并入综合有害请求拒答策略；真正含越狱模板、提示注入、攻击增强或对抗改写的数据仍只归入攻击抵御鲁棒性。RMCBench 直接约束恶意代码产出，归入输出内容无害性。
+
+XSafety 进一步按输入机制拆分为互斥数据：17,990 条普通风险请求保留在系统策略，2,000 条 Privacy And Property 进入隐私防护策略，2,000 条 Goal Hijacking 进入攻击抵御并与 DoAnythingNow、UltraSafety 合并为“多语种越狱提示攻击防御评测”。Prompt Leaking 和 Role Play Instruction 共 3,998 条因标签与实际内容混杂而不参与评分，三个可评测分片的样本 ID 交集为 0。
