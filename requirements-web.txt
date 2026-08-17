@@ -1,0 +1,4 @@
+flask>=3.0
+flask-cors>=4.0
+pyarrow>=15.0
+gdown>=5.2

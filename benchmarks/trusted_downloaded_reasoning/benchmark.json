@@ -1,0 +1,924 @@
+{
+  "id": "reasoning",
+  "label": "逻辑推理与因果",
+  "benchmark_name": "可信评测 Benchmark",
+  "description": "逻辑推理与因果 包含已接入的可信评测数据集，可通过统一评测流程运行并展示指标与样例。",
+  "source_type": "downloaded_trustedgpt",
+  "enabled": true,
+  "paths": {
+    "results": "result"
+  },
+  "execution": {
+    "adapter": "python_cli",
+    "script": "evaluate_generic_benchmark.py",
+    "default_tasks": [
+      "qa"
+    ],
+    "supported_tasks": [
+      "qa"
+    ],
+    "supports_real_eval": true
+  },
+  "display": {
+    "mode": "generic_text_qa",
+    "sections": [
+      "selection_detail",
+      "progress",
+      "summary",
+      "metrics"
+    ]
+  },
+  "metrics": [
+    {
+      "key": "accuracy",
+      "label": "准确率",
+      "format": "percent"
+    },
+    {
+      "key": "response_rate",
+      "label": "响应率",
+      "format": "percent"
+    },
+    {
+      "key": "avg_latency_ms",
+      "label": "平均延迟 ms",
+      "format": "number"
+    },
+    {
+      "key": "n_total",
+      "label": "样本数",
+      "format": "number"
+    }
+  ],
+  "categories": [
+    {
+      "id": "downloaded",
+      "label": "逻辑推理与因果",
+      "dimensions": [
+        {
+          "id": "因果推断",
+          "label": "因果推断",
+          "name_en": "因果推断",
+          "intro": "因果推断 的本地 Benchmark 评测入口。",
+          "benchmarks": [
+            {
+              "option_key": "ARC",
+              "name": "ARC",
+              "intro": "评估模型理解因果关系、反事实条件和原因-结果链条的推断能力。\n\nARC语料库包含1400万条与科学相关的句子。抽样分析表明，语料库中包含的知识覆盖了95%的具有挑战性的问题。\n\n语言：English；规模：7787\n\n当前系统会从该数据集中抽取样例，按文本问答或选择题形式调用所选模型，并汇总准确率、响应率、平均延迟和样本数等指标。",
+              "url": "https://huggingface.co/datasets/allenai/ai2_arc",
+              "language": "English",
+              "scale": "7787",
+              "evaluation": "",
+              "example": {
+                "benchmark": "ARC",
+                "dimension": "因果推断",
+                "task": "mc",
+                "question": "Juan and LaKeisha roll a few objects down a ramp. They want to see which object rolls the farthest. What should they do so they can repeat their investigation?\nA. Put the objects in groups.\nB. Change the height of the ramp.\nC. Choose different objects to roll.\nD. Record the details of the investigation.\n请只回答正确选项字母。",
+                "answer": "D",
+                "options": [
+                  "A. Put the objects in groups.",
+                  "B. Change the height of the ramp.",
+                  "C. Choose different objects to roll.",
+                  "D. Record the details of the investigation."
+                ],
+                "raw": {
+                  "id": "Mercury_SC_407695",
+                  "question": "Juan and LaKeisha roll a few objects down a ramp. They want to see which object rolls the farthest. What should they do so they can repeat their investigation?",
+                  "choices": "{\"text\": [\"Put the objects in groups.\", \"Change the height of the ramp.\", \"Choose different objects to roll.\", \"Record the details of the investigation.\"], \"label\": [\"A\", \"B\", \"C\", \"D\"]}",
+                  "answerKey": "D"
+                }
+              },
+              "metrics": [
+                {
+                  "key": "accuracy",
+                  "label": "准确率",
+                  "format": "percent"
+                },
+                {
+                  "key": "response_rate",
+                  "label": "响应率",
+                  "format": "percent"
+                },
+                {
+                  "key": "avg_latency_ms",
+                  "label": "平均延迟 ms",
+                  "format": "number"
+                },
+                {
+                  "key": "n_total",
+                  "label": "样本数",
+                  "format": "number"
+                }
+              ],
+              "paths": {
+                "dataset": "downloads/datasets/huggingface/allenai__ai2_arc",
+                "results": "result"
+              },
+              "display": {
+                "mode": "generic_text_qa",
+                "sections": [
+                  "selection_detail",
+                  "progress",
+                  "summary",
+                  "metrics"
+                ],
+                "case_view": "text_sample"
+              },
+              "execution": {
+                "adapter": "python_cli",
+                "script": "evaluate_generic_benchmark.py",
+                "default_tasks": [
+                  "qa"
+                ],
+                "supported_tasks": [
+                  "qa"
+                ],
+                "supports_real_eval": true,
+                "args": {
+                  "dataset": "--dataset",
+                  "output_dir": "--output-dir",
+                  "models": "--models",
+                  "tasks": "--tasks",
+                  "parallel": "--parallel",
+                  "retry": "--retry",
+                  "timeout_s": "--timeout-s",
+                  "progress_file": "--progress-file",
+                  "categories": "--categories",
+                  "dimensions": "--dimensions"
+                },
+                "extra_args": {
+                  "--benchmark-name": "ARC",
+                  "--dimension-label": "因果推断",
+                  "--benchmark-url": "https://huggingface.co/datasets/allenai/ai2_arc",
+                  "--max-cases": 20
+                }
+              }
+            },
+            {
+              "option_key": "HotpotQA",
+              "name": "HotpotQA",
+              "intro": "评估模型理解因果关系、反事实条件和原因-结果链条的推断能力。\n\n数据集包含113 k个基于维基百科的问答对，用于复杂的多跳推理。\n\n语言：English；规模：113000\n\n当前系统会从该数据集中抽取样例，按文本问答或选择题形式调用所选模型，并汇总准确率、响应率、平均延迟和样本数等指标。",
+              "url": "https://github.com/hotpotqa/hotpot",
+              "language": "English",
+              "scale": "113000",
+              "evaluation": "",
+              "example": {
+                "benchmark": "HotpotQA",
+                "dimension": "因果推断",
+                "task": "qa",
+                "question": "Ed Wood (film): Ed Wood is a 1994 American biographical period comedy-drama film directed and produced by Tim Burton, and starring Johnny Depp as cult filmmaker Ed Wood. The film concerns the period in Wood's life when he made his best-known films as well as his relationship with actor Bela Lugosi, played by Martin Landau. Sarah Jessica Parker, Patricia Arquette, Jeffrey Jones, Lisa Marie, and Bill Murray are among the supporting cast.\nScott Derrickson: Scott Derrickson (born July 16, 1966) is an American director, screenwriter and producer. He lives in Los Angeles, California. He is best known for directing horror films such as \"Sinister\", \"The Exorcism of Emily Rose\", and \"Deliver Us From Evil\", as well as the 2016 Marvel Cinematic Universe installment, \"Doctor Strange.\"\nWoodson, Arkansas: Woodson is a census-designated place (CDP) in Pulaski County, Arkansas, in the United States. Its population was 403 at the 2010 census. It is part of the Little Rock–North Little Rock–Conway Metropolitan Statistical Area. Woodson and its accompanying Woodson Lake and Wood Hollow are the namesake for Ed Wood Sr., a prominent plantation owner, trader, and businessman at the turn of the 20th century. Woodson is adjacent to the Wood Plantation, the largest of the plantations own by Ed Wood Sr.\nTyler Bates: Tyler Bates (born June 5, 1965) is an American musician, music producer, and composer for films, television, and video games. Much of his work is in the action and horror film genres, with films like \"Dawn of the Dead, 300, Sucker Punch,\" and \"John Wick.\" He has collaborated with directo...\n请直接给出答案。",
+                "answer": "yes",
+                "options": [],
+                "raw": {
+                  "id": "5a8b57f25542995d1e6f1371",
+                  "question": "Were Scott Derrickson and Ed Wood of the same nationality?",
+                  "answer": "yes",
+                  "type": "comparison",
+                  "level": "hard",
+                  "supporting_facts": "{\"title\": [\"Scott Derrickson\", \"Ed Wood\"], \"sent_id\": [0, 0]}",
+                  "context": "Ed Wood (film): Ed Wood is a 1994 American biographical period comedy-drama film directed and produced by Tim Burton, and starring Johnny Depp as cult filmmaker Ed Wood. The film concerns the period in Wood's life when he made his best-known films as well as his relationship with actor Bela Lugosi, played by Martin Landau. Sarah Jessica Parker, Patricia Arquette, Jeffrey Jones, Lisa Marie, and Bill Murray are among the supporting cast.\nScott Derrickson: Scott Derrickson (born July 16, 1966) is an American director, screenwriter and producer. He lives in Los Angeles, California. He is best know..."
+                }
+              },
+              "metrics": [
+                {
+                  "key": "accuracy",
+                  "label": "准确率",
+                  "format": "percent"
+                },
+                {
+                  "key": "response_rate",
+                  "label": "响应率",
+                  "format": "percent"
+                },
+                {
+                  "key": "avg_latency_ms",
+                  "label": "平均延迟 ms",
+                  "format": "number"
+                },
+                {
+                  "key": "n_total",
+                  "label": "样本数",
+                  "format": "number"
+                }
+              ],
+              "paths": {
+                "dataset": "downloads/datasets/github_repos/hotpotqa__hotpot",
+                "results": "result"
+              },
+              "display": {
+                "mode": "generic_text_qa",
+                "sections": [
+                  "selection_detail",
+                  "progress",
+                  "summary",
+                  "metrics"
+                ],
+                "case_view": "text_sample"
+              },
+              "execution": {
+                "adapter": "python_cli",
+                "script": "evaluate_generic_benchmark.py",
+                "default_tasks": [
+                  "qa"
+                ],
+                "supported_tasks": [
+                  "qa"
+                ],
+                "supports_real_eval": true,
+                "args": {
+                  "dataset": "--dataset",
+                  "output_dir": "--output-dir",
+                  "models": "--models",
+                  "tasks": "--tasks",
+                  "parallel": "--parallel",
+                  "retry": "--retry",
+                  "timeout_s": "--timeout-s",
+                  "progress_file": "--progress-file",
+                  "categories": "--categories",
+                  "dimensions": "--dimensions"
+                },
+                "extra_args": {
+                  "--benchmark-name": "HotpotQA",
+                  "--dimension-label": "因果推断",
+                  "--benchmark-url": "https://github.com/hotpotqa/hotpot",
+                  "--max-cases": 20
+                }
+              }
+            },
+            {
+              "option_key": "LogiQA",
+              "name": "LogiQA",
+              "intro": "评估模型理解因果关系、反事实条件和原因-结果链条的推断能力。\n\nLogiQA 是基于专家编写的问题集，用于测试人类的逻辑推理能力。\n\n语言：English、Chinese；规模：8,678\n\n当前系统会从该数据集中抽取样例，按文本问答或选择题形式调用所选模型，并汇总准确率、响应率、平均延迟和样本数等指标。",
+              "url": "https://github.com/lgw863/LogiQA-dataset",
+              "language": "English、Chinese",
+              "scale": "8,678",
+              "evaluation": "",
+              "example": {
+                "benchmark": "LogiQA",
+                "dimension": "因果推断",
+                "task": "mc",
+                "question": "10.美国黑人患高血压的比美国白人高两倍。把西方化的非洲黑人和非洲白人相比，情况也是如此。研究者们假设，西方化的黑人之所以会患高血压，是两个原因相互作用的结果：一个原因是西方食品含盐量高，另一个原因是黑人遗传基因中对于缺盐环境的适应机制。\n以下对当代西方化非洲黑人的断定，（ ）项如果是真的，最能支持研究者的假设？\nA.塞内加尔人和冈比亚人后裔的血压通常不高，塞内加尔和冈比亚历史一直不缺盐。\nB.非洲某些地区的不同寻常高盐摄入是危害居民健康的严重问题。\nC.考虑到保健，大多数非洲白人也注意控制盐的摄入量。\nD.西非约鲁巴人的血压不高，约鲁巴人有史以来一直居住在远离海盐的内陆，并远离非洲萨哈拉盐矿。\nA. 塞内加尔人和冈比亚人后裔的血压通常不高，塞内加尔和冈比亚历史一直不缺盐。\nB. 非洲某些地区的不同寻常高盐摄入是危害居民健康的严重问题。\nC. 考虑到保健，大多数非洲白人也注意控制盐的摄入量。\nD. 西非约鲁巴人的血压不高，约鲁巴人有史以来一直居住在远离海盐的内陆，并远离非洲萨哈拉盐矿。\n请只回答正确选项字母。",
+                "answer": "A",
+                "options": [
+                  "A. 塞内加尔人和冈比亚人后裔的血压通常不高，塞内加尔和冈比亚历史一直不缺盐。",
+                  "B. 非洲某些地区的不同寻常高盐摄入是危害居民健康的严重问题。",
+                  "C. 考虑到保健，大多数非洲白人也注意控制盐的摄入量。",
+                  "D. 西非约鲁巴人的血压不高，约鲁巴人有史以来一直居住在远离海盐的内陆，并远离非洲萨哈拉盐矿。"
+                ],
+                "raw": {
+                  "id": "0",
+                  "question": "10.美国黑人患高血压的比美国白人高两倍。把西方化的非洲黑人和非洲白人相比，情况也是如此。研究者们假设，西方化的黑人之所以会患高血压，是两个原因相互作用的结果：一个原因是西方食品含盐量高，另一个原因是黑人遗传基因中对于缺盐环境的适应机制。\n以下对当代西方化非洲黑人的断定，（ ）项如果是真的，最能支持研究者的假设？\nA.塞内加尔人和冈比亚人后裔的血压通常不高，塞内加尔和冈比亚历史一直不缺盐。\nB.非洲某些地区的不同寻常高盐摄入是危害居民健康的严重问题。\nC.考虑到保健，大多数非洲白人也注意控制盐的摄入量。\nD.西非约鲁巴人的血压不高，约鲁巴人有史以来一直居住在远离海盐的内陆，并远离非洲萨哈拉盐矿。",
+                  "answer": "A",
+                  "options": "[\"A. 塞内加尔人和冈比亚人后裔的血压通常不高，塞内加尔和冈比亚历史一直不缺盐。\", \"B. 非洲某些地区的不同寻常高盐摄入是危害居民健康的严重问题。\", \"C. 考虑到保健，大多数非洲白人也注意控制盐的摄入量。\", \"D. 西非约鲁巴人的血压不高，约鲁巴人有史以来一直居住在远离海盐的内陆，并远离非洲萨哈拉盐矿。\"]"
+                }
+              },
+              "metrics": [
+                {
+                  "key": "accuracy",
+                  "label": "准确率",
+                  "format": "percent"
+                },
+                {
+                  "key": "response_rate",
+                  "label": "响应率",
+                  "format": "percent"
+                },
+                {
+                  "key": "avg_latency_ms",
+                  "label": "平均延迟 ms",
+                  "format": "number"
+                },
+                {
+                  "key": "n_total",
+                  "label": "样本数",
+                  "format": "number"
+                }
+              ],
+              "paths": {
+                "dataset": "downloads/datasets/github_repos/lgw863__LogiQA-dataset",
+                "results": "result"
+              },
+              "display": {
+                "mode": "generic_text_qa",
+                "sections": [
+                  "selection_detail",
+                  "progress",
+                  "summary",
+                  "metrics"
+                ],
+                "case_view": "text_sample"
+              },
+              "execution": {
+                "adapter": "python_cli",
+                "script": "evaluate_generic_benchmark.py",
+                "default_tasks": [
+                  "qa"
+                ],
+                "supported_tasks": [
+                  "qa"
+                ],
+                "supports_real_eval": true,
+                "args": {
+                  "dataset": "--dataset",
+                  "output_dir": "--output-dir",
+                  "models": "--models",
+                  "tasks": "--tasks",
+                  "parallel": "--parallel",
+                  "retry": "--retry",
+                  "timeout_s": "--timeout-s",
+                  "progress_file": "--progress-file",
+                  "categories": "--categories",
+                  "dimensions": "--dimensions"
+                },
+                "extra_args": {
+                  "--benchmark-name": "LogiQA",
+                  "--dimension-label": "因果推断",
+                  "--benchmark-url": "https://github.com/lgw863/LogiQA-dataset",
+                  "--max-cases": 20
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "规划执行能力",
+          "label": "规划执行能力",
+          "name_en": "规划执行能力",
+          "intro": "规划执行能力 的本地 Benchmark 评测入口。",
+          "benchmarks": [
+            {
+              "option_key": "FollowBench",
+              "name": "FollowBench",
+              "intro": "规划执行能力评估模型有效执行任务、遵循指令、使用工具、展现逻辑推理和内容质量的能力。\n\n该数据集用于评估LLMs的指令遵循能力\n\n语言：English；规模：820\n\n当前系统会从该数据集中抽取样例，按文本问答或选择题形式调用所选模型，并汇总准确率、响应率、平均延迟和样本数等指标。",
+              "url": "https://github.com/YJiangcm/FollowBench",
+              "language": "English",
+              "scale": "820",
+              "evaluation": "",
+              "example": {
+                "benchmark": "FollowBench",
+                "dimension": "规划执行能力",
+                "task": "qa",
+                "question": "这封电子邮件是关于什么的：\n尊敬的美体店会员：在UBS/Enron过渡期间，您的美体商店会员资格将不间断地继续。\n我们正在与瑞银（UBS）和安然（Enron）合作，过渡工资扣除，并继续从外部进入美体店。\n在我们完成这些更改的同时，请继续您的美体店会员资格。\n非常感谢。\n答案: 瑞银员工的Body Shop扣减\n\n这封电子邮件是关于什么的：\n这是我为马克准备的北美法律问题清单。\n事实上，他昨天（我回来的第一天）打电话给我索要。\n显然，我只将其保留在可能存在剩余法律风险的主要领域。\n他似乎对格式很满意。\n我解释说，我已经向你提到了他的请求，你正在制定一个欧洲版本，由于你有这么多司法管辖区要处理，这个版本可能会更长。\n答案: MEH法律问题清单\n\n这封电子邮件是关于什么的：\n如果你能亲自参加这次会议或想打电话给我，请尽快通知我。\n我会提供来电号码。\n谢谢\n答案: 安然管理委员会会议，2002年1月7日，星期一上午11:00。\n\n这封电子邮件是关于什么的：\n附件是您要求的信用证格式。\n此外，我仍在努力从伦敦获得有关保证金基金和证券的信息。\n他们正在做这件事，所以我希望很快能给你。\n他们是唯一的顽固分子。\n答案: 信用证\n\n这封电子邮件是关于什么的：\n比尔，与过去几周相比，Rogas的情况已经基本平静下来，但有什么新消息：已计划于3/16与加州渔猎局举行会议，讨论以下问题：1）提交该设施2081许可证要求的1999年和2000年年度报告。\n2） 与F&G就EOTT持有的41英亩信贷将如何管理达成协议，以确保符合F&G的要求。\n3） 介绍Rogas项目施工过程中进行的调查结果。\nRogas工程地面上铺设管道的豁免获得了州消防马歇尔办公室管道安全部的批准。\n有8个市、县、州和联邦机构通过申请批准来建造由3条管道组成的9英里管道系统。\n这是迄今为止唯一获得的机构批准。\n从Aera获得了Rogas管道建设的英亩信贷。\nAera是一家石油公司，拥有大量可供购买的土地。\n有人认为，由于启动该项目的时间限制以及无法从F&G获得信贷的担忧，EOTT将购买Aera信贷，以确保为Rogas项目采购必要的面积。\n这是该项目的一大优势。\n答案: Rogas活动\n\n这封电子邮件是关于什么的：\n休斯顿办事处要求我准备一份基于加拿大参考实体破产的信贷衍生品确认表。\n在我和加拿大律师谈论那里的破产法之前，我想我应该和你们核实一下，确保你们还没有这样做——你们知道什么问题吗？\n谢谢，马克\n请直接给出答案。",
+                "answer": "{instruction}\n答案: {answer}",
+                "options": [],
+                "raw": {
+                  "example_id": "1",
+                  "category": "example",
+                  "source": "aeslc",
+                  "level": "1",
+                  "instruction": "这封电子邮件是关于什么的：\n尊敬的美体店会员：在UBS/Enron过渡期间，您的美体商店会员资格将不间断地继续。\n我们正在与瑞银（UBS）和安然（Enron）合作，过渡工资扣除，并继续从外部进入美体店。\n在我们完成这些更改的同时，请继续您的美体店会员资格。\n非常感谢。\n答案: 瑞银员工的Body Shop扣减\n\n这封电子邮件是关于什么的：\n这是我为马克准备的北美法律问题清单。\n事实上，他昨天（我回来的第一天）打电话给我索要。\n显然，我只将其保留在可能存在剩余法律风险的主要领域。\n他似乎对格式很满意。\n我解释说，我已经向你提到了他的请求，你正在制定一个欧洲版本，由于你有这么多司法管辖区要处理，这个版本可能会更长。\n答案: MEH法律问题清单\n\n这封电子邮件是关于什么的：\n如果你能亲自参加这次会议或想打电话给我，请尽快通知我。\n我会提供来电号码。\n谢谢\n答案: 安然管理委员会会议，2002年1月7日，星期一上午11:00。\n\n这封电子邮件是关于什么的：\n附件是您要求的信用证格式。\n此外，我仍在努力从伦敦获得有关保证金基金和证券的信息。\n他们正在做这件事，所以我希望很快能给你。\n他们是唯一的顽固分子。\n答案: 信用证\n\n这封电子邮件是关于什么的：\n比尔，与过去几周相比，Rogas的情况已经基本平静下来，但有什么新消息：已计划于3/16与加州渔猎局举行会议，讨论以下问题：1）提交该设施20...",
+                  "target": "{instruction}\n答案: {answer}"
+                }
+              },
+              "metrics": [
+                {
+                  "key": "accuracy",
+                  "label": "准确率",
+                  "format": "percent"
+                },
+                {
+                  "key": "response_rate",
+                  "label": "响应率",
+                  "format": "percent"
+                },
+                {
+                  "key": "avg_latency_ms",
+                  "label": "平均延迟 ms",
+                  "format": "number"
+                },
+                {
+                  "key": "n_total",
+                  "label": "样本数",
+                  "format": "number"
+                }
+              ],
+              "paths": {
+                "dataset": "downloads/datasets/github_repos/YJiangcm__FollowBench",
+                "results": "result"
+              },
+              "display": {
+                "mode": "generic_text_qa",
+                "sections": [
+                  "selection_detail",
+                  "progress",
+                  "summary",
+                  "metrics"
+                ],
+                "case_view": "text_sample"
+              },
+              "execution": {
+                "adapter": "python_cli",
+                "script": "evaluate_generic_benchmark.py",
+                "default_tasks": [
+                  "qa"
+                ],
+                "supported_tasks": [
+                  "qa"
+                ],
+                "supports_real_eval": true,
+                "args": {
+                  "dataset": "--dataset",
+                  "output_dir": "--output-dir",
+                  "models": "--models",
+                  "tasks": "--tasks",
+                  "parallel": "--parallel",
+                  "retry": "--retry",
+                  "timeout_s": "--timeout-s",
+                  "progress_file": "--progress-file",
+                  "categories": "--categories",
+                  "dimensions": "--dimensions"
+                },
+                "extra_args": {
+                  "--benchmark-name": "FollowBench",
+                  "--dimension-label": "规划执行能力",
+                  "--benchmark-url": "https://github.com/YJiangcm/FollowBench",
+                  "--max-cases": 20
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "谬误理解能力",
+          "label": "谬误理解能力",
+          "name_en": "谬误理解能力",
+          "intro": "谬误理解能力 的本地 Benchmark 评测入口。",
+          "benchmarks": [
+            {
+              "option_key": "CMRC2018",
+              "name": "CMRC2018",
+              "intro": "CMRC2018 用于支撑“谬误理解能力”子类的可信评测，重点考察模型在该维度下的问题理解、指令响应和答案生成表现。\n\n当前系统会从该数据集中抽取样例，按文本问答或选择题形式调用所选模型，并汇总准确率、响应率、平均延迟和样本数等指标。",
+              "url": "https://github.com/ymcui/cmrc2018",
+              "language": "",
+              "scale": "",
+              "evaluation": "",
+              "example": {
+                "benchmark": "CMRC2018",
+                "dimension": "谬误理解能力",
+                "task": "qa",
+                "question": "范廷颂枢机（，），圣名保禄·若瑟（），是越南罗马天主教枢机。1963年被任为主教；1990年被擢升为天主教河内总教区宗座署理；1994年被擢升为总主教，同年年底被擢升为枢机；2009年2月离世。范廷颂于1919年6月15日在越南宁平省天主教发艳教区出生；童年时接受良好教育后，被一位越南神父带到河内继续其学业。范廷颂于1940年在河内大修道院完成神学学业。范廷颂于1949年6月6日在河内的主教座堂晋铎；及后被派到圣女小德兰孤儿院服务。1950年代，范廷颂在河内堂区创建移民接待中心以收容到河内避战的难民。1954年，法越战争结束，越南民主共和国建都河内，当时很多天主教神职人员逃至越南的南方，但范廷颂仍然留在河内。翌年管理圣若望小修院；惟在1960年因捍卫修院的自由、自治及拒绝政府在修院设政治课的要求而被捕。1963年4月5日，教宗任命范廷颂为天主教北宁教区主教，同年8月15日就任；其牧铭为「我信天主的爱」。由于范廷颂被越南政府软禁差不多30年，因此他无法到所属堂区进行牧灵工作而专注研读等工作。范廷颂除了面对战争、贫困、被当局迫害天主教会等问题外，也秘密恢复修院、创建女修会团体等。1990年，教宗若望保禄二世在同年6月18日擢升范廷颂为天主教河内总教区宗座署理以填补该教区总主教的空缺。1994年3月23日，范廷颂被教宗若望保禄二世擢升为天主教河内总教区总主教并兼天主教谅山教区宗座署理；同年11月26日，若望保禄二世擢升范廷颂为枢机。范廷颂在1995年至2001年期间出任天主教越南主教团主席。2003年4月26日，教宗若望保禄二世任命天主教谅山教区兼天主教高平教区吴光杰主教为天主教河内总教区署理主教；及至2005年2月19日，范廷颂因获批辞去总主教职务而荣休；吴光杰同日真除天主教河内总教区总主教职务。范廷颂于2009年2月22日清晨在河内离世，享年89岁；其葬礼于同月26日上午在天主教河内总教区总主教座堂举行。\n\n范廷颂是什么时候被任为主教的？\n请直接给出答案。",
+                "answer": "1963年",
+                "options": [],
+                "raw": {
+                  "id": "TRAIN_186_QUERY_0",
+                  "title": "范廷颂",
+                  "context": "范廷颂枢机（，），圣名保禄·若瑟（），是越南罗马天主教枢机。1963年被任为主教；1990年被擢升为天主教河内总教区宗座署理；1994年被擢升为总主教，同年年底被擢升为枢机；2009年2月离世。范廷颂于1919年6月15日在越南宁平省天主教发艳教区出生；童年时接受良好教育后，被一位越南神父带到河内继续其学业。范廷颂于1940年在河内大修道院完成神学学业。范廷颂于1949年6月6日在河内的主教座堂晋铎；及后被派到圣女小德兰孤儿院服务。1950年代，范廷颂在河内堂区创建移民接待中心以收容到河内避战的难民。1954年，法越战争结束，越南民主共和国建都河内，当时很多天主教神职人员逃至越南的南方，但范廷颂仍然留在河内。翌年管理圣若望小修院；惟在1960年因捍卫修院的自由、自治及拒绝政府在修院设政治课的要求而被捕。1963年4月5日，教宗任命范廷颂为天主教北宁教区主教，同年8月15日就任；其牧铭为「我信天主的爱」。由于范廷颂被越南政府软禁差不多30年，因此他无法到所属堂区进行牧灵工作而专注研读等工作。范廷颂除了面对战争、贫困、被当局迫害天主教会等问题外，也秘密恢复修院、创建女修会团体等。1990年，教宗若望保禄二世在同年6月18日擢升范廷颂为天主教河内总教区宗座署理以填补该教区总主教的空缺。1994年3月23日，范廷颂被教宗若望保禄二世擢升为天主教河内总教区总主教并兼天主教谅山教区宗座署理；同...",
+                  "question": "范廷颂是什么时候被任为主教的？",
+                  "answer": "1963年"
+                }
+              },
+              "metrics": [
+                {
+                  "key": "accuracy",
+                  "label": "准确率",
+                  "format": "percent"
+                },
+                {
+                  "key": "response_rate",
+                  "label": "响应率",
+                  "format": "percent"
+                },
+                {
+                  "key": "avg_latency_ms",
+                  "label": "平均延迟 ms",
+                  "format": "number"
+                },
+                {
+                  "key": "n_total",
+                  "label": "样本数",
+                  "format": "number"
+                }
+              ],
+              "paths": {
+                "dataset": "downloads/datasets/github_repos/ymcui__cmrc2018",
+                "results": "result"
+              },
+              "display": {
+                "mode": "generic_text_qa",
+                "sections": [
+                  "selection_detail",
+                  "progress",
+                  "summary",
+                  "metrics"
+                ],
+                "case_view": "text_sample"
+              },
+              "execution": {
+                "adapter": "python_cli",
+                "script": "evaluate_generic_benchmark.py",
+                "default_tasks": [
+                  "qa"
+                ],
+                "supported_tasks": [
+                  "qa"
+                ],
+                "supports_real_eval": true,
+                "args": {
+                  "dataset": "--dataset",
+                  "output_dir": "--output-dir",
+                  "models": "--models",
+                  "tasks": "--tasks",
+                  "parallel": "--parallel",
+                  "retry": "--retry",
+                  "timeout_s": "--timeout-s",
+                  "progress_file": "--progress-file",
+                  "categories": "--categories",
+                  "dimensions": "--dimensions"
+                },
+                "extra_args": {
+                  "--benchmark-name": "CMRC2018",
+                  "--dimension-label": "谬误理解能力",
+                  "--benchmark-url": "https://github.com/ymcui/cmrc2018",
+                  "--max-cases": 20
+                }
+              }
+            },
+            {
+              "option_key": "Chinese_Rumor_Dataset",
+              "name": "Chinese_Rumor_Dataset",
+              "intro": "谬误理解能力指的是大型语言模型识别、理解和分类逻辑谬误的能力。该能力反映了模型在分析文本时分辨出不合理推理或逻辑错误的水平，有助于确保生成内容的准确性和逻辑一致性\n\nChinese rumor data captured from Sina Weibo's false information reporting platform\n\n语言：Chinese；规模：31669\n\n当前系统会从该数据集中抽取样例，按文本问答或选择题形式调用所选模型，并汇总准确率、响应率、平均延迟和样本数等指标。",
+              "url": "https://github.com/thunlp/Chinese_Rumor_Dataset",
+              "language": "Chinese",
+              "scale": "31669",
+              "evaluation": "",
+              "example": {
+                "benchmark": "Chinese_Rumor_Dataset",
+                "dimension": "谬误理解能力",
+                "task": "mc",
+                "question": "分享图片 ​\nA. 非谣言\nB. 谣言\n请只回答正确选项字母。",
+                "answer": "B",
+                "options": [
+                  "A. 非谣言",
+                  "B. 谣言"
+                ],
+                "raw": {
+                  "multi": "None",
+                  "text": "分享图片 ​",
+                  "user": "empty",
+                  "has_url": "False",
+                  "comments": "27",
+                  "pics": "1",
+                  "source": "微博 weibo.com",
+                  "likes": "0"
+                }
+              },
+              "metrics": [
+                {
+                  "key": "accuracy",
+                  "label": "准确率",
+                  "format": "percent"
+                },
+                {
+                  "key": "response_rate",
+                  "label": "响应率",
+                  "format": "percent"
+                },
+                {
+                  "key": "avg_latency_ms",
+                  "label": "平均延迟 ms",
+                  "format": "number"
+                },
+                {
+                  "key": "n_total",
+                  "label": "样本数",
+                  "format": "number"
+                }
+              ],
+              "paths": {
+                "dataset": "downloads/datasets/github_repos/thunlp__Chinese_Rumor_Dataset",
+                "results": "result"
+              },
+              "display": {
+                "mode": "generic_text_qa",
+                "sections": [
+                  "selection_detail",
+                  "progress",
+                  "summary",
+                  "metrics"
+                ],
+                "case_view": "text_sample"
+              },
+              "execution": {
+                "adapter": "python_cli",
+                "script": "evaluate_generic_benchmark.py",
+                "default_tasks": [
+                  "qa"
+                ],
+                "supported_tasks": [
+                  "qa"
+                ],
+                "supports_real_eval": true,
+                "args": {
+                  "dataset": "--dataset",
+                  "output_dir": "--output-dir",
+                  "models": "--models",
+                  "tasks": "--tasks",
+                  "parallel": "--parallel",
+                  "retry": "--retry",
+                  "timeout_s": "--timeout-s",
+                  "progress_file": "--progress-file",
+                  "categories": "--categories",
+                  "dimensions": "--dimensions"
+                },
+                "extra_args": {
+                  "--benchmark-name": "Chinese_Rumor_Dataset",
+                  "--dimension-label": "谬误理解能力",
+                  "--benchmark-url": "https://github.com/thunlp/Chinese_Rumor_Dataset",
+                  "--max-cases": 20
+                }
+              }
+            },
+            {
+              "option_key": "FLUB",
+              "name": "FLUB",
+              "intro": "谬误理解能力指的是大型语言模型识别、理解和分类逻辑谬误的能力。该能力反映了模型在分析文本时分辨出不合理推理或逻辑错误的水平，有助于确保生成内容的准确性和逻辑一致性\n\nFLUB 包含一些巧妙的文本，这些文本对人类来说易于理解，但对模型来说却难以把握。\n\n语言：Chinese；规模：834\n\n当前系统会从该数据集中抽取样例，按文本问答或选择题形式调用所选模型，并汇总准确率、响应率、平均延迟和样本数等指标。",
+              "url": "https://github.com/THUKElab/FLUB",
+              "language": "Chinese",
+              "scale": "834",
+              "evaluation": "",
+              "example": {
+                "benchmark": "FLUB",
+                "dimension": "谬误理解能力",
+                "task": "mc",
+                "question": "明天就要上手术台，我演个什么节目。\nA. 这句话存在很大的逻辑漏洞。演出一个节目和明天要接受手术之间没有任何明显的关联。这句话可能是说话人在焦虑、紧张的情况下，说出了错误的话。\nB. 出于讽刺的目的，暗示医生的治疗方式类似于戏剧性的表演，而不仅仅是医学技术。\nC. 在寻求一种幽默的方式来应对即将做手术的恐惧或紧张情绪。\nD. “上手术台”的目的是做手术，而不是“上台”表演。\n请只回答正确选项字母。",
+                "answer": "D",
+                "options": [
+                  "A. 这句话存在很大的逻辑漏洞。演出一个节目和明天要接受手术之间没有任何明显的关联。这句话可能是说话人在焦虑、紧张的情况下，说出了错误的话。",
+                  "B. 出于讽刺的目的，暗示医生的治疗方式类似于戏剧性的表演，而不仅仅是医学技术。",
+                  "C. 在寻求一种幽默的方式来应对即将做手术的恐惧或紧张情绪。",
+                  "D. “上手术台”的目的是做手术，而不是“上台”表演。"
+                ],
+                "raw": {
+                  "text": "明天就要上手术台，我演个什么节目。",
+                  "is_question": "False",
+                  "type": "文字游戏",
+                  "explanation": "“上手术台”的目的是做手术，而不是“上台”表演。",
+                  "id": "f60fc5d4ff5eccf0b52f78012cc69143717afee5",
+                  "options": "{\"A\": \"这句话存在很大的逻辑漏洞。演出一个节目和明天要接受手术之间没有任何明显的关联。这句话可能是说话人在焦虑、紧张的情况下，说出了错误的话。\", \"B\": \"出于讽刺的目的，暗示医生的治疗方式类似于戏剧性的表演，而不仅仅是医学技术。\", \"C\": \"在寻求一种幽默的方式来应对即将做手术的恐惧或紧张情绪。\", \"D\": \"“上手术台”的目的是做手术，而不是“上台”表演。\"}",
+                  "answer": "D"
+                }
+              },
+              "metrics": [
+                {
+                  "key": "accuracy",
+                  "label": "准确率",
+                  "format": "percent"
+                },
+                {
+                  "key": "response_rate",
+                  "label": "响应率",
+                  "format": "percent"
+                },
+                {
+                  "key": "avg_latency_ms",
+                  "label": "平均延迟 ms",
+                  "format": "number"
+                },
+                {
+                  "key": "n_total",
+                  "label": "样本数",
+                  "format": "number"
+                }
+              ],
+              "paths": {
+                "dataset": "downloads/datasets/github_repos/THUKElab__FLUB",
+                "results": "result"
+              },
+              "display": {
+                "mode": "generic_text_qa",
+                "sections": [
+                  "selection_detail",
+                  "progress",
+                  "summary",
+                  "metrics"
+                ],
+                "case_view": "text_sample"
+              },
+              "execution": {
+                "adapter": "python_cli",
+                "script": "evaluate_generic_benchmark.py",
+                "default_tasks": [
+                  "qa"
+                ],
+                "supported_tasks": [
+                  "qa"
+                ],
+                "supports_real_eval": true,
+                "args": {
+                  "dataset": "--dataset",
+                  "output_dir": "--output-dir",
+                  "models": "--models",
+                  "tasks": "--tasks",
+                  "parallel": "--parallel",
+                  "retry": "--retry",
+                  "timeout_s": "--timeout-s",
+                  "progress_file": "--progress-file",
+                  "categories": "--categories",
+                  "dimensions": "--dimensions"
+                },
+                "extra_args": {
+                  "--benchmark-name": "FLUB",
+                  "--dimension-label": "谬误理解能力",
+                  "--benchmark-url": "https://github.com/THUKElab/FLUB",
+                  "--max-cases": 20
+                }
+              }
+            },
+            {
+              "option_key": "MAFALDA",
+              "name": "MAFALDA",
+              "intro": "谬误理解能力指的是大型语言模型识别、理解和分类逻辑谬误的能力。该能力反映了模型在分析文本时分辨出不合理推理或逻辑错误的水平，有助于确保生成内容的准确性和逻辑一致性\n\n一个手动创建的谬误分类数据集。\n\n语言：English；规模：232\n\n当前系统会从该数据集中抽取样例，按文本问答或选择题形式调用所选模型，并汇总准确率、响应率、平均延迟和样本数等指标。",
+              "url": "https://github.com/ChadiHelwe/MAFALDA",
+              "language": "English",
+              "scale": "232",
+              "evaluation": "",
+              "example": {
+                "benchmark": "MAFALDA",
+                "dimension": "谬误理解能力",
+                "task": "qa",
+                "question": "TITLE: Endless Ledge Skip Campaign for Alts POST: Reading everyone's comments has made me change my opinion on having an adventure mode like thing in PoE. I keep seeing if an adventure mode needs to exist then why not just start a char at 68. then a couple months after that we'll see post about how people want to start at 90 just so they can kill bosses. Then a few months later we'll see people asking for a\"creative\" mode so they can have access to all items in the game so they don't have to farm, and i dont think that sets a good example as a community for a game that we all love.\n请直接给出答案。",
+                "answer": "[[155, 588, \"slippery slope\"]]",
+                "options": [],
+                "raw": {
+                  "text": "TITLE: Endless Ledge Skip Campaign for Alts POST: Reading everyone's comments has made me change my opinion on having an adventure mode like thing in PoE. I keep seeing if an adventure mode needs to exist then why not just start a char at 68. then a couple months after that we'll see post about how people want to start at 90 just so they can kill bosses. Then a few months later we'll see people asking for a\"creative\" mode so they can have access to all items in the game so they don't have to farm, and i dont think that sets a good example as a community for a game that we all love.\n",
+                  "labels": "[[155, 588, \"slippery slope\"]]",
+                  "comments": "[\"Slippery slope: P1 = poster, A = why not just start a char at 68, B = then a couple months after that we'll see post about how people want to start at 90 just so they can kill bosses, C = Then a few months later we'll see people asking for a\\\"creative\\\" mode so they can have access to all items in the game, D= so they don't have to farm\", \"Usage of a slippery slope for removing adventure modes.\"]",
+                  "sentences_with_labels": "{\"TITLE: Endless Ledge Skip Campaign for Alts POST: Reading everyone's comments has made me change my opinion on having an adventure mode like thing in PoE.\": [[\"nothing\"]], \"I keep seeing if an adventure mode needs to exist then why not just start a char at 68.\": [[\"slippery slope\"]], \"then a couple months after that we'll see post about how people want to start at 90 just so they can kill bosses.\": [[\"slippery slope\"]], \"Then a few months later we'll see people asking for a\\\"creative\\\" mode so they can have access to all items in the game so they don't have to farm, and i dont think that set..."
+                }
+              },
+              "metrics": [
+                {
+                  "key": "accuracy",
+                  "label": "准确率",
+                  "format": "percent"
+                },
+                {
+                  "key": "response_rate",
+                  "label": "响应率",
+                  "format": "percent"
+                },
+                {
+                  "key": "avg_latency_ms",
+                  "label": "平均延迟 ms",
+                  "format": "number"
+                },
+                {
+                  "key": "n_total",
+                  "label": "样本数",
+                  "format": "number"
+                }
+              ],
+              "paths": {
+                "dataset": "downloads/datasets/github_repos/ChadiHelwe__MAFALDA",
+                "results": "result"
+              },
+              "display": {
+                "mode": "generic_text_qa",
+                "sections": [
+                  "selection_detail",
+                  "progress",
+                  "summary",
+                  "metrics"
+                ],
+                "case_view": "text_sample"
+              },
+              "execution": {
+                "adapter": "python_cli",
+                "script": "evaluate_generic_benchmark.py",
+                "default_tasks": [
+                  "qa"
+                ],
+                "supported_tasks": [
+                  "qa"
+                ],
+                "supports_real_eval": true,
+                "args": {
+                  "dataset": "--dataset",
+                  "output_dir": "--output-dir",
+                  "models": "--models",
+                  "tasks": "--tasks",
+                  "parallel": "--parallel",
+                  "retry": "--retry",
+                  "timeout_s": "--timeout-s",
+                  "progress_file": "--progress-file",
+                  "categories": "--categories",
+                  "dimensions": "--dimensions"
+                },
+                "extra_args": {
+                  "--benchmark-name": "MAFALDA",
+                  "--dimension-label": "谬误理解能力",
+                  "--benchmark-url": "https://github.com/ChadiHelwe/MAFALDA",
+                  "--max-cases": 20
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "逻辑和分析推理能力",
+          "label": "逻辑和分析推理能力",
+          "name_en": "逻辑和分析推理能力",
+          "intro": "逻辑和分析推理能力 的本地 Benchmark 评测入口。",
+          "benchmarks": [
+            {
+              "option_key": "Chinese_language_ability",
+              "name": "Chinese_language_ability",
+              "intro": "大型语言模型的逻辑和分析推理能力是指它们理解、处理并应用逻辑规则和分析方法，以进行推理、解决问题和分析模式的能力。\n\n测试大语言模型对中文的理解能力\n\n语言：Chinese；规模：126\n\n当前系统会从该数据集中抽取样例，按文本问答或选择题形式调用所选模型，并汇总准确率、响应率、平均延迟和样本数等指标。",
+              "url": "https://raw.githubusercontent.com/CLUEbenchmark/FewCLUE/main/datasets/chid/test.json",
+              "language": "Chinese",
+              "scale": "126",
+              "evaluation": "",
+              "example": {
+                "benchmark": "Chinese_language_ability",
+                "dimension": "逻辑和分析推理能力",
+                "task": "mc",
+                "question": "大部分的大功告成都是由无数个#idiom#累积而来,做好每一件应该做好的小事绝不是一件小事。 《你好李焕英》主要讲了贾玲意外穿越到了母亲年轻的时候,和母亲一起感受了她的生活和情感。这故事是根据贾玲的亲生经历改编而来, ...\nA. 造谣生事\nB. 谨小慎微\nC. 难言之隐\nD. 急功近利\nE. 欢天喜地\nF. 自成一格\nG. 万人空巷\n请只回答正确选项字母。",
+                "answer": "谨小慎微",
+                "options": [
+                  "A. 造谣生事",
+                  "B. 谨小慎微",
+                  "C. 难言之隐",
+                  "D. 急功近利",
+                  "E. 欢天喜地",
+                  "F. 自成一格",
+                  "G. 万人空巷"
+                ],
+                "raw": {
+                  "id": "24",
+                  "candidates": "[\"造谣生事\", \"谨小慎微\", \"难言之隐\", \"急功近利\", \"欢天喜地\", \"自成一格\", \"万人空巷\"]",
+                  "content": "大部分的大功告成都是由无数个#idiom#累积而来,做好每一件应该做好的小事绝不是一件小事。 《你好李焕英》主要讲了贾玲意外穿越到了母亲年轻的时候,和母亲一起感受了她的生活和情感。这故事是根据贾玲的亲生经历改编而来, ...",
+                  "answer": "1"
+                }
+              },
+              "metrics": [
+                {
+                  "key": "accuracy",
+                  "label": "准确率",
+                  "format": "percent"
+                },
+                {
+                  "key": "response_rate",
+                  "label": "响应率",
+                  "format": "percent"
+                },
+                {
+                  "key": "avg_latency_ms",
+                  "label": "平均延迟 ms",
+                  "format": "number"
+                },
+                {
+                  "key": "n_total",
+                  "label": "样本数",
+                  "format": "number"
+                }
+              ],
+              "paths": {
+                "dataset": "downloads/datasets/files/fewclue_chid",
+                "results": "result"
+              },
+              "display": {
+                "mode": "generic_text_qa",
+                "sections": [
+                  "selection_detail",
+                  "progress",
+                  "summary",
+                  "metrics"
+                ],
+                "case_view": "text_sample"
+              },
+              "execution": {
+                "adapter": "python_cli",
+                "script": "evaluate_generic_benchmark.py",
+                "default_tasks": [
+                  "qa"
+                ],
+                "supported_tasks": [
+                  "qa"
+                ],
+                "supports_real_eval": true,
+                "args": {
+                  "dataset": "--dataset",
+                  "output_dir": "--output-dir",
+                  "models": "--models",
+                  "tasks": "--tasks",
+                  "parallel": "--parallel",
+                  "retry": "--retry",
+                  "timeout_s": "--timeout-s",
+                  "progress_file": "--progress-file",
+                  "categories": "--categories",
+                  "dimensions": "--dimensions"
+                },
+                "extra_args": {
+                  "--benchmark-name": "Chinese_language_ability",
+                  "--dimension-label": "逻辑和分析推理能力",
+                  "--benchmark-url": "https://raw.githubusercontent.com/CLUEbenchmark/FewCLUE/main/datasets/chid/test.json",
+                  "--max-cases": 20
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

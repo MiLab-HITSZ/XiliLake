@@ -1,0 +1,121 @@
+{
+  "id": "custom_apps",
+  "label": "APPS 本地接入",
+  "benchmark_name": "APPS",
+  "description": "基于已下载的 codeparrot/apps 本地数据，为 APPS 代码综合能力评测提供统一问答入口。",
+  "source_type": "custom_curated",
+  "enabled": true,
+  "paths": {
+    "results": "result"
+  },
+  "execution": {
+    "adapter": "python_cli",
+    "script": "evaluate_generic_benchmark.py",
+    "default_tasks": [
+      "qa"
+    ],
+    "supported_tasks": [
+      "qa"
+    ],
+    "supports_real_eval": true
+  },
+  "display": {
+    "mode": "generic_text_qa",
+    "sections": [
+      "selection_detail",
+      "progress",
+      "summary",
+      "metrics"
+    ]
+  },
+  "metrics": [
+    {
+      "key": "accuracy",
+      "label": "准确率",
+      "format": "percent"
+    },
+    {
+      "key": "response_rate",
+      "label": "响应率",
+      "format": "percent"
+    },
+    {
+      "key": "avg_latency_ms",
+      "label": "平均延迟 ms",
+      "format": "number"
+    },
+    {
+      "key": "n_total",
+      "label": "样本数",
+      "format": "number"
+    }
+  ],
+  "categories": [
+    {
+      "id": "capability",
+      "label": "任务遵循可靠性",
+      "dimensions": [
+        {
+          "id": "code_synthesis",
+          "label": "代码综合能力",
+          "name_en": "Code Synthesis",
+          "intro": "评估模型理解编程题、生成可执行解法和保持代码正确性的能力。",
+          "benchmarks": [
+            {
+              "option_key": "apps_hf",
+              "name": "APPS",
+              "intro": "APPS 是代码竞赛风格编程题数据集。当前本地接入使用 codeparrot/apps 的题目与参考解法字段进行通用代码问答评测。",
+              "url": "https://huggingface.co/datasets/codeparrot/apps",
+              "language": "English",
+              "scale": "local",
+              "evaluation": "Reference solution match",
+              "paths": {
+                "dataset": "downloads/datasets/huggingface/codeparrot__apps",
+                "results": "result"
+              },
+              "display": {
+                "mode": "generic_text_qa",
+                "sections": [
+                  "selection_detail",
+                  "progress",
+                  "summary",
+                  "metrics"
+                ],
+                "case_view": "text_sample"
+              },
+              "execution": {
+                "adapter": "python_cli",
+                "script": "evaluate_generic_benchmark.py",
+                "default_tasks": [
+                  "qa"
+                ],
+                "supported_tasks": [
+                  "qa"
+                ],
+                "supports_real_eval": true,
+                "args": {
+                  "dataset": "--dataset",
+                  "output_dir": "--output-dir",
+                  "models": "--models",
+                  "tasks": "--tasks",
+                  "parallel": "--parallel",
+                  "retry": "--retry",
+                  "timeout_s": "--timeout-s",
+                  "progress_file": "--progress-file",
+                  "categories": "--categories",
+                  "dimensions": "--dimensions"
+                },
+                "extra_args": {
+                  "--benchmark-name": "APPS",
+                  "--dimension-label": "代码综合能力",
+                  "--benchmark-url": "https://huggingface.co/datasets/codeparrot/apps",
+                  "--max-cases": 20
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

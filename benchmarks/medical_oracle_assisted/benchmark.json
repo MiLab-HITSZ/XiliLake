@@ -1,0 +1,236 @@
+{
+  "id": "medical_oracle_assisted",
+  "label": "医疗领域-辅助推理可靠性",
+  "benchmark_name": "EHRPerturb Oracle-Assisted",
+  "description": "在已提供金标准证据锚点和异常类型的条件下，评估模型解释临床矛盾并提出最小修复的能力。该大类不考察模型能否从完整病历中发现或定位异常，而是检查模型是否遵循给定证据和类型完成专业推理。",
+  "source_type": "medical_oracle_assisted",
+  "enabled": true,
+  "paths": {
+    "dataset": "downloads/datasets/github_repos/wealone1__EHRPerturb_release/data/ehrperturb_corrupted_450",
+    "results": "result"
+  },
+  "execution": {
+    "adapter": "python_cli",
+    "script": "evaluate_ehrperturb.py",
+    "default_tasks": [
+      "qa"
+    ],
+    "supported_tasks": [
+      "qa"
+    ],
+    "supports_real_eval": true,
+    "args": {
+      "dataset": "--dataset",
+      "output_dir": "--output-dir",
+      "models": "--models",
+      "tasks": "--tasks",
+      "parallel": "--parallel",
+      "retry": "--retry",
+      "timeout_s": "--timeout-s",
+      "progress_file": "--progress-file",
+      "categories": "--categories",
+      "dimensions": "--dimensions"
+    },
+    "extra_args": {
+      "--track": "oracle_assisted",
+      "--benchmark-url": "https://github.com/wealone1/EHRPerturb_release",
+      "--max-cases": 15
+    }
+  },
+  "display": {
+    "mode": "generic_text_qa",
+    "sections": [
+      "selection_detail",
+      "progress",
+      "summary",
+      "metrics",
+      "cases"
+    ],
+    "case_view": "text_sample"
+  },
+  "metrics": [
+    {
+      "key": "accuracy",
+      "label": "严格成功率",
+      "format": "percent"
+    },
+    {
+      "key": "relaxed_success_rate",
+      "label": "宽松成功率",
+      "format": "percent"
+    },
+    {
+      "key": "target_match_rate",
+      "label": "目标异常匹配率",
+      "format": "percent"
+    },
+    {
+      "key": "anchor_adherence_rate",
+      "label": "证据锚点遵循率",
+      "format": "percent"
+    },
+    {
+      "key": "taxonomy_usage_rate",
+      "label": "异常类型使用率",
+      "format": "percent"
+    },
+    {
+      "key": "explanation_score",
+      "label": "冲突解释得分",
+      "format": "percent"
+    },
+    {
+      "key": "repair_score",
+      "label": "最小修复得分",
+      "format": "percent"
+    },
+    {
+      "key": "response_rate",
+      "label": "响应率",
+      "format": "percent"
+    },
+    {
+      "key": "avg_latency_ms",
+      "label": "平均延迟 ms",
+      "format": "number"
+    },
+    {
+      "key": "n_total",
+      "label": "评测任务数",
+      "format": "number"
+    }
+  ],
+  "categories": [
+    {
+      "id": "ehr_oracle_assisted_reasoning",
+      "label": "电子病历辅助推理",
+      "dimensions": [
+        {
+          "id": "ehr_temporal_oracle_reasoning",
+          "label": "电子病历时序辅助推理",
+          "name_en": "EHR Temporal Oracle-Assisted Reasoning",
+          "intro": "在已给出目标时间证据和 temporal_inconsistency 类型的条件下，评估模型能否解释事件顺序为何冲突，并提出不引入新矛盾的最小修复。",
+          "execution": {
+            "extra_args": {
+              "--taxonomy": "T1",
+              "--benchmark-name": "EHRPerturb-T1-Oracle",
+              "--dimension-label": "电子病历时序辅助推理"
+            }
+          },
+          "benchmarks": [
+            {
+              "option_key": "ehrperturb_t1_oracle",
+              "name": "EHRPerturb-T1-Oracle",
+              "intro": "使用 Corrupt450 中 90 个时间扰动病例的 Oracle 任务。提示直接提供金标准证据锚点和时序异常类型，模型只需基于这些证据解释局部时间戳、成对事件顺序或多步时间线冲突，并给出最小修复。",
+              "url": "https://github.com/wealone1/EHRPerturb_release",
+              "language": "English",
+              "scale": "90 cases / 90 scored tasks",
+              "source": "EHRPerturb official Corrupt450 release",
+              "evaluation": "Oracle-Assisted Reasoning"
+            }
+          ]
+        },
+        {
+          "id": "clinical_representation_oracle_reasoning",
+          "label": "临床表征辅助推理",
+          "name_en": "Clinical Representation Oracle-Assisted Reasoning",
+          "intro": "在已给出目标字段证据和 representational_contradiction 类型的条件下，评估模型能否说明同一临床事实的不同表示为何不一致并修复错误表示。",
+          "execution": {
+            "extra_args": {
+              "--taxonomy": "T2",
+              "--benchmark-name": "EHRPerturb-T2-Oracle",
+              "--dimension-label": "临床表征辅助推理"
+            }
+          },
+          "benchmarks": [
+            {
+              "option_key": "ehrperturb_t2_oracle",
+              "name": "EHRPerturb-T2-Oracle",
+              "intro": "使用 90 个临床表征矛盾病例的 Oracle 任务。提示给出冲突字段和异常类型，模型需要依据数值、参考范围、Flag、Interpretation、Comment 或结构化标签解释矛盾，并恢复一致表示。",
+              "url": "https://github.com/wealone1/EHRPerturb_release",
+              "language": "English",
+              "scale": "90 cases / 90 scored tasks",
+              "source": "EHRPerturb official Corrupt450 release",
+              "evaluation": "Oracle-Assisted Reasoning"
+            }
+          ]
+        },
+        {
+          "id": "physiological_plausibility_oracle_reasoning",
+          "label": "临床生理辅助推理",
+          "name_en": "Clinical Physiology Oracle-Assisted Reasoning",
+          "intro": "在已给出目标生理证据和 physiological_implausibility 类型的条件下，评估模型能否联系患者状态、趋势和干预记录解释不可信数值或轨迹并提出修复。",
+          "execution": {
+            "extra_args": {
+              "--taxonomy": "T3",
+              "--benchmark-name": "EHRPerturb-T3-Oracle",
+              "--dimension-label": "临床生理辅助推理"
+            }
+          },
+          "benchmarks": [
+            {
+              "option_key": "ehrperturb_t3_oracle",
+              "name": "EHRPerturb-T3-Oracle",
+              "intro": "使用 90 个生理不合理病例的 Oracle 任务。提示给出目标生命体征或检验证据及异常类型，模型需要结合邻近上下文、短期趋势和后续干预说明其为何不可信，并提出合理修复。",
+              "url": "https://github.com/wealone1/EHRPerturb_release",
+              "language": "English",
+              "scale": "90 cases / 90 scored tasks",
+              "source": "EHRPerturb official Corrupt450 release",
+              "evaluation": "Oracle-Assisted Reasoning"
+            }
+          ]
+        },
+        {
+          "id": "treatment_logic_oracle_reasoning",
+          "label": "临床治疗逻辑辅助推理",
+          "name_en": "Treatment Logic Oracle-Assisted Reasoning",
+          "intro": "在已给出目标治疗证据和 treatment_logic_mismatch 类型的条件下，评估模型能否解释医嘱、配药、给药或管理叙述与患者证据之间的冲突并修复。",
+          "execution": {
+            "extra_args": {
+              "--taxonomy": "T4",
+              "--benchmark-name": "EHRPerturb-T4-Oracle",
+              "--dimension-label": "临床治疗逻辑辅助推理"
+            }
+          },
+          "benchmarks": [
+            {
+              "option_key": "ehrperturb_t4_oracle",
+              "name": "EHRPerturb-T4-Oracle",
+              "intro": "使用 90 个治疗逻辑不匹配病例的 Oracle 任务。提示给出治疗动作、关联临床证据和异常类型，模型需要解释医嘱、EMAR、Pyxis、治疗计划或管理叙述为何与过敏、禁忌、检验或实际执行记录冲突。",
+              "url": "https://github.com/wealone1/EHRPerturb_release",
+              "language": "English",
+              "scale": "90 cases / 90 scored tasks",
+              "source": "EHRPerturb official Corrupt450 release",
+              "evaluation": "Oracle-Assisted Reasoning"
+            }
+          ]
+        },
+        {
+          "id": "documentation_evidence_oracle_reasoning",
+          "label": "诊疗文档证据辅助推理",
+          "name_en": "Documentation-Evidence Oracle-Assisted Reasoning",
+          "intro": "在已给出高层文档和底层证据锚点及 documentation_code_conflict 类型的条件下，评估模型能否解释诊疗结论为何不受证据支持并提出最小修复。",
+          "execution": {
+            "extra_args": {
+              "--taxonomy": "T5",
+              "--benchmark-name": "EHRPerturb-T5-Oracle",
+              "--dimension-label": "诊疗文档证据辅助推理"
+            }
+          },
+          "benchmarks": [
+            {
+              "option_key": "ehrperturb_t5_oracle",
+              "name": "EHRPerturb-T5-Oracle",
+              "intro": "使用 90 个文档与证据冲突病例的 Oracle 任务。提示直接给出高层诊断或总结、对应底层检验/影像/用药/病程证据和异常类型，模型需要解释冲突并修正错误文档结论。",
+              "url": "https://github.com/wealone1/EHRPerturb_release",
+              "language": "English",
+              "scale": "90 cases / 90 scored tasks",
+              "source": "EHRPerturb official Corrupt450 release",
+              "evaluation": "Oracle-Assisted Reasoning"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

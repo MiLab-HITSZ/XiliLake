@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<!-- Copyright (c) 2026 MiLab. All rights reserved. -->
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多模态大模型可信评测系统-西丽湖v0.1</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root{
+            --bg:#f3f6fb;--panel:#ffffff;--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;
+            --primary:#2458ff;--primary-soft:#e8efff;--good:#16a34a;--bad:#dc2626;
+        }
+        *{box-sizing:border-box;}
+        body{margin:0;background:var(--bg);color:var(--ink);font-size:16px;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}
+        .page{width:100%;min-height:100vh;margin:0;padding:22px 20px 32px;}
+        .page-head{margin-bottom:18px;display:flex;justify-content:space-between;align-items:flex-start;gap:16px;}
+        .page-head-main{min-width:0;}
+        .page-head h1{margin:0;font-size:38px;font-weight:900;letter-spacing:0;}
+        .page-head .subtitle{margin-top:9px;color:#334155;font-size:17px;font-weight:700;line-height:1.6;}
+        .page-head .meta{margin-top:8px;color:var(--muted);font-size:14px;}
+        .head-actions{padding-top:4px;display:flex;gap:10px;align-items:center;}
+        .workspace{min-height:calc(100vh - 145px);display:grid;grid-template-columns:minmax(430px,500px) minmax(0,1fr);background:var(--panel);border:1px solid var(--line);}
+        .sidebar{border-right:1px solid var(--line);padding:16px 14px 18px;background:#fcfdff;}
+        .sidebar-title,.content-title{font-size:16px;font-weight:900;margin:0 0 9px;}
+        .selector-block + .selector-block{margin-top:14px;padding-top:14px;border-top:1px solid var(--line);}
+        .selector-list{display:grid;gap:6px;}
+        #group-list,#dimension-list,#benchmark-list{grid-template-columns:repeat(2,minmax(0,1fr));}
+        .domain-switch-block{padding:14px;border:1px solid #b8c8e6;background:#eef3fb;}
+        .domain-switch-block .sidebar-title{margin-bottom:10px;color:#1e3a5f;}
+        .domain-switch-block + .selector-block{margin-top:14px;padding-top:14px;border-top:1px solid var(--line);}
+        .domain-switcher{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border:1px solid #9fb2d2;background:#fff;}
+        .domain-switch{min-width:0;min-height:72px;padding:10px 8px;border:0;border-right:1px solid #c8d4e6;background:#fff;color:#334155;text-align:center;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;}
+        .domain-switch:last-child{border-right:0;}
+        .domain-switch:hover{background:#e4ecf8;color:#163f73;}
+        .domain-switch.active{background:#183b66;color:#fff;box-shadow:inset 0 4px 0 #25b8a6;}
+        .domain-switch .name{font-size:14px;font-weight:900;line-height:1.3;overflow-wrap:anywhere;}
+        .domain-switch .count{font-size:11px;font-weight:700;line-height:1.3;color:#64748b;}
+        .domain-switch.active .count{color:#dbeafe;}
+        .selector-item{width:100%;text-align:left;border:1px solid #dbe4f0;background:#fff;border-radius:8px;padding:10px 11px;cursor:pointer;line-height:1.3;min-height:64px;display:flex;flex-direction:column;justify-content:center;}
+        .selector-item:hover{background:#f8fafc;border-color:#bfdbfe;}
+        .selector-item.active{background:var(--primary-soft);border-color:#c7d2fe;color:#1d4ed8;font-weight:800;}
+        .selector-item .name{display:block;font-size:14px;font-weight:800;}
+        .selector-item .meta{display:block;font-size:12px;color:var(--muted);margin-top:4px;line-height:1.35;}
+        .selector-item.active .meta{color:#4f46e5;}
+        .content{padding:22px 28px 32px;}
+        .content-section + .content-section{margin-top:22px;padding-top:22px;border-top:1px solid var(--line);}
+        .section-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px;}
+        .section-head h2{margin:0;font-size:21px;font-weight:900;}
+        .section-head .meta,.subtle{color:var(--muted);font-size:14px;line-height:1.65;}
+        .intro-grid{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(300px,.92fr);gap:18px;}
+        .group-brief{margin-bottom:16px;padding:12px 0 16px;border-bottom:1px solid var(--line);}
+        .group-brief-title{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px;font-size:17px;font-weight:900;}
+        .group-brief-title span{font-size:14px;color:var(--muted);font-weight:700;}
+        .group-brief-text{max-width:1100px;color:#334155;font-size:16px;line-height:1.8;}
+        .intro-box{padding:16px 18px;border:1px solid var(--line);background:#fbfdff;}
+        .intro-box h3{margin:0 0 8px;font-size:25px;font-weight:900;}
+        .intro-box h4{margin:0 0 10px;font-size:18px;font-weight:900;}
+        .pathline{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;}
+        .tag{display:inline-flex;align-items:center;padding:5px 11px;border-radius:999px;background:#eef2ff;color:#3730a3;font-size:13px;font-weight:800;}
+        .tag.ok{background:#dcfce7;color:#166534;}
+        .intro-text{white-space:pre-wrap;line-height:1.8;color:#334155;font-size:16px;}
+        .dataset-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+        .dataset-meta span{display:inline-flex;align-items:center;padding:5px 11px;border:1px solid #dbe4f0;border-radius:999px;background:#fff;font-size:13px;color:#475569;}
+        .form-grid{display:grid;grid-template-columns:minmax(220px,340px) auto minmax(200px,260px) auto;gap:14px;align-items:end;margin-top:16px;padding-top:16px;border-top:1px solid var(--line);}
+        .task-box{display:flex;gap:16px;flex-wrap:wrap;padding:10px 12px;border:1px solid var(--line);background:#fff;min-height:42px;align-items:center;}
+        .toolbar{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;}
+        .empty{padding:18px 0;color:#94a3b8;font-size:14px;}
+        .status-pill{display:inline-flex;border-radius:999px;padding:5px 10px;font-weight:800;font-size:12px;background:#dbeafe;color:#1d4ed8;}
+        .status-completed{background:#dcfce7;color:#166534;}.status-failed{background:#fee2e2;color:#991b1b;}.status-cancelled{background:#e2e8f0;color:#334155;}
+        .progress-wrap{padding:14px;border:1px solid var(--line);background:#fbfdff;}
+        .progress{height:12px;background:#dbeafe;border-radius:999px;}.progress-bar{background:linear-gradient(90deg,#2458ff,#06b6d4);}
+        .log-box{margin-top:12px;background:#0f172a;color:#dbeafe;padding:12px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;white-space:pre-wrap;max-height:220px;overflow:auto;}
+        .metrics-section{display:flex;flex-direction:column;gap:16px;}
+        .task-metrics + .task-metrics{padding-top:16px;border-top:1px dashed var(--line);}
+        .task-title{font-size:14px;font-weight:900;margin-bottom:10px;}
+        .metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;}
+        .metric-card{border:1px solid var(--line);background:#fff;padding:14px 16px;min-height:92px;}
+        .metric-card .label{font-size:12px;color:var(--muted);}
+        .metric-card .value{margin-top:8px;font-size:24px;font-weight:900;line-height:1.2;}
+        .metric-card .desc{margin-top:6px;font-size:12px;color:var(--muted);line-height:1.5;}
+        .mini-title{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;margin:10px 0 4px;}
+        .prelike{white-space:pre-wrap;word-break:break-word;line-height:1.6;font-size:13px;color:#1e293b;}
+        .json-box{margin:0;background:#f8fafc;border:1px solid var(--line);padding:12px;white-space:pre-wrap;word-break:break-word;font-size:12px;line-height:1.6;}
+        .sample-list{display:flex;flex-direction:column;gap:12px;}
+        .sample-card{border:1px solid var(--line);background:#fff;padding:12px 14px;}
+        .sample-card .sample-head{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--muted);margin-bottom:8px;}
+        .sample-card pre{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;tab-size:4;background:#f8fafc;border:1px solid var(--line);padding:12px 14px;font:14px/1.7 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;max-height:none;overflow-x:auto;overflow-y:visible;}
+        .sample-card pre.code-block{white-space:pre;overflow-wrap:normal;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;}
+        .sample-purpose{margin:0 0 14px;padding:12px 14px;border-left:4px solid var(--primary);background:#f3f7ff;display:grid;gap:10px;}
+        .sample-purpose-row{display:grid;grid-template-columns:92px minmax(0,1fr);gap:10px;align-items:start;}
+        .sample-purpose-label{font-size:13px;font-weight:900;color:#1e3a8a;}
+        .sample-purpose-text{font-size:14px;line-height:1.7;color:#334155;white-space:pre-wrap;overflow-wrap:anywhere;}
+        .sample-empty-field{border:1px dashed var(--line);background:#fbfdff;padding:10px;color:var(--muted);font-size:12px;}
+        .sample-image-single{margin-top:0;max-width:560px;}
+        .example-images{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:12px 0 14px;}
+        .example-image-card{border:1px solid var(--line);background:#fbfdff;padding:10px;}
+        .example-image-card .label{font-size:12px;font-weight:800;color:var(--muted);margin-bottom:8px;}
+        .example-image-card img{display:block;width:100%;height:260px;object-fit:contain;background:#fff;border:1px solid var(--line);}
+        @media (max-width: 1180px){
+            .workspace{grid-template-columns:1fr;}
+            .sidebar{border-right:0;border-bottom:1px solid var(--line);}
+            #group-list,#dimension-list,#benchmark-list{grid-template-columns:repeat(2,minmax(0,1fr));}
+            .intro-grid,.form-grid{grid-template-columns:1fr;}
+            .toolbar{justify-content:flex-start;}
+            .example-images{grid-template-columns:1fr;}
+        }
+        @media (max-width: 720px){
+            .page{padding:14px 10px 24px;}
+            .page-head{flex-direction:column;align-items:stretch;}
+            .page-head h1{font-size:30px;}
+            .head-actions{width:100%;padding-top:0;flex-wrap:wrap;}
+            .head-actions .btn{flex:1 1 150px;}
+            #group-list,#dimension-list,#benchmark-list{grid-template-columns:1fr;}
+            .domain-switch .name{font-size:13px;}
+            .domain-switch .count{font-size:10px;}
+            .content{padding:16px 12px 24px;}
+            .section-head{align-items:stretch;flex-direction:column;}
+            .section-head .btn{align-self:flex-start;}
+            .sample-purpose-row{grid-template-columns:1fr;gap:3px;}
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+    <header class="page-head">
+        <div class="page-head-main">
+            <h1>多模态大模型可信评测系统-西丽湖v0.1</h1>
+            <div class="subtitle" id="catalog-meta">3 个评测领域 · 12 个大类 · 87 个子类 · 108 个数据集</div>
+        </div>
+        <div class="head-actions">
+            <button class="btn btn-outline-primary" id="smoke-test-button" type="button" onclick="startSystemSmokeTest()">全子类快速检测</button>
+            <button class="btn btn-primary" type="button" onclick="openLeaderboardPopup()">总榜</button>
+        </div>
+    </header>
+
+    <div class="workspace">
+        <aside class="sidebar">
+            <section class="domain-switch-block">
+                <h2 class="sidebar-title">评测领域</h2>
+                <div class="domain-switcher" id="domain-switcher"><div class="empty">加载中...</div></div>
+            </section>
+            <section class="selector-block">
+                <h2 class="sidebar-title" id="group-section-title">评测大类</h2>
+                <div class="selector-list" id="group-list"><div class="empty">加载中...</div></div>
+            </section>
+            <section class="selector-block">
+                <h2 class="sidebar-title">评测子类</h2>
+                <div class="selector-list" id="dimension-list"><div class="empty">请先选择评测大类。</div></div>
+            </section>
+            <section class="selector-block">
+                <h2 class="sidebar-title">评测数据集</h2>
+                <div class="selector-list" id="benchmark-list"><div class="empty">请先选择子类。</div></div>
+            </section>
+        </aside>
+
+        <main class="content">
+            <section class="content-section">
+                <div class="section-head">
+                    <div>
+                        <h2>当前选择</h2>
+                        <div class="meta">展示类别、子类与 Benchmark 的具体介绍。</div>
+                    </div>
+                </div>
+                <div id="group-brief" class="group-brief"></div>
+                <div id="selection-detail"><div class="empty">请选择子类与 Benchmark。</div></div>
+            </section>
+
+            <section class="content-section">
+                <div class="section-head">
+                    <div>
+                        <h2>启动评测</h2>
+                        <div class="meta">选择模型、评测任务与缓解策略后启动当前 Benchmark。</div>
+                    </div>
+                </div>
+                <div id="evaluation-launcher"><div class="empty">请选择子类与 Benchmark。</div></div>
+            </section>
+
+            <section class="content-section">
+                <div class="section-head">
+                    <div>
+                        <h2>评测进度</h2>
+                        <div class="meta">显示当前选择对应的任务；全子类快速检测会在任意子类下显示总进度。</div>
+                    </div>
+                    <button class="btn btn-sm btn-outline-secondary" type="button" onclick="refreshJobs(true)">刷新</button>
+                </div>
+                <div id="job-shell"><div class="empty">当前没有运行中的评测任务。</div></div>
+            </section>
+
+            <section class="content-section">
+                <div class="section-head">
+                    <div>
+                        <h2>指标展示</h2>
+                        <div class="meta" id="result-meta">尚无结果。</div>
+                    </div>
+                    <button class="btn btn-sm btn-outline-secondary" type="button" onclick="exportCurrentResult()">导出结果</button>
+                </div>
+                <div id="metrics-shell"><div class="empty">请选择 Benchmark。</div></div>
+            </section>
+
+            <section class="content-section">
+                <div class="section-head">
+                    <div>
+                        <h2>评测样例</h2>
+                        <div class="meta">未评测时展示 Benchmark 原始样例；评测完成后展示同一 Benchmark 的模型结果。</div>
+                    </div>
+                    <button class="btn btn-sm btn-outline-secondary" type="button" onclick="fetchEvalSamples(true)">刷新</button>
+                </div>
+                <div id="samples-shell"><div class="empty">暂无评测样例。</div></div>
+            </section>
+
+        </main>
+    </div>
+</div>
+
+<script>
+let optionState={supported_models:[],trust_catalog:{groups:[]}};
+let catalog={groups:[]};
+let domainMap={};
+let groupMap={};
+let dimensionMap={};
+let benchmarkMap={};
+let selectedDomainId='';
+let selectedGroupId='';
+let selectedDimId='';
+let selectedBenchmarkId='';
+let selectedMitigation='none';
+let currentResult={exists:false};
+let fullSummary={};
+let placeholderItems=[];
+let evalSamples=[];
+let benchmarkExample=null;
+let benchmarkExampleSelectionKey='';
+let evalSamplesCacheKey='';
+let activePollingJobId=null;
+let selectedModelId='';
+let taskSelectionState={qa:true,mc:true};
+let selectionTouched=false;
+let taxonomyRevision='default';
+const TASK_LABELS={qa:'直接问答',mc:'选择题',caption:'描述题'};
+const METRIC_LABELS={CF_Acc:'反常识准确率 CF Acc',CS_Acc:'常识准确率 CS Acc',Gap:'性能差值 Gap',CCR:'一致纠错率 CCR',RPD:'相对性能下降 RPD'};
+
+function escapeHtml(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
+function cloneJson(v){return v?JSON.parse(JSON.stringify(v)):null}
+function formatPct(v){if(v===null||v===undefined||Number.isNaN(Number(v)))return '—';return `${(Number(v)*100).toFixed(1)}%`}
+function isCdh(id){return String(id||'').startsWith('cdh::')}
+function parseCdh(id){const p=String(id||'').split('::');return p.length===3?{category:p[1],subcategory:p[2]}:null}
+function resultFilterForSelection(){
+    const dim=selectedDimension();
+    const bench=selectedBenchmark();
+    if(!dim||!bench)return null;
+    if(isCdh(dim.id))return parseCdh(dim.id);
+    return {category:bench.result_label||dim.result_label||dim.label,subcategory:bench.name||dim.result_label||dim.label};
+}
+function hasRealResultForSelection(){
+    if(!(selectedBenchmarkImplemented()&&currentResult.has_real_results))return false;
+    const ids=currentResult.benchmark_ids||[];
+    const executionId=selectedExecutionBenchmarkId();
+    const selections=currentResult.result_selections||[];
+    const dim=selectedDimension();
+    const bench=selectedBenchmark();
+    const resultDimensionIds=new Set([selectedDimId,bench?.result_dimension_id,...(dim?.result_dimension_ids||[])].filter(Boolean));
+    if(selections.length){
+        return selections.some(item=>resultDimensionIds.has(item.dimension_id)&&(!executionId||item.benchmark_id===executionId));
+    }
+    return !executionId||!ids.length||ids.includes(executionId);
+}
+function isActiveJob(job){return ['queued','starting','running'].includes(job?.status)}
+function statusClass(s){if(s==='completed')return 'status-completed';if(s==='failed')return 'status-failed';if(s==='cancelled')return 'status-cancelled';return ''}
+function arraysEqualAsSet(a,b){return [...new Set(a||[])].sort().join('|')===[...new Set(b||[])].sort().join('|')}
+function currentDomain(){return domainMap[selectedDomainId]||null}
+function currentGroup(){return groupMap[selectedGroupId]||null}
+function groupsForDomain(){const ids=currentDomain()?.group_ids||[];return ids.map(id=>groupMap[id]).filter(Boolean)}
+function selectedDimension(){return dimensionMap[selectedDimId]||null}
+function selectedBenchmark(){const dim=selectedDimension();if(!dim)return null;return (dim.benchmarks||[]).find(b=>b.id===selectedBenchmarkId)||null}
+function selectedDims(){return selectedDimId?[selectedDimId]:[]}
+function selectedExecutionBenchmarkId(){const bench=selectedBenchmark();return bench?.execution_option_id||selectedBenchmarkId}
+function selectedBenchmarkIds(){const id=selectedExecutionBenchmarkId();return id?[id]:[]}
+function selectedCdhDims(){return selectedDims().filter(isCdh)}
+function selectedPlaceholderDims(){return selectedDims().filter(id=>!isCdh(id))}
+function selectedBenchmarkImplemented(){return !!selectedBenchmark()?.implemented}
+function visibleTasks(){const checks=[...document.querySelectorAll('[data-task-checkbox]')];const picked=checks.filter(x=>x.checked).map(x=>x.value);return picked.length?picked:['qa','mc']}
+function benchmarkMetrics(bench){const rows=bench?.metrics||[];if(Array.isArray(rows)&&rows.length){return rows.map(item=>typeof item==='string'?{label:item,key:item,format:'text'}:item)}return []}
+function benchmarkMetaTags(bench){
+    const tags=[];
+    if(bench?.language)tags.push(`语言：${Array.isArray(bench.language)?bench.language.join('、'):bench.language}`);
+    if(bench?.scale)tags.push(`规模：${bench.scale}`);
+    if(bench?.evaluation)tags.push(`指标：${Array.isArray(bench.evaluation)?bench.evaluation.join('、'):bench.evaluation}`);
+    if(bench?.time)tags.push(`时间：${bench.time}`);
+    if(Array.isArray(bench?.source)&&bench.source.length)tags.push(`来源：${bench.source.join('、')}`);
+    else if(bench?.source)tags.push(`来源：${bench.source}`);
+    const text=String(bench?.intro||'');
+    const re=/(语言|规模|指标|时间)：([^；\n]+)/g;
+    let m;
+    while((m=re.exec(text))!==null){
+        tags.push(`${m[1]}：${m[2].trim()}`);
+    }
+    return [...new Set(tags.filter(Boolean))];
+}
+function setBenchmarkExampleFromSelection(){
+    const key=`${selectedDimId}::${selectedBenchmarkId}`;
+    if(benchmarkExampleSelectionKey===key)return;
+    benchmarkExampleSelectionKey=key;
+    benchmarkExample=null;
+    evalSamples=[];
+    evalSamplesCacheKey='';
+}
+function cleanBenchmarkIntro(text){
+    const metaLine=/^\s*(?:(?:语言|规模|指标|时间)：[^；\n]+)(?:；\s*(?:语言|规模|指标|时间)：[^；\n]+)*\s*$/;
+    return String(text||'').split(/\n+/).map(x=>x.trim()).filter(line=>line&&!metaLine.test(line)).join('\n\n');
+}
+function captureFormState(){
+    const modelSel=document.getElementById('model-select');
+    if(modelSel&&modelSel.value)selectedModelId=modelSel.value;
+    const mitigationSel=document.getElementById('mitigation-select');
+    if(mitigationSel)selectedMitigation=mitigationSel.value||'none';
+    document.querySelectorAll('[data-task-checkbox]').forEach(cb=>{taskSelectionState[cb.value]=cb.checked});
+}
+function jobMatchesSelection(job){
+    if(!job||!selectedDimId)return false;
+    const dims=job.payload?.trust_dimensions||[];
+    if(!dims.includes(selectedDimId))return false;
+    const benchIds=job.payload?.benchmark_ids||[];
+    const executionId=selectedExecutionBenchmarkId();
+    if(executionId&&benchIds.length)return benchIds.includes(executionId);
+    return true;
+}
+function describeJob(job){
+    const dim=(job?.payload?.trust_dimensions||[]).map(id=>dimensionMap[id]?.label).filter(Boolean)[0]||'某个子类';
+    const model=job?.payload?.selected_model_name||'某个模型';
+    return `${dim} / ${model}`;
+}
+
+function buildMaps(){
+    domainMap={};groupMap={};dimensionMap={};benchmarkMap={};
+    (catalog.domains||[]).forEach(domain=>{domainMap[domain.id]=domain});
+    (catalog.groups||[]).forEach(group=>{
+        groupMap[group.id]=group;
+        (group.dimensions||[]).forEach(dim=>{
+            dim.group_id=group.id;
+            dim.group_label=group.label;
+            dimensionMap[dim.id]=dim;
+            (dim.benchmarks||[]).forEach(bench=>{
+                const mapped={...bench,dimension_id:dim.id,dimension_label:dim.label,group_id:group.id,group_label:group.label};
+                benchmarkMap[bench.id]=mapped;
+                if(bench.execution_option_id)benchmarkMap[bench.execution_option_id]=mapped;
+            });
+        });
+    });
+}
+
+function ensureSelection(){
+    const domains=catalog.domains||[];
+    const allGroups=catalog.groups||[];
+    if(!domains.length||!allGroups.length){selectedDomainId='';selectedGroupId='';selectedDimId='';selectedBenchmarkId='';return}
+    if(groupMap[selectedGroupId]&&!domainMap[selectedDomainId])selectedDomainId=groupMap[selectedGroupId].domain_id||'';
+    if(!domainMap[selectedDomainId])selectedDomainId=domains[0].id;
+    const groups=groupsForDomain();
+    if(!groups.some(group=>group.id===selectedGroupId))selectedGroupId=groups[0]?.id||'';
+    if(selectedDimId&&!dimensionMap[selectedDimId])selectedDimId='';
+    const dim=selectedDimension();
+    if(dim&&dim.group_id!==selectedGroupId){selectedDimId='';selectedBenchmarkId='';return}
+    if(dim){
+        const benches=dim.benchmarks||[];
+        if(!benches.length)selectedBenchmarkId='';
+        else if(!benchmarksContain(dim, selectedBenchmarkId))selectedBenchmarkId=benches[0].id;
+    }else{
+        selectedBenchmarkId='';
+    }
+}
+function benchmarksContain(dim, benchId){return !!(dim?.benchmarks||[]).find(b=>b.id===benchId)}
+
+function renderHeaderMeta(){
+    const totalDomains=(catalog.domains||[]).length;
+    const totalGroups=(catalog.groups||[]).length;
+    const domainDimensionTotal=(catalog.domains||[]).reduce((sum,domain)=>sum+Number(domain.dimension_count||0),0);
+    const domainBenchmarkTotal=(catalog.domains||[]).reduce((sum,domain)=>sum+Number(domain.benchmark_count||0),0);
+    const totalDims=domainDimensionTotal||catalog.total_dimensions||0;
+    const totalBenchmarks=domainBenchmarkTotal||catalog.total_benchmarks||0;
+    document.getElementById('catalog-meta').textContent=`${totalDomains} 个评测领域 · ${totalGroups} 个大类 · ${totalDims} 个子类 · ${totalBenchmarks} 个数据集`;
+}
+
+function renderDomainGroups(){
+    const switcher=document.getElementById('domain-switcher');
+    const groupBox=document.getElementById('group-list');
+    const groupTitle=document.getElementById('group-section-title');
+    const domains=catalog.domains||[];
+    switcher.innerHTML=domains.length?domains.map(domain=>`<button type="button" class="domain-switch ${domain.id===selectedDomainId?'active':''}" onclick="selectDomain('${escapeHtml(domain.id)}')"><span class="name">${escapeHtml(domain.label)}</span><span class="count">${domain.dimension_count||0} 个子类</span></button>`).join(''):'<div class="empty">暂无评测领域。</div>';
+    const domain=currentDomain();
+    const groups=groupsForDomain();
+    groupTitle.textContent=domain?.label||'评测大类';
+    groupBox.innerHTML=groups.length?groups.map(group=>`<button type="button" class="selector-item ${group.id===selectedGroupId?'active':''}" onclick="selectGroup('${escapeHtml(group.id)}')"><span class="name">${escapeHtml(group.label)}</span><span class="meta">${(group.dimensions||[]).length} 个子类 · ${(group.dimensions||[]).reduce((sum,dim)=>sum+(dim.benchmarks||[]).length,0)} 个数据集</span></button>`).join(''):'<div class="empty">当前领域暂无评测大类。</div>';
+}
+
+function renderDimensions(){
+    const box=document.getElementById('dimension-list');
+    const group=currentGroup();
+    const domain=currentDomain();
+    const dims=group?.dimensions||[];
+    box.innerHTML=dims.length?dims.map(dim=>`<button type="button" class="selector-item ${dim.id===selectedDimId?'active':''}" onclick="selectDimension('${escapeHtml(dim.id)}')"><span class="name">${escapeHtml(dim.label)}</span><span class="meta">${escapeHtml(dim.category_label||group.label||'')} · ${(dim.benchmarks||[]).length} 个 Benchmark</span></button>`).join(''):'<div class="empty">当前大类下暂无子类。</div>';
+}
+
+function renderBenchmarks(){
+    const box=document.getElementById('benchmark-list');
+    const dim=selectedDimension();
+    const benches=dim?.benchmarks||[];
+    box.innerHTML=benches.length?benches.map(bench=>`<button type="button" class="selector-item ${bench.id===selectedBenchmarkId?'active':''}" onclick="selectBenchmark('${escapeHtml(bench.id)}')"><span class="name">${escapeHtml(bench.name||'Benchmark')}</span><span class="meta">${bench.implemented?'可评测':'资料展示'}</span></button>`).join(''):(dim?'<div class="empty">当前子类下暂无 Benchmark。</div>':'<div class="empty">请先选择子类。</div>');
+}
+
+function renderGroupBrief(){
+    const box=document.getElementById('group-brief');
+    if(!box)return;
+    const group=currentGroup();
+    const domain=currentDomain();
+    if(!group){box.innerHTML='';return}
+    const dims=group.dimensions||[];
+    const benchCount=dims.reduce((sum,dim)=>sum+(dim.benchmarks||[]).length,0);
+    box.innerHTML=`
+        <div class="group-brief-title">
+            ${escapeHtml(domain?.label||'')} / ${escapeHtml(group.label)}
+            <span>${dims.length} 个子类 · ${benchCount} 个数据集</span>
+        </div>
+        <div class="group-brief-text">${escapeHtml(group.description||'')}</div>`;
+}
+
+function renderSelectionDetail(){
+    captureFormState();
+    renderGroupBrief();
+    const shell=document.getElementById('selection-detail');
+    const launcher=document.getElementById('evaluation-launcher');
+    const group=currentGroup();
+    const domain=currentDomain();
+    const dim=selectedDimension();
+    const bench=selectedBenchmark();
+    if(!group){shell.innerHTML='<div class="empty">暂无评测目录。</div>';launcher.innerHTML='<div class="empty">暂无可启动的评测。</div>';return}
+    if(!dim){
+        shell.innerHTML=`<div class="intro-box"><div class="pathline"><span class="tag">${escapeHtml(domain?.label||'')}</span><span class="tag">${escapeHtml(group.label)}</span></div><div class="intro-text">请选择子类。</div></div>`;
+        launcher.innerHTML='<div class="empty">请选择子类与 Benchmark。</div>';
+        return;
+    }
+    const benchmarkTags=bench?benchmarkMetaTags(bench):[];
+    const taskHtml=bench?.implemented?renderTaskChecks(bench):'<div class="task-box"><span class="subtle">当前 Benchmark 不提供真实评测，启动后生成该数据集对应的展示结果。</span></div>';
+    const mitigationHtml=bench?.implemented?renderMitigationSelect():'<div class="task-box"><span class="subtle">—</span></div>';
+    shell.innerHTML=`
+        <div class="intro-grid">
+            <div class="intro-box">
+                <div class="pathline">
+                    <span class="tag">${escapeHtml(domain?.label||'')}</span>
+                    <span class="tag">${escapeHtml(group.label)}</span>
+                    ${dim.category_label?`<span class="tag">${escapeHtml(dim.category_label)}</span>`:''}
+                    ${bench?.implemented?'<span class="tag ok">可评测</span>':''}
+                </div>
+                <h3>${escapeHtml(dim.label)}</h3>
+                ${dim.name_en?`<div class="subtle" style="margin-bottom:10px;">${escapeHtml(dim.name_en)}</div>`:''}
+                <h4>子类介绍</h4>
+                <div class="intro-text">${escapeHtml(dim.intro||'')}</div>
+            </div>
+            <div class="intro-box">
+                <div class="d-flex justify-content-between align-items-start gap-3">
+                    <div>
+                        <h4 style="margin-bottom:6px;">${escapeHtml(bench?.name||'')}</h4>
+                        <div class="intro-text">${escapeHtml(cleanBenchmarkIntro(bench?.intro||''))}</div>
+                    </div>
+                    ${bench?.url?`<a class="btn btn-sm btn-outline-secondary" href="${escapeHtml(bench.url)}" target="_blank" rel="noopener">链接</a>`:''}
+                </div>
+                ${benchmarkTags.length?`<div class="dataset-meta">${benchmarkTags.map(tag=>`<span>${escapeHtml(tag)}</span>`).join('')}</div>`:''}
+            </div>
+        </div>`;
+    launcher.innerHTML=`<div class="form-grid" style="margin-top:0;padding-top:0;border-top:0;">
+            <div>
+                <label class="form-label fw-semibold">评测模型</label>
+                <select id="model-select" class="form-select" onchange="onModelChange()">${modelOptionsHtml()}</select>
+            </div>
+            <div>
+                <label class="form-label fw-semibold">评测任务</label>
+                ${taskHtml}
+            </div>
+            <div>
+                <label class="form-label fw-semibold">缓解策略</label>
+                ${mitigationHtml}
+            </div>
+            <div class="toolbar">
+                <button class="btn btn-primary" type="button" onclick="submitEval()">启动评测</button>
+                <button class="btn btn-outline-danger" type="button" onclick="deleteCurrentResult()">删除当前结果</button>
+            </div>
+        </div>`;
+}
+
+function renderTaskChecks(bench){
+    const execution=bench?.execution||selectedDimension()?.execution||{};
+    const supported=(execution.supported_tasks||['qa','mc']).filter(task=>['qa','mc','caption'].includes(task));
+    const defaults=new Set((execution.default_tasks||supported).filter(task=>['qa','mc','caption'].includes(task)));
+    return `<div class="task-box">${supported.map(task=>`<label class="form-check mb-0"><input class="form-check-input" type="checkbox" value="${escapeHtml(task)}" data-task-checkbox ${((task in taskSelectionState)?taskSelectionState[task]:defaults.has(task))?'checked':''}><span class="form-check-label ms-1">${escapeHtml(TASK_LABELS[task]||task)}</span></label>`).join('')}</div>`;
+}
+
+function renderMitigationSelect(){
+    const rows=[
+        ['none','无'],
+        ['visual_evidence','视觉证据锚定'],
+        ['option_entailment','选择题声明核验'],
+        ['cp_vbc','先验贝叶斯校正']
+    ];
+    return `<select id="mitigation-select" class="form-select" onchange="selectedMitigation=this.value||'none'">${rows.map(([value,label])=>`<option value="${escapeHtml(value)}" ${selectedMitigation===value?'selected':''}>${escapeHtml(label)}</option>`).join('')}</select>`;
+}
+
+function modelOptionsHtml(){
+    const rows=optionState.supported_models||[];
+    if(!rows.length)return '<option value="">暂无可用模型</option>';
+    const preferredId='local::Qwen3-VL-2B-Instruct';
+    const activeId=selectedModelId&&rows.find(item=>item.id===selectedModelId)
+        ? selectedModelId
+        : ((rows.find(item=>item.id===preferredId)?.id)||rows[0].id);
+    selectedModelId=activeId;
+    return rows.map(item=>`<option value="${escapeHtml(item.id)}" ${item.id===activeId?'selected':''}>${escapeHtml(item.label)}</option>`).join('');
+}
+
+function onModelChange(){
+    const modelSel=document.getElementById('model-select');
+    if(modelSel)selectedModelId=modelSel.value;
+}
+
+function renderMetrics(){
+    const shell=document.getElementById('metrics-shell');
+    const meta=document.getElementById('result-meta');
+    const dim=selectedDimension();
+    const bench=selectedBenchmark();
+    if(!dim||!bench){shell.innerHTML='<div class="empty">请选择 Benchmark。</div>';meta.textContent='尚无结果。';return}
+    meta.textContent=currentResult.exists?`当前结果：${currentResult.display_name||'当前结果'}`:`当前未生成结果。`;
+    if(hasRealResultForSelection()){
+        const parsed=resultFilterForSelection();
+        const byTask=fullSummary.by_subcategory||{};
+        const metricDefs=benchmarkMetrics(bench);
+        let html='';
+        Object.keys(byTask).forEach(task=>{
+            const stats=parsed?byTask[task]?.[`${parsed.category} / ${parsed.subcategory}`]:null;
+            if(!stats)return;
+            html+=`<div class="task-metrics"><div class="task-title">${escapeHtml(TASK_LABELS[task]||task)}</div><div class="metric-grid">${metricDefs.map(metric=>`<div class="metric-card"><div class="label">${escapeHtml(metric.label||metric.key||'')}</div><div class="value">${formatMetricValue(stats[metric.key], metric.format)}</div></div>`).join('')}<div class="metric-card"><div class="label">样本数</div><div class="value">${stats.n_total??'—'}</div></div></div></div>`;
+        });
+        shell.innerHTML=html?`<div class="metrics-section">${html}</div>`:'<div class="empty">当前结果中没有该 Benchmark 的指标。</div>';
+        return;
+    }
+    const metricDefs=benchmarkMetrics(bench);
+    if(!metricDefs.length){shell.innerHTML='<div class="empty">当前 Benchmark 未提供指标定义。</div>';return}
+    shell.innerHTML=`<div class="metric-grid">${metricDefs.map(metric=>`<div class="metric-card"><div class="label">${escapeHtml(metric.label||metric.key||'')}</div><div class="value">—</div>${metric.format&&metric.format!=='text'?`<div class="desc">${escapeHtml(metric.format)}</div>`:''}</div>`).join('')}</div>`;
+}
+
+function firstTaskRecord(item){
+    const tasks=item?.tasks||{};
+    for(const task of Object.keys(tasks)){
+        const sides=tasks[task]||{};
+        for(const side of Object.keys(sides)){
+            return {task,side,...(sides[side]||{})};
+        }
+    }
+    return null;
+}
+
+function evidenceText(rec){
+    return rec?.option_entailment||rec?.visual_evidence||'';
+}
+
+function evidenceTitle(rec){
+    return rec?.option_entailment?'声明核验':'视觉证据';
+}
+
+function recordMaterial(rec){
+    const direct=sampleValueText(rec?.material);
+    if(direct.trim())return direct;
+    const prompt=sampleValueText(rec?.prompt);
+    const question=sampleValueText(rec?.question);
+    if(prompt.trim()&&prompt.trim()!==question.trim())return prompt;
+    const raw=rec?.case_raw;
+    if(raw&&typeof raw==='object'){
+        const preferred=['context','passage','article','document','story','scenario','source','description','code','messages'];
+        const blocks=preferred.filter(key=>raw[key]!==undefined&&raw[key]!==null&&sampleValueText(raw[key]).trim()).map(key=>`${key}:\n${sampleValueText(raw[key])}`);
+        if(blocks.length)return blocks.join('\n\n');
+        const excluded=new Set(['question','query','prompt','instruction','input','answer','answers','gt','label','labels','target','output','gold','options','choices','candidates','id','idx','qid','question_id']);
+        const remaining=Object.fromEntries(Object.entries(raw).filter(([key,value])=>!excluded.has(String(key).toLowerCase())&&value!==null&&value!==''));
+        if(Object.keys(remaining).length)return JSON.stringify(remaining,null,2);
+    }
+    return '';
+}
+
+function recordQuestion(rec){
+    const current=cleanSampleQuestion(rec?.question||'',rec?.options||[]);
+    const raw=rec?.case_raw;
+    if(!raw||typeof raw!=='object')return current;
+    for(const key of ['question','query','instruction','input','prompt']){
+        const candidate=sampleValueText(raw[key]).trim();
+        if(candidate&&candidate.length>=current.length)return candidate;
+    }
+    return current;
+}
+
+function sampleValueText(value){
+    if(value===null||value===undefined)return '';
+    const raw=typeof value==='string'?value:(typeof value==='object'?JSON.stringify(value,null,2):String(value));
+    return raw.replace(/\r\n/g,'\n').replace(/\r/g,'\n').replace(/\s+$/,'');
+}
+
+function looksLikeCodeText(value,title=''){
+    const text=sampleValueText(value);
+    if(/代码|源码|补全|函数|程序/.test(title))return true;
+    return /```|(^|\n)\s*(?:def |class |import |from \S+ import |function |public |private |protected |#include|fn |let |const |var )|(^|\n)\s*(?:if|for|while|try|except)\b.*[:{]|[;{}]\s*$/m.test(text);
+}
+
+function optionParts(options){
+    return (Array.isArray(options)?options:[]).map((option,index)=>{
+        const text=sampleValueText(option).trim();
+        const match=text.match(/^([A-G])[.)]\s*(.*)$/is);
+        return {label:match?match[1].toUpperCase():String.fromCharCode(65+index),text:match?match[2].trim():text,full:text};
+    });
+}
+
+function alignedOptionAnswer(value,options){
+    const raw=sampleValueText(value);
+    const text=raw.trim();
+    const parts=optionParts(options);
+    if(!text||!parts.length)return raw;
+    const normalized=text.replace(/^([A-G])[.)]\s*/i,'').trim().toLowerCase();
+    let label='';
+    if(/^[A-G]$/i.test(text))label=text.toUpperCase();
+    if(!label){
+        const matches=[...text.matchAll(/(?:正确选项|最终答案|答案|answer|choice)(?:\s*(?:is|是|为)\s*|\s*)(?:[:：]\s*)?[*`\s]*([A-G])\b/ig)];
+        if(matches.length)label=matches[matches.length-1][1].toUpperCase();
+    }
+    let part=label?parts.find(item=>item.label===label):null;
+    if(!part)part=parts.find(item=>item.text.trim().toLowerCase()===normalized||item.full.trim().toLowerCase()===text.toLowerCase());
+    return part?`${part.label}. ${part.text}`:raw;
+}
+
+function modelAnswerForDisplay(rec){return alignedOptionAnswer(rec?.model_answer||rec?.pred||'',rec?.options||[])}
+function referenceAnswerForDisplay(rec){return alignedOptionAnswer(rec?.gt??'',rec?.options||[])}
+
+function responseRequirement(task,options,question='',answer=''){
+    if(String(task||'').includes('auditing'))return '根据完整临床材料给出审计判断、定位、解释和修复内容。';
+    if(String(task||'').includes('reasoning'))return '根据完整临床材料和辅助信息给出最终推理结论。';
+    if(Array.isArray(options)&&options.length)return '根据题目和材料选择正确选项，给出对应的选项字母。';
+    const answerText=sampleValueText(answer).trim();
+    if((answerText.startsWith('{')&&answerText.endsWith('}'))||(answerText.startsWith('[')&&answerText.endsWith(']')))return '按照参考答案所示的结构化格式给出完整结果。';
+    if(looksLikeCodeText(`${sampleValueText(question)}\n${answerText}`))return '生成或补全可执行代码，并保持原有缩进；使用代码块或原始代码格式作答。';
+    return '根据题目及所给材料直接给出最终答案。';
+}
+
+function cleanSampleQuestion(value,options=[]){
+    const optionSet=new Set((Array.isArray(options)?options:[]).map(item=>sampleValueText(item).trim()).filter(Boolean));
+    const instructionPatterns=[
+        /^请只回答正确选项字母[。.]?$/,
+        /^请直接给出答案[。.]?$/,
+        /^请根据题目补全或生成代码。只输出最终代码，不要输出分析过程[。.]?$/,
+    ];
+    return sampleValueText(value).split('\n').filter(line=>{
+        const text=line.trim();
+        if(optionSet.has(text))return false;
+        return !instructionPatterns.some(pattern=>pattern.test(text));
+    }).join('\n').trim();
+}
+
+function samplePurposeBlock(example={},task='',options=[],answer=''){
+    const dim=selectedDimension()||{};
+    const bench=selectedBenchmark()||{};
+    const focus=sampleValueText(example.evaluation_focus||dim.intro||'').trim();
+    const context=sampleValueText(example.benchmark_context||bench.intro||'').trim();
+    const scoring=sampleValueText(example.scoring_rule||responseRequirement(task,options,example.question||'',answer)).trim();
+    const rows=[];
+    if(focus)rows.push(['评测目标',focus]);
+    if(context&&context!==focus)rows.push(['数据含义',context]);
+    if(scoring)rows.push(['判定方式',scoring]);
+    if(!rows.length)return '';
+    return `<div class="sample-purpose">${rows.map(([label,text])=>`<div class="sample-purpose-row"><div class="sample-purpose-label">${escapeHtml(label)}</div><div class="sample-purpose-text">${escapeHtml(text)}</div></div>`).join('')}</div>`;
+}
+
+function sampleImageField(url,label='输入图片'){
+    return `<div class="mini-title">图片</div>${url
+        ?`<div class="example-images sample-image-single"><div class="example-image-card"><div class="label">${escapeHtml(label)}</div><img src="${escapeHtml(url)}" alt="evaluation input"></div></div>`
+        :'<div class="sample-empty-field">本题无图片输入</div>'}`;
+}
+
+function sampleTextField(title,value,emptyText){
+    const text=sampleValueText(value);
+    const codeClass=looksLikeCodeText(text,title)?' class="code-block"':'';
+    return `<div class="mini-title">${escapeHtml(title)}</div>${text.trim()?`<pre${codeClass}>${escapeHtml(text)}</pre>`:`<div class="sample-empty-field">${escapeHtml(emptyText)}</div>`}`;
+}
+
+function renderCdhTaskBlock(taskName, taskData){
+    const sideOrder=[['counterfactual','反常识'],['commonsense','常识']];
+    const first=taskData?.counterfactual||taskData?.commonsense||{};
+    const options=Array.isArray(first.options)&&first.options.length?first.options.join('\n'):'';
+    return `<div class="mt-3">
+        <div class="mini-title">${escapeHtml(TASK_LABELS[taskName]||taskName)}</div>
+        <div class="mini-title">题目</div>
+        <pre>${escapeHtml(first.question||'')}</pre>
+        ${options?`<div class="mini-title">选项</div><pre>${escapeHtml(options)}</pre>`:''}
+        <div class="metric-grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin-top:10px;">
+            ${sideOrder.map(([side,label])=>{
+                const rec=taskData?.[side]||{};
+                const ev=evidenceText(rec);
+                const material=recordMaterial(rec);
+                return `<div class="metric-card">
+                    <div class="label">${label}</div>
+                    ${sampleTextField('材料 / 上下文',material,'本题以上方图片为主要材料')}
+                    ${ev?`<div class="mini-title">${escapeHtml(evidenceTitle(rec))}</div><pre>${escapeHtml(ev)}</pre>`:''}
+                    ${sampleTextField('模型回答',modelAnswerForDisplay(rec),'模型未返回内容')}
+                    ${sampleTextField('参考答案',referenceAnswerForDisplay(rec),'该任务无显式参考答案')}
+                </div>`;
+            }).join('')}
+        </div>
+    </div>`;
+}
+
+function renderEvalSamples(){
+    const shell=document.getElementById('samples-shell');
+    if(!shell)return;
+    if(evalSamples.length){
+        shell.innerHTML=`<div class="sample-list">${evalSamples.slice(0,3).map(item=>{
+            if(item.images?.counterfactual||item.images?.commonsense){
+                const pairName=item.pair_name||item.subcategory||'CDH-Bench 样例';
+                const cfImg=item.images?.counterfactual||'';
+                const csImg=item.images?.commonsense||'';
+                return `<div class="sample-card">
+                    <div class="sample-head"><span>${escapeHtml(pairName)}</span><span>${escapeHtml(item.subcategory||'')}</span></div>
+                    ${samplePurposeBlock(item)}
+                    <div class="example-images" style="margin-top:0;">
+                        <div class="example-image-card">
+                            <div class="label">反常识图像</div>
+                            ${cfImg?`<img src="${escapeHtml(cfImg)}" alt="counterfactual eval sample">`:'<div class="empty">暂无图像</div>'}
+                        </div>
+                        <div class="example-image-card">
+                            <div class="label">常识图像</div>
+                            ${csImg?`<img src="${escapeHtml(csImg)}" alt="commonsense eval sample">`:'<div class="empty">暂无图像</div>'}
+                        </div>
+                    </div>
+                    ${Object.keys(item.tasks||{}).map(task=>renderCdhTaskBlock(task, item.tasks?.[task]||{})).join('')}
+                </div>`;
+            }
+            const rec=firstTaskRecord(item)||{};
+            const ok=rec.correct===true?'正确':(rec.correct===false?'错误':'未评分');
+            const ev=evidenceText(rec);
+            const material=recordMaterial(rec);
+            const imageUrl=rec.image_url||item.images?.sample||'';
+            const options=Array.isArray(rec.options)&&rec.options.length?rec.options.join('\n'):'';
+            return `<div class="sample-card">
+                <div class="sample-head"><span>${escapeHtml(item.subcategory||'')} · ${escapeHtml(TASK_LABELS[rec.task]||rec.task||'')}</span><span>${escapeHtml(ok)}</span></div>
+                ${samplePurposeBlock(rec,rec.task,rec.options||[],rec.gt||'')}
+                ${sampleTextField('题目',recordQuestion(rec),'未记录题目')}
+                ${sampleTextField('材料 / 上下文',material,'本题无额外文本材料')}
+                ${sampleImageField(imageUrl)}
+                ${options?sampleTextField('选项',options,''):''}
+                ${ev?`<div class="mini-title">${escapeHtml(evidenceTitle(rec))}</div><pre>${escapeHtml(ev)}</pre>`:''}
+                ${sampleTextField('模型回答',modelAnswerForDisplay(rec),'模型未返回内容')}
+                ${sampleTextField('参考答案',referenceAnswerForDisplay(rec),'该任务无显式参考答案')}
+            </div>`;
+        }).join('')}</div>`;
+        return;
+    }
+    const example=benchmarkExample||selectedBenchmark()?.example||null;
+    if(!example){shell.innerHTML='<div class="empty">当前选择暂无评测样例。</div>';return}
+    if(example.images||example.qa||example.mc){
+        const pairName=example.pair_name||example.subcategory||'CDH-Bench 样例';
+        const cfImg=example.images?.counterfactual||'';
+        const csImg=example.images?.commonsense||'';
+        const qa=example.qa||{};
+        const mc=example.mc||{};
+        const materials=example.materials||{};
+        shell.innerHTML=`<div class="sample-list"><div class="sample-card">
+            <div class="sample-head"><span>${escapeHtml(pairName)}</span><span>${escapeHtml(example.subcategory||'')}</span></div>
+            ${samplePurposeBlock(example)}
+            <div class="example-images" style="margin-top:0;">
+                <div class="example-image-card">
+                    <div class="label">反常识图像</div>
+                    ${cfImg?`<img src="${escapeHtml(cfImg)}" alt="counterfactual benchmark sample">`:'<div class="empty">暂无图像</div>'}
+                </div>
+                <div class="example-image-card">
+                    <div class="label">常识图像</div>
+                    ${csImg?`<img src="${escapeHtml(csImg)}" alt="commonsense benchmark sample">`:'<div class="empty">暂无图像</div>'}
+                </div>
+            </div>
+            ${sampleTextField('反常识图片材料',materials.counterfactual,'图片本身为输入材料')}
+            ${sampleTextField('常识图片材料',materials.commonsense,'图片本身为输入材料')}
+            ${qa.question?`${sampleTextField('直接问答题目',qa.question,'未提供题目')}${sampleTextField('作答要求',responseRequirement('qa',[],qa.question,qa.counterfactual_answer),'')}<div class="dataset-meta"><span>反常识参考答案：${escapeHtml(qa.counterfactual_answer||'')}</span><span>常识参考答案：${escapeHtml(qa.commonsense_answer||'')}</span></div>`:''}
+            ${mc.question?`${sampleTextField('选择题题目',mc.question,'未提供题目')}${Array.isArray(mc.options)&&mc.options.length?sampleTextField('选项',mc.options.join('\n'),''):''}${sampleTextField('作答要求',responseRequirement('mc',mc.options,mc.question,mc.counterfactual_answer),'')}<div class="dataset-meta"><span>反常识参考答案：${escapeHtml(alignedOptionAnswer(mc.counterfactual_answer,mc.options)||'')}</span><span>常识参考答案：${escapeHtml(alignedOptionAnswer(mc.commonsense_answer,mc.options)||'')}</span></div>`:''}
+        </div></div>`;
+        return;
+    }
+    const options=Array.isArray(example.options)&&example.options.length?example.options.join('\n'):'';
+    const exampleImage=example.image_url||example.image||example.images?.sample||'';
+    shell.innerHTML=`<div class="sample-list"><div class="sample-card">
+        <div class="sample-head"><span>${escapeHtml(example.benchmark||example.dimension||'Benchmark')}</span></div>
+        ${samplePurposeBlock(example,example.task,example.options||[],example.answer||'')}
+        ${sampleTextField('题目',cleanSampleQuestion(example.question,example.options||[]),'未记录题目')}
+        ${sampleTextField('材料 / 上下文',example.material,'本题无额外文本材料')}
+        ${sampleImageField(exampleImage)}
+        ${options?sampleTextField('选项',options,''):''}
+        ${sampleTextField('作答要求',example.response_requirement||responseRequirement(example.task,example.options,example.question,example.answer),'')}
+        ${sampleTextField('参考答案',alignedOptionAnswer(example.answer,example.options), '该任务无显式参考答案')}
+    </div></div>`;
+}
+
+function formatMetricValue(value, format){
+    if(format==='percent')return formatPct(value);
+    if(format==='number'&&value!==null&&value!==undefined&&value!==''){
+        const n=Number(value);
+        return Number.isFinite(n)?(Math.abs(n)>=100?n.toFixed(0):n.toFixed(3).replace(/\.?0+$/,'')):String(value);
+    }
+    if(value===null||value===undefined||value==='')return '—';
+    return String(value);
+}
+
+async function openLeaderboardPopup(){
+    const win=window.open('', 'trusted_eval_leaderboard', 'width=1400,height=900,scrollbars=yes,resizable=yes');
+    if(!win){alert('浏览器阻止了弹出窗口，请允许弹窗后重试。');return}
+    win.document.write('<!doctype html><html><head><meta charset="utf-8"><title>评测总榜</title><style>body{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;margin:20px;color:#0f172a;background:#f8fafc}h1{margin:0 0 6px;font-size:26px}.meta{color:#64748b;margin-bottom:18px}table{border-collapse:collapse;width:100%;background:white;font-size:13px}th,td{border:1px solid #dbe4f0;padding:8px 10px;text-align:left;vertical-align:top}th{background:#eef2ff;position:sticky;top:0}tr:nth-child(even){background:#fbfdff}.blank{color:#cbd5e1}.pill{display:inline-block;border-radius:999px;padding:2px 8px;background:#dcfce7;color:#166534;font-weight:700;font-size:12px}</style></head><body><h1>评测总榜</h1><div class="meta">正在加载...</div></body></html>');
+    win.document.close();
+    try{
+        const res=await fetch('/api/leaderboard');
+        const data=await res.json();
+        const cols=data.metric_columns||[];
+        const rows=data.rows||[];
+        const html=`<!doctype html><html><head><meta charset="utf-8"><title>评测总榜</title><style>body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;margin:20px;color:#0f172a;background:#f8fafc}h1{margin:0 0 6px;font-size:26px}.meta{color:#64748b;margin-bottom:18px}table{border-collapse:collapse;width:100%;background:white;font-size:13px}th,td{border:1px solid #dbe4f0;padding:8px 10px;text-align:left;vertical-align:top}th{background:#eef2ff;position:sticky;top:0}tr:nth-child(even){background:#fbfdff}.blank{color:#cbd5e1}.pill{display:inline-block;border-radius:999px;padding:2px 8px;background:#dcfce7;color:#166534;font-weight:700;font-size:12px}</style></head><body>
+            <h1>评测总榜</h1>
+            <div class="meta">当前结果：${escapeHtml(data.result?.display_name||'当前结果')}；共 ${rows.length} 条 Benchmark 记录。已评测项目显示指标，未评测项目留空。</div>
+            <table><thead><tr><th>评测领域</th><th>评测大类</th><th>评测子类</th><th>Benchmark</th><th>状态</th><th>任务</th>${cols.map(c=>`<th>${escapeHtml(c.label||c.key)}</th>`).join('')}</tr></thead>
+            <tbody>${rows.map(row=>`<tr><td>${escapeHtml(row.major||'')}</td><td>${escapeHtml(row.secondary||'')}</td><td>${escapeHtml(row.tertiary||'')}</td><td>${escapeHtml(row.benchmark||'')}</td><td>${row.evaluated?'<span class="pill">已评测</span>':(row.implemented?'可评测':'')}</td><td>${escapeHtml(TASK_LABELS[row.task]||row.task||'')}</td>${cols.map(c=>`<td>${row.evaluated?formatMetricValue(row.metrics?.[c.key],c.format):''}</td>`).join('')}</tr>`).join('')}</tbody></table>
+        </body></html>`;
+        win.document.open();
+        win.document.write(html);
+        win.document.close();
+    }catch(e){
+        win.document.body.innerHTML=`<h1>评测总榜</h1><div class="meta">加载失败：${escapeHtml(e.message||e)}</div>`;
+    }
+}
+
+function renderJob(job){
+    const shell=document.getElementById('job-shell');
+    if(!job){shell.innerHTML=`<div class="empty">${selectedDimId?'当前选择没有运行中的评测任务。':'当前没有运行中的评测任务。'}</div>`;return}
+    const progress=job.progress||{};
+    const percent=Number(progress.percent??0).toFixed(1);
+    const indeterminate=Boolean(progress.indeterminate);
+    const progressCaption=indeterminate
+        ? `${escapeHtml(progress.message||job.message||'正在准备评测')} · 已等待 ${Number(progress.elapsed_s??0)} 秒`
+        : `${progress.completed??0} / ${progress.total??0}`;
+    const last=progress.last_result;
+    shell.innerHTML=`
+        <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+            <div>
+                <span class="status-pill ${statusClass(job.status)}">${escapeHtml(job.status)}</span>
+                <div class="fw-bold mt-2">${escapeHtml(job.payload?.selected_model_name||'')}</div>
+                <div class="subtle">${escapeHtml(selectedDimension()?.label||'')}</div>
+                <div class="subtle">${escapeHtml(job.message||'')}</div>
+            </div>
+            ${isActiveJob(job)?`<button class="btn btn-sm btn-outline-danger" type="button" onclick="cancelJob('${job.id}')">取消</button>`:''}
+        </div>
+        <div class="progress-wrap mt-3">
+            <div class="d-flex justify-content-between small mb-2"><span>${progressCaption}</span><span>${indeterminate?'准备中':`${percent}%`}</span></div>
+            <div class="progress"><div class="progress-bar ${indeterminate?'progress-bar-striped progress-bar-animated':''}" style="width:${indeterminate?'100':percent}%"></div></div>
+            ${last?`<div class="subtle mt-2">最近完成：${escapeHtml(last.category||'')} / ${escapeHtml(last.subcategory||'')} / ${escapeHtml(last.task||'')}</div>`:''}
+        </div>
+        <div class="log-box" id="job-log-box">${escapeHtml(job.log_tail||'暂无日志')}</div>`;
+    const logBox=document.getElementById('job-log-box');
+    if(logBox)logBox.scrollTop=logBox.scrollHeight;
+}
+
+async function fetchJobs(){const res=await fetch('/api/evaluations');return await res.json()}
+async function waitUntilNoActiveJob(timeoutMs=20000){const start=Date.now();while(Date.now()-start<timeoutMs){const jobs=await fetchJobs();if(!jobs.find(isActiveJob))return;await new Promise(r=>setTimeout(r,1000))}throw new Error('等待当前任务停止超时')}
+async function maybePreemptActiveJob(modelId,tasks,dims,benchmarkIds,mitigation){
+    const jobs=await fetchJobs();
+    const active=jobs.find(isActiveJob);
+    if(!active)return;
+    const sameDims=arraysEqualAsSet(active.payload?.trust_dimensions||[],dims);
+    const sameTasks=arraysEqualAsSet(active.payload?.tasks||[],tasks);
+    const sameModel=(active.payload?.selected_model_id||'')===modelId;
+    const sameBenchmarks=arraysEqualAsSet(active.payload?.benchmark_ids||[],benchmarkIds);
+    const sameMitigation=(active.payload?.mitigation||'none')===(mitigation||'none');
+    if(sameDims&&sameTasks&&sameModel&&sameBenchmarks&&sameMitigation)return;
+    const ok=confirm(`当前正在进行 ${describeJob(active)} 的评测，是否停止并开启新的评测？`);
+    if(!ok)throw new Error('已取消启动新评测');
+    const res=await fetch(`/api/evaluations/${active.id}/cancel`,{method:'POST'});
+    const data=await res.json();
+    if(!res.ok)throw new Error(data.error||'停止当前任务失败');
+    await waitUntilNoActiveJob();
+}
+
+async function refreshOptions(){
+    const res=await fetch('/api/options');
+    optionState=await res.json();
+    catalog=optionState.trust_catalog||{groups:[]};
+    taxonomyRevision=catalog.taxonomy_revision||'default';
+    buildMaps();
+    ensureSelection();
+    setBenchmarkExampleFromSelection();
+    renderHeaderMeta();
+    renderDomainGroups();
+    renderDimensions();
+    renderBenchmarks();
+    renderSelectionDetail();
+    await refreshCurrentResult(false);
+}
+
+async function refreshCurrentResult(resetViews=true){
+    const res=await fetch('/api/current_result');
+    currentResult=await res.json();
+    if(!selectionTouched&&!selectedDimId&&currentResult.trust_dimensions?.length){
+        const firstDim=currentResult.trust_dimensions.find(id=>dimensionMap[id]);
+        if(firstDim){
+            selectedDimId=firstDim;
+            selectedGroupId=dimensionMap[firstDim].group_id;
+            selectedDomainId=groupMap[selectedGroupId]?.domain_id||selectedDomainId;
+        }
+    }
+    if(!selectionTouched&&!selectedBenchmarkId&&currentResult.benchmark_ids?.length){
+        const firstBenchmark=currentResult.benchmark_ids.find(id=>benchmarkMap[id]);
+        if(firstBenchmark){
+            const mapped=benchmarkMap[firstBenchmark];
+            selectedBenchmarkId=mapped.id;
+            selectedDimId=mapped.dimension_id;
+            selectedGroupId=mapped.group_id;
+            selectedDomainId=groupMap[selectedGroupId]?.domain_id||selectedDomainId;
+        }
+    }
+    ensureSelection();
+    setBenchmarkExampleFromSelection();
+    renderDomainGroups();
+    renderDimensions();
+    renderBenchmarks();
+    renderSelectionDetail();
+    if(!currentResult.exists){fullSummary={};placeholderItems=[];renderMetrics();await fetchEvalSamples(false);return}
+    await refreshResultViews();
+}
+
+async function refreshResultViews(){
+    await fetchSummary();
+    await fetchPlaceholderResults();
+    await fetchEvalSamples(false);
+    renderMetrics();
+    renderEvalSamples();
+}
+
+async function fetchSummary(){
+    fullSummary={};
+    if(!(currentResult.exists&&hasRealResultForSelection()))return;
+    const parsed=resultFilterForSelection();
+    if(!parsed)return;
+    const url=new URL('/api/summary',location.origin);
+    url.searchParams.set('category',parsed.category);
+    url.searchParams.set('subcategories',parsed.subcategory);
+    const res=await fetch(url);
+    fullSummary=await res.json();
+}
+
+async function fetchEvalSamples(force){
+    const dim=selectedDimension();
+    const bench=selectedBenchmark();
+    if(!dim||!bench){benchmarkExample=null;renderEvalSamples();return}
+    if(currentResult.exists&&hasRealResultForSelection()){
+        const cacheKey=`result::${currentResult.created_at||''}::${selectedDimId}::${selectedBenchmarkId}`;
+        if(!force && evalSamplesCacheKey===cacheKey && benchmarkExampleSelectionKey===`${selectedDimId}::${selectedBenchmarkId}`){
+            renderEvalSamples();
+            return;
+        }
+        const parsed=resultFilterForSelection();
+        if(!parsed){renderEvalSamples();return}
+        const url=new URL('/api/eval_data',location.origin);
+        url.searchParams.set('category',parsed.category);
+        url.searchParams.set('subcategories',parsed.subcategory);
+        url.searchParams.set('dimension_id',bench.result_dimension_id||selectedDimId);
+        const executionId=selectedExecutionBenchmarkId();
+        if(executionId)url.searchParams.set('benchmark_id',executionId);
+        url.searchParams.set('page','1');
+        url.searchParams.set('per_page','3');
+        if(force)url.searchParams.set('shuffle','1');
+        evalSamples=[];
+        const res=await fetch(url);
+        const data=await res.json();
+        evalSamples=data.items||[];
+        evalSamplesCacheKey=cacheKey;
+        renderEvalSamples();
+        return;
+    }
+    evalSamplesCacheKey='';
+    evalSamples=[];
+    if(force || !benchmarkExample){
+        const url=new URL('/api/benchmark_example', location.origin);
+        url.searchParams.set('dimension_id', dim.id);
+        url.searchParams.set('benchmark_id', bench.id);
+        if(force)url.searchParams.set('refresh','1');
+        const res=await fetch(url);
+        const data=await res.json();
+        benchmarkExample=data.example||cloneJson(bench.example)||null;
+    }
+    renderEvalSamples();
+}
+
+async function fetchPlaceholderResults(){
+    if(!currentResult.exists){placeholderItems=[];return}
+    const res=await fetch('/api/placeholder_results');
+    const data=await res.json();
+    placeholderItems=data.items||[];
+}
+
+function selectGroup(id){
+    if(selectedGroupId===id)return;
+    selectionTouched=true;
+    selectedGroupId=id;
+    selectedDomainId=groupMap[id]?.domain_id||selectedDomainId;
+    selectedDimId='';
+    selectedBenchmarkId='';
+    setBenchmarkExampleFromSelection();
+    renderDomainGroups();
+    renderDimensions();
+    renderBenchmarks();
+    renderSelectionDetail();
+    renderMetrics();
+    evalSamples=[];renderEvalSamples();
+    refreshJobs(false);
+}
+
+function selectDomain(id){
+    if(selectedDomainId===id)return;
+    selectionTouched=true;
+    selectedDomainId=id;
+    selectedGroupId=(domainMap[id]?.group_ids||[]).find(groupId=>groupMap[groupId])||'';
+    selectedDimId=currentGroup()?.dimensions?.[0]?.id||'';
+    selectedBenchmarkId=selectedDimension()?.benchmarks?.[0]?.id||'';
+    setBenchmarkExampleFromSelection();
+    evalSamples=[];
+    renderDomainGroups();
+    renderDimensions();
+    renderBenchmarks();
+    renderSelectionDetail();
+    refreshResultViewsIfNeeded();
+    refreshJobs(false);
+}
+
+function selectDimension(id){
+    const dim=dimensionMap[id];
+    if(!dim)return;
+    selectionTouched=true;
+    selectedGroupId=dim.group_id;
+    selectedDomainId=groupMap[selectedGroupId]?.domain_id||selectedDomainId;
+    selectedDimId=id;
+    selectedBenchmarkId=(dim.benchmarks||[])[0]?.id||'';
+    setBenchmarkExampleFromSelection();
+    evalSamples=[];
+    renderDomainGroups();
+    renderDimensions();
+    renderBenchmarks();
+    renderSelectionDetail();
+    refreshResultViewsIfNeeded();
+    refreshJobs(false);
+}
+
+function selectBenchmark(id){
+    if(selectedBenchmarkId===id)return;
+    selectionTouched=true;
+    selectedBenchmarkId=id;
+    setBenchmarkExampleFromSelection();
+    evalSamples=[];
+    renderBenchmarks();
+    renderSelectionDetail();
+    refreshResultViewsIfNeeded();
+    refreshJobs(false);
+}
+
+async function refreshResultViewsIfNeeded(){
+    if(currentResult.exists)await refreshResultViews();
+    else{renderMetrics();await fetchEvalSamples(false);}
+}
+
+async function submitEval(){
+    const dims=selectedDims();
+    const benchmarkIds=selectedBenchmarkIds();
+    if(!dims.length){alert('请选择子类');return}
+    if(!benchmarkIds.length){alert('请选择 Benchmark');return}
+    const modelId=document.getElementById('model-select')?.value||'';
+    if(!modelId){alert('请选择评测模型');return}
+    const mitigation=document.getElementById('mitigation-select')?.value||selectedMitigation||'none';
+    selectedMitigation=mitigation;
+    const tasks=selectedBenchmarkImplemented()?visibleTasks():[];
+    const trigger=document.querySelector('#evaluation-launcher .btn.btn-primary');
+    if(trigger){trigger.disabled=true;trigger.textContent='正在启动...';}
+    try{
+        await maybePreemptActiveJob(modelId,tasks,dims,benchmarkIds,mitigation);
+        if(selectedBenchmarkImplemented()){
+            const res=await fetch('/api/evaluations',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model_id:modelId,tasks,dimensions:dims,benchmark_ids:benchmarkIds,mitigation})});
+            const data=await res.json();
+            if(!res.ok)throw new Error(data.error||'启动失败');
+            activePollingJobId=data.id;
+            await refreshJobs(true);
+        }else{
+            const res=await fetch('/api/placeholder_results',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model_id:modelId,dimensions:dims,benchmark_ids:benchmarkIds})});
+            const data=await res.json();
+            if(!res.ok)throw new Error(data.error||'生成结果失败');
+            await refreshCurrentResult(true);
+        }
+    }catch(e){alert(e.message||'启动失败');}
+    finally{if(trigger){trigger.disabled=false;trigger.textContent='启动评测';}}
+}
+
+async function refreshJobs(refreshResult){
+    const jobs=await fetchJobs();
+    const globalActive=jobs.find(isActiveJob)||null;
+    const selectedJob=jobs.find(job=>isActiveJob(job)&&(job.payload?.smoke_all||jobMatchesSelection(job)))
+        ||jobs.find(job=>job.payload?.smoke_all||jobMatchesSelection(job))
+        ||null;
+    renderJob(selectedJob);
+    activePollingJobId=globalActive?.id||null;
+    if(refreshResult||!activePollingJobId)await refreshCurrentResult(false);
+}
+
+async function startSystemSmokeTest(){
+    const modelId=document.getElementById('model-select')?.value||selectedModelId||'';
+    if(!modelId){alert('请先选择一个模型');return}
+    if(!confirm('将使用当前模型对全部可评测子类各运行 1 个真实样例，并替换当前结果。是否继续？'))return;
+    const button=document.getElementById('smoke-test-button');
+    if(button){button.disabled=true;button.textContent='正在启动...';}
+    try{
+        const jobs=await fetchJobs();
+        const active=jobs.find(isActiveJob);
+        if(active)throw new Error('当前已有评测任务在运行');
+        const res=await fetch('/api/evaluations',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model_id:modelId,smoke_all:true})});
+        const data=await res.json();
+        if(!res.ok)throw new Error(data.error||'启动失败');
+        activePollingJobId=data.id;
+        await refreshJobs(true);
+    }catch(e){alert(e.message||'启动失败');}
+    finally{if(button){button.disabled=false;button.textContent='全子类快速检测';}}
+}
+
+async function cancelJob(id){
+    if(!confirm('确定取消当前评测任务吗？'))return;
+    const res=await fetch(`/api/evaluations/${id}/cancel`,{method:'POST'});
+    const data=await res.json();
+    if(!res.ok){alert(data.error||'取消失败');return}
+    await refreshJobs(true);
+}
+
+async function deleteCurrentResult(){
+    if(!currentResult.exists){alert('当前没有可删除的结果');return}
+    if(!confirm('确定删除当前结果吗？'))return;
+    const res=await fetch('/api/current_result',{method:'DELETE'});
+    const data=await res.json();
+    if(!res.ok){alert(data.error||'删除失败');return}
+    await refreshCurrentResult(true);
+    await refreshJobs(false);
+}
+
+function exportCurrentResult(){
+    if(!currentResult.exists){alert('当前没有可导出的结果');return}
+    window.open('/api/current_result/export', '_blank');
+}
+
+async function pollLoop(){
+    await refreshJobs(false);
+    try{
+        const res=await fetch('/api/taxonomy/revision',{cache:'no-store'});
+        const data=await res.json();
+        if((data.revision||'default')!==taxonomyRevision)await refreshOptions();
+    }catch(_error){}
+    setTimeout(pollLoop,activePollingJobId?2000:6000);
+}
+
+async function init(){
+    await refreshOptions();
+    await refreshJobs(true);
+    pollLoop();
+}
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,60 @@
+{
+  "id": "new_benchmark_id",
+  "label": "新评测大类",
+  "benchmark_name": "示例 Benchmark",
+  "description": "说明该 benchmark 的目标。",
+  "source_type": "custom",
+  "enabled": false,
+  "paths": {"dataset": "data/your_dataset.jsonl", "images": "", "results": "result"},
+  "execution": {
+    "adapter": "python_cli",
+    "script": "evaluate_your_benchmark.py",
+    "default_tasks": ["qa"],
+    "supported_tasks": ["qa"],
+    "supports_real_eval": false,
+    "args": {
+      "dataset": "--dataset",
+      "images": "--images-root",
+      "output_dir": "--output-dir",
+      "models": "--models",
+      "tasks": "--tasks",
+      "parallel": "--parallel",
+      "retry": "--retry",
+      "timeout_s": "--timeout-s",
+      "progress_file": "--progress-file",
+      "categories": "--categories",
+      "dimensions": "--dimensions"
+    }
+  },
+  "display": {"mode": "dataset_intro", "sections": ["selection_detail", "progress", "summary", "metrics", "cases"]},
+  "metrics": [{"key": "score", "label": "得分", "format": "number"}],
+  "download": {
+    "files": [
+      {
+        "url": "https://example.com/evaluate_your_benchmark.py",
+        "path": "evaluate_your_benchmark.py",
+        "executable": false
+      }
+    ]
+  },
+  "categories": [
+    {
+      "id": "category_id",
+      "label": "类别名称",
+      "dimensions": [
+        {
+          "id": "dimension_id",
+          "label": "维度名称",
+          "benchmarks": [
+            {
+              "option_key": "default",
+              "name": "示例 Benchmark",
+              "intro": "该子维度对应的 benchmark 说明。",
+              "metrics": [{"key": "score", "label": "得分", "format": "number"}]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

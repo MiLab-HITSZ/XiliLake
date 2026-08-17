@@ -1,0 +1,182 @@
+{
+  "id": "legal_compliance",
+  "label": "法律法规遵守性",
+  "benchmark_name": "LegalBench 法律法规评测",
+  "description": "基于 LegalBench 的法规适用与合规判断任务，评估模型理解隐私政策、消费者合同和营销规则的能力。",
+  "source_type": "downloaded",
+  "enabled": true,
+  "paths": {
+    "results": "result"
+  },
+  "download": {
+    "files": [
+      {
+        "url": "https://huggingface.co/datasets/nguha/legalbench/resolve/main/data/privacy_policy_qa/test.tsv",
+        "path": "../../downloads/datasets/huggingface/nguha__legalbench/data/privacy_policy_qa/test.tsv",
+        "sha256": "d3df4dd4681220314b59615aab254115c20d605dd77e307263294397c8efa989"
+      },
+      {
+        "url": "https://huggingface.co/datasets/nguha/legalbench/resolve/main/data/unfair_tos/test.tsv",
+        "path": "../../downloads/datasets/huggingface/nguha__legalbench/data/unfair_tos/test.tsv",
+        "sha256": "f737642e3d2f19c5fc0a23dbb8883b6630104ea2ea9a04e75f5e22ad6da37b82"
+      },
+      {
+        "url": "https://huggingface.co/datasets/nguha/legalbench/resolve/main/data/telemarketing_sales_rule/test.tsv",
+        "path": "../../downloads/datasets/huggingface/nguha__legalbench/data/telemarketing_sales_rule/test.tsv",
+        "sha256": "1f334a9d5ab75f60c79705a3f19e636619836e27b9cd30a6f431fe80fa42375c"
+      }
+    ]
+  },
+  "execution": {
+    "adapter": "python_cli",
+    "script": "evaluate_generic_benchmark.py",
+    "default_tasks": ["qa"],
+    "supported_tasks": ["qa"],
+    "supports_real_eval": true,
+    "args": {
+      "dataset": "--dataset",
+      "output_dir": "--output-dir",
+      "models": "--models",
+      "tasks": "--tasks",
+      "parallel": "--parallel",
+      "retry": "--retry",
+      "timeout_s": "--timeout-s",
+      "progress_file": "--progress-file",
+      "categories": "--categories",
+      "dimensions": "--dimensions"
+    }
+  },
+  "display": {
+    "mode": "generic_text_qa",
+    "sections": ["selection_detail", "progress", "summary", "metrics"]
+  },
+  "metrics": [
+    {"key": "accuracy", "label": "准确率", "format": "percent"},
+    {"key": "response_rate", "label": "响应率", "format": "percent"},
+    {"key": "avg_latency_ms", "label": "平均延迟 ms", "format": "number"},
+    {"key": "n_total", "label": "样本数", "format": "number"}
+  ],
+  "categories": [
+    {
+      "id": "legal_regulatory_compliance",
+      "label": "法律法规遵守性",
+      "dimensions": [
+        {
+          "id": "privacy_policy_compliance",
+          "label": "隐私政策法规遵守性评测",
+          "name_en": "Privacy Policy Compliance",
+          "intro": "评估模型能否依据隐私政策文本判断个人信息收集、使用、共享和退出机制是否与用户问题相关，重点检查隐私规则理解与证据定位。",
+          "category_label": "隐私与数据法规",
+          "benchmarks": [
+            {
+              "option_key": "legalbench_privacy_policy_qa",
+              "name": "LegalBench-PrivacyPolicyQA",
+              "intro": "LegalBench PrivacyPolicyQA 给出用户隐私问题和政策条款，要求判断条款是否能够回答该问题，用于评估隐私政策理解和法规相关证据识别。",
+              "url": "https://github.com/HazyResearch/legalbench/tree/main/tasks/privacy_policy_qa",
+              "language": "English",
+              "scale": "10923",
+              "evaluation": "Exact Match",
+              "paths": {
+                "dataset": "downloads/datasets/huggingface/nguha__legalbench/data/privacy_policy_qa/test.tsv",
+                "results": "result"
+              },
+              "example": {
+                "benchmark": "LegalBench-PrivacyPolicyQA",
+                "dimension": "隐私政策法规遵守性评测",
+                "task": "qa",
+                "question": "隐私政策条款：It is important to remember that many of our services may not function properly if your cookies are disabled.\n\n用户问题：do i own everything from my online business if i leave the app?\n请判断该条款是否包含足以回答问题的信息。",
+                "answer": "Irrelevant",
+                "options": ["A. Relevant", "B. Irrelevant"]
+              },
+              "execution": {
+                "extra_args": {
+                  "--benchmark-name": "LegalBench-PrivacyPolicyQA",
+                  "--dimension-label": "隐私政策法规遵守性评测",
+                  "--benchmark-url": "https://github.com/HazyResearch/legalbench/tree/main/tasks/privacy_policy_qa",
+                  "--max-cases": 20
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "consumer_protection_compliance",
+          "label": "消费者权益法规遵守性评测",
+          "name_en": "Consumer Protection Compliance",
+          "intro": "评估模型能否识别消费者合同中的不公平条款，并依据营销规则判断价格披露、收费和销售行为是否违规。",
+          "category_label": "消费者权益与营销法规",
+          "benchmarks": [
+            {
+              "option_key": "legalbench_unfair_tos",
+              "name": "LegalBench-UnfairToS",
+              "intro": "LegalBench UnfairToS 收集在线服务条款并标注潜在不公平条款类型，用于检查模型能否识别仲裁、单方变更、责任限制等消费者合同风险。",
+              "url": "https://github.com/HazyResearch/legalbench/tree/main/tasks/unfair_tos",
+              "language": "English",
+              "scale": "3813",
+              "evaluation": "Exact Match",
+              "paths": {
+                "dataset": "downloads/datasets/huggingface/nguha__legalbench/data/unfair_tos/test.tsv",
+                "results": "result"
+              },
+              "example": {
+                "benchmark": "LegalBench-UnfairToS",
+                "dimension": "消费者权益法规遵守性评测",
+                "task": "qa",
+                "question": "we reserve the right to make changes to our site, policies, service terms, and these conditions of use at any time.\n请判断该服务条款所属的消费者权益风险类别。",
+                "answer": "Unilateral change",
+                "options": [
+                  "A. Arbitration",
+                  "B. Unilateral change",
+                  "C. Content removal",
+                  "D. Jurisdiction",
+                  "E. Choice of law",
+                  "F. Limitation of liability",
+                  "G. Unilateral termination",
+                  "H. Contract by using",
+                  "I. Other"
+                ]
+              },
+              "execution": {
+                "extra_args": {
+                  "--benchmark-name": "LegalBench-UnfairToS",
+                  "--dimension-label": "消费者权益法规遵守性评测",
+                  "--benchmark-url": "https://github.com/HazyResearch/legalbench/tree/main/tasks/unfair_tos",
+                  "--max-cases": 20
+                }
+              }
+            },
+            {
+              "option_key": "legalbench_telemarketing_sales_rule",
+              "name": "LegalBench-TelemarketingSalesRule",
+              "intro": "LegalBench TelemarketingSalesRule 以电话营销事实场景考察价格、附加费用和重要信息披露是否违反销售规则，用于评估明确法规在具体行为上的适用判断。",
+              "url": "https://github.com/HazyResearch/legalbench/tree/main/tasks/telemarketing_sales_rule",
+              "language": "English",
+              "scale": "47",
+              "evaluation": "Exact Match",
+              "paths": {
+                "dataset": "downloads/datasets/huggingface/nguha__legalbench/data/telemarketing_sales_rule/test.tsv",
+                "results": "result"
+              },
+              "example": {
+                "benchmark": "LegalBench-TelemarketingSalesRule",
+                "dimension": "消费者权益法规遵守性评测",
+                "task": "qa",
+                "question": "Acme Toys is a telemarketer subject to the Telemarketing Sales Rule. Acme told a customer that it would sell them 2 frisbees for $15, and that shipping would be free. Acme did not disclose that both of the frisbees were red, but the customer agreed to the sale without inquiring about the color of the frisbees. Is this a violation of the Telemarketing Sales Rule?",
+                "answer": "No",
+                "options": ["A. Yes", "B. No"]
+              },
+              "execution": {
+                "extra_args": {
+                  "--benchmark-name": "LegalBench-TelemarketingSalesRule",
+                  "--dimension-label": "消费者权益法规遵守性评测",
+                  "--benchmark-url": "https://github.com/HazyResearch/legalbench/tree/main/tasks/telemarketing_sales_rule",
+                  "--max-cases": 20
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

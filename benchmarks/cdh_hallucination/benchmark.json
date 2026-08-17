@@ -1,0 +1,90 @@
+{
+  "id": "cdh_hallucination",
+  "label": "幻觉水平",
+  "benchmark_name": "反常识-常识对图像评测",
+  "description": "面向多模态模型的反常识/常识成对图像幻觉评测。",
+  "source_type": "cdh",
+  "enabled": true,
+  "paths": {
+    "dataset": "CDH-Bench.revised.strict.jsonl",
+    "images": "images",
+    "results": "result"
+  },
+  "execution": {
+    "adapter": "python_cli",
+    "script": "evaluate_cdh_bench.py",
+    "default_tasks": ["qa", "mc"],
+    "supported_tasks": ["qa", "mc", "caption"],
+    "supports_real_eval": true,
+    "args": {
+      "dataset": "--jsonl",
+      "images": "--images-root",
+      "output_dir": "--output-dir",
+      "models": "--models",
+      "tasks": "--tasks",
+      "parallel": "--parallel",
+      "retry": "--retry",
+      "timeout_s": "--timeout-s",
+      "progress_file": "--progress-file",
+      "mitigation": "--mitigation",
+      "categories": "--categories",
+      "dimensions": "--subcategories"
+    }
+  },
+  "display": {
+    "mode": "paired_image_qa",
+    "sections": ["selection_detail", "progress", "summary", "metrics"],
+    "case_view": "counterfactual_commonsense_pair",
+    "chart": "metric_bar"
+  },
+  "metrics": [
+    {"key": "CF_Acc", "label": "反常识准确率 CF Acc", "format": "percent"},
+    {"key": "CS_Acc", "label": "常识准确率 CS Acc", "format": "percent"},
+    {"key": "Gap", "label": "性能差值 Gap", "format": "percent"},
+    {"key": "CCR", "label": "一致纠错率 CCR", "format": "percent"},
+    {"key": "RPD", "label": "相对性能下降 RPD", "format": "percent"},
+    {"key": "Caption_Coverage", "label": "描述关键声明覆盖率", "format": "percent"},
+    {"key": "Caption_Critical_Acc", "label": "描述关键事实命中率", "format": "percent"},
+    {"key": "Claim_Coverage", "label": "CDH-Gen Claim 覆盖率", "format": "percent"},
+    {"key": "Critical_Claim_Acc", "label": "CDH-Gen 关键 Claim 准确率", "format": "percent"},
+    {"key": "Prior_Attraction_Rate", "label": "先验吸附率", "format": "percent"},
+    {"key": "Forbidden_Claim_Rate", "label": "Forbidden Claim 率", "format": "percent"}
+  ],
+  "download": {
+    "files": []
+  },
+  "categories": [
+    {
+      "id": "Counting Anomalies",
+      "label": "计数幻觉",
+      "dimensions": [
+        {"id": "Animal Parts", "label": "动物部位计数幻觉"},
+        {"id": "Body Parts", "label": "身体部位计数幻觉"},
+        {"id": "Everyday Objects", "label": "日常物体计数幻觉"},
+        {"id": "Plant Structure", "label": "植物结构计数幻觉"}
+      ]
+    },
+    {
+      "id": "Relational Anomalies",
+      "label": "关系幻觉",
+      "dimensions": [
+        {"id": "Animal Behavior", "label": "动物行为关系幻觉"},
+        {"id": "Causality", "label": "因果推断/因果关系幻觉"},
+        {"id": "Object Function", "label": "物体功能关系幻觉"},
+        {"id": "Size Scale", "label": "尺寸尺度关系幻觉"},
+        {"id": "Spatial", "label": "空间关系幻觉"}
+      ]
+    },
+    {
+      "id": "Attribute Anomalies",
+      "label": "属性幻觉",
+      "dimensions": [
+        {"id": "Color", "label": "颜色属性幻觉"},
+        {"id": "Luminescence/Transparency", "label": "发光/透明属性幻觉"},
+        {"id": "Material", "label": "材质属性幻觉"},
+        {"id": "Physical State", "label": "物理状态属性幻觉"},
+        {"id": "Temperature", "label": "温度属性幻觉"}
+      ]
+    }
+  ]
+}

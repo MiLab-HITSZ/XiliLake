@@ -1,0 +1,11 @@
+[
+  {
+    "name": "example-openai-compatible-model",
+    "backend": "api",
+    "model": "model-name",
+    "base_url": "https://api.example.com/v1/chat/completions",
+    "api_key_env": "XILILAKE_EXAMPLE_API_KEY",
+    "temperature": 0.0,
+    "max_tokens": 1024
+  }
+]

@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "updated_at": "2026-08-17T12:10:11.353339+00:00",
+  "groups": {
+    "privacy_security": {
+      "label": "系统策略安全性"
+    },
+    "fairness_bias": {
+      "label": "社会群体公平性"
+    }
+  },
+  "dimensions": {
+    "benchmark::truthfulness::downloaded::输出真实性": {
+      "label": "一般问答真实性评测"
+    },
+    "benchmark::truthfulness::downloaded::常识": {
+      "label": "认知偏差问答评测"
+    },
+    "benchmark::privacy_security::downloaded::代码漏洞安全评测": {
+      "label": "代码漏洞识别能力评测"
+    },
+    "benchmark::medical_end_to_end::ehr_end_to_end_auditing::ehr_temporal_end_to_end": {
+      "label": "病历时序审计（端到端）"
+    },
+    "benchmark::medical_end_to_end::ehr_end_to_end_auditing::clinical_representation_end_to_end": {
+      "label": "临床表征审计（端到端）"
+    },
+    "benchmark::medical_end_to_end::ehr_end_to_end_auditing::physiological_plausibility_end_to_end": {
+      "label": "临床生理审计（端到端）"
+    },
+    "benchmark::medical_end_to_end::ehr_end_to_end_auditing::treatment_logic_end_to_end": {
+      "label": "临床治疗逻辑审计（端到端）"
+    },
+    "benchmark::medical_end_to_end::ehr_end_to_end_auditing::documentation_evidence_end_to_end": {
+      "label": "诊疗文档证据审计（端到端）"
+    },
+    "benchmark::medical_oracle_assisted::ehr_oracle_assisted_reasoning::ehr_temporal_oracle_reasoning": {
+      "label": "病历时序辅助推理"
+    }
+  }
+}

@@ -1,0 +1,241 @@
+{
+  "id": "medical_end_to_end",
+  "label": "医疗领域-端到端可靠性",
+  "benchmark_name": "EHRPerturb End-to-End",
+  "description": "在不提供异常位置、异常类型或证据提示的条件下，评估模型独立审计完整电子健康记录的能力。模型需要从病例中发现目标异常，定位证据，判定异常类型，解释冲突并提出最小修复；本大类不包含已给出证据锚点和异常类型的辅助推理任务。",
+  "source_type": "medical_end_to_end",
+  "enabled": true,
+  "paths": {
+    "dataset": "downloads/datasets/github_repos/wealone1__EHRPerturb_release/data/ehrperturb_corrupted_450",
+    "results": "result"
+  },
+  "execution": {
+    "adapter": "python_cli",
+    "script": "evaluate_ehrperturb.py",
+    "default_tasks": [
+      "qa"
+    ],
+    "supported_tasks": [
+      "qa"
+    ],
+    "supports_real_eval": true,
+    "args": {
+      "dataset": "--dataset",
+      "output_dir": "--output-dir",
+      "models": "--models",
+      "tasks": "--tasks",
+      "parallel": "--parallel",
+      "retry": "--retry",
+      "timeout_s": "--timeout-s",
+      "progress_file": "--progress-file",
+      "categories": "--categories",
+      "dimensions": "--dimensions"
+    },
+    "extra_args": {
+      "--track": "end_to_end",
+      "--benchmark-url": "https://github.com/wealone1/EHRPerturb_release",
+      "--max-cases": 15
+    }
+  },
+  "display": {
+    "mode": "generic_text_qa",
+    "sections": [
+      "selection_detail",
+      "progress",
+      "summary",
+      "metrics",
+      "cases"
+    ],
+    "case_view": "text_sample"
+  },
+  "metrics": [
+    {
+      "key": "accuracy",
+      "label": "严格成功率",
+      "format": "percent"
+    },
+    {
+      "key": "relaxed_success_rate",
+      "label": "宽松成功率",
+      "format": "percent"
+    },
+    {
+      "key": "target_match_rate",
+      "label": "目标异常匹配率",
+      "format": "percent"
+    },
+    {
+      "key": "detection_accuracy",
+      "label": "异常检测准确率",
+      "format": "percent"
+    },
+    {
+      "key": "classification_accuracy",
+      "label": "异常分类准确率",
+      "format": "percent"
+    },
+    {
+      "key": "localization_score",
+      "label": "证据定位得分",
+      "format": "percent"
+    },
+    {
+      "key": "explanation_score",
+      "label": "冲突解释得分",
+      "format": "percent"
+    },
+    {
+      "key": "repair_score",
+      "label": "最小修复得分",
+      "format": "percent"
+    },
+    {
+      "key": "response_rate",
+      "label": "响应率",
+      "format": "percent"
+    },
+    {
+      "key": "avg_latency_ms",
+      "label": "平均延迟 ms",
+      "format": "number"
+    },
+    {
+      "key": "n_total",
+      "label": "评测任务数",
+      "format": "number"
+    }
+  ],
+  "categories": [
+    {
+      "id": "ehr_end_to_end_auditing",
+      "label": "电子病历端到端审计",
+      "dimensions": [
+        {
+          "id": "ehr_temporal_end_to_end",
+          "label": "电子病历时序端到端审计",
+          "name_en": "EHR Temporal End-to-End Auditing",
+          "intro": "评估模型在没有异常提示的情况下，能否从完整电子病历中发现事件时间、先后顺序或时间线叙述之间的冲突，并完成证据定位、类型判定和最小修复。",
+          "execution": {
+            "extra_args": {
+              "--taxonomy": "T1",
+              "--benchmark-name": "EHRPerturb-T1-End-to-End",
+              "--dimension-label": "电子病历时序端到端审计"
+            }
+          },
+          "benchmarks": [
+            {
+              "option_key": "ehrperturb_t1_end_to_end",
+              "name": "EHRPerturb-T1-End-to-End",
+              "intro": "使用官方 Corrupt450 中 90 个时间扰动病例，覆盖局部时间戳错误、成对事件顺序冲突和多步时间线冲突。模型只看到受扰动病历，不获得金标准证据或异常类型，必须自行发现并定位同一临床事件链中的时序异常。",
+              "url": "https://github.com/wealone1/EHRPerturb_release",
+              "language": "English",
+              "scale": "90 cases / 90 scored tasks",
+              "source": "EHRPerturb official Corrupt450 release",
+              "evaluation": "End-to-End Auditing"
+            }
+          ]
+        },
+        {
+          "id": "clinical_representation_end_to_end",
+          "label": "临床表征端到端审计",
+          "name_en": "Clinical Representation End-to-End Auditing",
+          "intro": "评估模型在没有异常提示的情况下，能否发现同一临床事实在数值、标记、解释、结构化字段或邻近叙述中的相互矛盾，并独立完成审计。",
+          "execution": {
+            "extra_args": {
+              "--taxonomy": "T2",
+              "--benchmark-name": "EHRPerturb-T2-End-to-End",
+              "--dimension-label": "临床表征端到端审计"
+            }
+          },
+          "benchmarks": [
+            {
+              "option_key": "ehrperturb_t2_end_to_end",
+              "name": "EHRPerturb-T2-End-to-End",
+              "intro": "使用 90 个临床表征矛盾病例，扰动 Flag、Interpretation、Comment、结构化结果标签或短叙述，使数值、参考范围和文本解释发生冲突。模型需要在完整病历中自行找到矛盾双方，不能依赖预先给出的证据位置。",
+              "url": "https://github.com/wealone1/EHRPerturb_release",
+              "language": "English",
+              "scale": "90 cases / 90 scored tasks",
+              "source": "EHRPerturb official Corrupt450 release",
+              "evaluation": "End-to-End Auditing"
+            }
+          ]
+        },
+        {
+          "id": "physiological_plausibility_end_to_end",
+          "label": "临床生理端到端审计",
+          "name_en": "Clinical Physiology End-to-End Auditing",
+          "intro": "评估模型在没有异常提示的情况下，能否结合患者状态、生命体征趋势、检验结果和干预记录，发现格式合法但生理上不可信的数值或轨迹。",
+          "execution": {
+            "extra_args": {
+              "--taxonomy": "T3",
+              "--benchmark-name": "EHRPerturb-T3-End-to-End",
+              "--dimension-label": "临床生理端到端审计"
+            }
+          },
+          "benchmarks": [
+            {
+              "option_key": "ehrperturb_t3_end_to_end",
+              "name": "EHRPerturb-T3-End-to-End",
+              "intro": "使用 90 个生理不合理病例，扰动生命体征、实验室数值或局部患者状态轨迹。模型需要自行搜索邻近上下文、短期趋势和后续干预证据，不能只靠固定阈值或明显越界识别异常。",
+              "url": "https://github.com/wealone1/EHRPerturb_release",
+              "language": "English",
+              "scale": "90 cases / 90 scored tasks",
+              "source": "EHRPerturb official Corrupt450 release",
+              "evaluation": "End-to-End Auditing"
+            }
+          ]
+        },
+        {
+          "id": "treatment_logic_end_to_end",
+          "label": "临床治疗逻辑端到端审计",
+          "name_en": "Treatment Logic End-to-End Auditing",
+          "intro": "评估模型在没有异常提示的情况下，能否核对治疗意图、医嘱、配药、给药和护理过程与患者证据，发现治疗或照护动作层的不一致。",
+          "execution": {
+            "extra_args": {
+              "--taxonomy": "T4",
+              "--benchmark-name": "EHRPerturb-T4-End-to-End",
+              "--dimension-label": "临床治疗逻辑端到端审计"
+            }
+          },
+          "benchmarks": [
+            {
+              "option_key": "ehrperturb_t4_end_to_end",
+              "name": "EHRPerturb-T4-End-to-End",
+              "intro": "使用 90 个治疗逻辑不匹配病例，覆盖药物医嘱、EMAR 给药事件、Pyxis 配药动作、治疗计划和管理叙述。模型必须从完整照护链中自行连接过敏、禁忌、检验、生命体征和实际执行记录。",
+              "url": "https://github.com/wealone1/EHRPerturb_release",
+              "language": "English",
+              "scale": "90 cases / 90 scored tasks",
+              "source": "EHRPerturb official Corrupt450 release",
+              "evaluation": "End-to-End Auditing"
+            }
+          ]
+        },
+        {
+          "id": "documentation_evidence_end_to_end",
+          "label": "诊疗文档证据端到端审计",
+          "name_en": "Documentation-Evidence End-to-End Auditing",
+          "intro": "评估模型在没有异常提示的情况下，能否核对高层诊疗文档结论与检验、影像、用药和病程等底层证据，发现不受支持或直接冲突的记录。",
+          "execution": {
+            "extra_args": {
+              "--taxonomy": "T5",
+              "--benchmark-name": "EHRPerturb-T5-End-to-End",
+              "--dimension-label": "诊疗文档证据端到端审计"
+            }
+          },
+          "benchmarks": [
+            {
+              "option_key": "ehrperturb_t5_end_to_end",
+              "name": "EHRPerturb-T5-End-to-End",
+              "intro": "使用 90 个文档与证据冲突病例，扰动出院诊断、问题列表、最终总结或诊断编码，并保留下层检验、影像、微生物、用药和病程证据。模型需要自行定位冲突双方，并排除脱敏占位符和普通缺失。",
+              "url": "https://github.com/wealone1/EHRPerturb_release",
+              "language": "English",
+              "scale": "90 cases / 90 scored tasks",
+              "source": "EHRPerturb official Corrupt450 release",
+              "evaluation": "End-to-End Auditing"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

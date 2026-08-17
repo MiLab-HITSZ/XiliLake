@@ -1,0 +1,63 @@
+# Copyright (c) 2026 MiLab. All rights reserved.
+
+# Credentials and machine-local configuration
+.env
+.env.*
+!.env.example
+api_keys*.json
+temp_models.json
+config/api_models.json
+*credentials*.json
+*secrets*.json
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Python and editor state
+.venv/
+venv/
+cdh-bench-env/
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.py[cod]
+.DS_Store
+.idea/
+.vscode/
+
+# Large or reproducible local artifacts
+downloads/
+models/
+images/
+result/
+runtime/
+tmp/
+data/**/images/
+data/**/cache/
+
+# Generated benchmark views; rebuild them from their prepare scripts.
+benchmarks/custom_privacy/xsafety_multilingual_refusal.jsonl
+benchmarks/trusted_downloaded_capability/natural_instructions.jsonl
+benchmarks/trusted_downloaded_harmful_capability/rules_confidentiality.jsonl
+benchmarks/trusted_downloaded_privacy_security/safe_test.jsonl
+benchmarks/trusted_downloaded_privacy_security/safetybench_labeled_dev.jsonl
+benchmarks/trusted_downloaded_societal_compliance/moral_except_majority.jsonl
+benchmarks/trusted_downloaded_truthfulness/cmmlu_test.jsonl
+
+# Logs, process state, and generated result rows
+*.log
+*.pid
+*.out
+nohup.out
+result/**/*.jsonl
+
+# Notebook and LaTeX intermediates
+.ipynb_checkpoints/
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.synctex.gz
