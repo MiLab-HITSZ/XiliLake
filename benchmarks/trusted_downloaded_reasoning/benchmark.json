@@ -769,7 +769,7 @@
                 }
               ],
               "paths": {
-                "dataset": "downloads/datasets/github_repos/ChadiHelwe__MAFALDA",
+                "dataset": "downloads/datasets/github_repos/ChadiHelwe__MAFALDA/datasets/gold_standard_dataset.jsonl",
                 "results": "result"
               },
               "display": {

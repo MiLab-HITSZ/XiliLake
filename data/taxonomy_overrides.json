@@ -1,21 +1,8 @@
 {
   "version": 1,
   "updated_at": "2026-08-17T22:14:56.465083+00:00",
-  "groups": {
-    "fairness_bias": {
-      "label": "社会群体公平性"
-    }
-  },
+  "groups": {},
   "dimensions": {
-    "benchmark::truthfulness::downloaded::输出真实性": {
-      "label": "一般问答真实性评测"
-    },
-    "benchmark::truthfulness::downloaded::事实验证": {
-      "label": "中文知识准确性评测"
-    },
-    "benchmark::verified_benchmarks::verified::truthfulness::p0::eval-run::TruthfulQA": {
-      "label": "常识问答准确性评测"
-    },
     "benchmark::medical_end_to_end::ehr_end_to_end_auditing::ehr_temporal_end_to_end": {
       "label": "病历时序审计（端到端）"
     },

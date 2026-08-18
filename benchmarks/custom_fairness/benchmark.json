@@ -54,7 +54,7 @@
   "categories": [
     {
       "id": "fairness_bias",
-      "label": "群体与社会公平性",
+      "label": "社会群体公平性",
       "dimensions": [
         {
           "id": "stereotype_pair_detection",

@@ -55,7 +55,7 @@
               "evaluation": "Best-answer accuracy",
               "intro": "TruthfulQA 使用 790 个容易诱发常见误解的问题，当前入口显示官方问题、最佳正确答案、其他正确答案、错误答案与证据来源。",
               "paths": {"dataset": "benchmarks/verified_benchmarks/data/truthfulqa.jsonl", "results": "result"},
-              "execution": {"extra_args": {"--benchmark-name": "TruthfulQA", "--dimension-label": "常识问答真实性评测", "--benchmark-url": "https://github.com/sylinrl/TruthfulQA", "--max-cases": 20}}
+              "execution": {"extra_args": {"--benchmark-name": "TruthfulQA", "--dimension-label": "易谬误问题事实性检测", "--benchmark-url": "https://github.com/sylinrl/TruthfulQA", "--max-cases": 20}}
             }
           ]
         },
@@ -141,8 +141,8 @@
         },
         {
           "id": "output_safety",
-          "label": "输出内容安全评测",
-          "intro": "判定响应内容本身是否安全，或测量高风险知识暴露。",
+          "label": "响应策略校准评测",
+          "intro": "判定既有回复是否安全，或观察高风险知识保留情况，为系统响应策略提供校准信号。",
           "benchmarks": [
             {
               "option_key": "diasafety",
@@ -153,7 +153,7 @@
               "evaluation": "Safe/unsafe classification accuracy",
               "intro": "DiaSafety 评估给定对话上下文时回复是否安全，重点是上下文敏感的不安全输出；当前入口把上下文和待判定回复完整组合为安全二分类题。",
               "paths": {"dataset": "benchmarks/verified_benchmarks/data/diasafety.jsonl", "results": "result"},
-              "execution": {"extra_args": {"--benchmark-name": "DiaSafety", "--dimension-label": "上下文对话安全判别评测", "--benchmark-url": "https://aclanthology.org/2022.findings-acl.308/", "--max-cases": 20}}
+              "execution": {"extra_args": {"--benchmark-name": "DiaSafety", "--dimension-label": "上下文对话安全判别策略评测", "--benchmark-url": "https://aclanthology.org/2022.findings-acl.308/", "--max-cases": 20}}
             },
             {
               "option_key": "wmdp_biochem",
@@ -164,7 +164,7 @@
               "evaluation": "Multiple-choice accuracy",
               "intro": "WMDP-BioChem 合并生物安全与化学安全危险知识分片，测量模型对可被滥用的高风险专业知识的掌握程度。",
               "paths": {"dataset": "benchmarks/verified_benchmarks/data/wmdp_biochem.jsonl", "results": "result"},
-              "execution": {"extra_args": {"--benchmark-name": "WMDP-BioChem", "--dimension-label": "生化危险知识暴露评测", "--benchmark-url": "https://www.wmdp.ai/", "--max-cases": 20}}
+              "execution": {"extra_args": {"--benchmark-name": "WMDP-BioChem", "--dimension-label": "生化危险知识控制策略评测", "--benchmark-url": "https://www.wmdp.ai/", "--max-cases": 20}}
             }
           ]
         },
@@ -255,7 +255,7 @@
               "evaluation": "Refusal proxy",
               "intro": "RMCBench 的 473 条提示覆盖文本到代码生成、代码翻译和补全等恶意代码请求。当前 gold 为安全拒答，修复了此前把 GOOD 标签显示成应生成恶意代码的问题。",
               "paths": {"dataset": "benchmarks/verified_benchmarks/data/rmcbench.jsonl", "results": "result"},
-              "execution": {"extra_args": {"--benchmark-name": "RMCBench", "--dimension-label": "恶意代码生成抑制评测", "--benchmark-url": "https://github.com/qing-yuan233/RMCBench", "--max-cases": 20}}
+              "execution": {"extra_args": {"--benchmark-name": "RMCBench", "--dimension-label": "恶意代码生成请求拒答策略评测", "--benchmark-url": "https://github.com/qing-yuan233/RMCBench", "--max-cases": 20}}
             },
             {
               "option_key": "chisafetybench",

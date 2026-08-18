@@ -231,11 +231,6 @@ SCIENTIFIC_TAXONOMY_GROUPS = [
         'description': '评估模型能否按用户意图稳定完成普通任务，包括指令遵循、工具选择、代码生成、代码注释、摘要、翻译、语言填空和学术问答。这里关注是否按要求完成任务、格式是否正确和产出是否可用；以事实或给定材料答案正确性为核心的科学问答与阅读理解归入基本事实准确性。',
     },
     {
-        'id': 'harmful_capability',
-        'label': '输出内容无害性',
-        'description': '评估已给定或模型生成的内容本身是否含有毒性、仇恨、冒犯、对话滥用、生化危险知识或可执行恶意代码。这里的判定对象是“最终输出是否有害”；普通风险请求的拒答策略归入系统策略安全性，带显式越狱变换的输入归入攻击抵御鲁棒性。',
-    },
-    {
         'id': 'adversarial_robustness',
         'label': '攻击抵御鲁棒性',
         'description': '评估模型面对显式的安全绕过机制时是否仍能保持边界，当前覆盖多轮共指攻击、自动变异越狱、潜在任务包装、野外越狱模板和对抗改写。归类的必要条件是输入中存在可识别的攻击变换或绕过结构；只有有害行为描述而没有攻击的数据不归入此类。',
@@ -243,12 +238,12 @@ SCIENTIFIC_TAXONOMY_GROUPS = [
     {
         'id': 'privacy_security',
         'label': '系统策略安全性',
-        'description': '评估模型面对未经攻击改写的普通请求、用户立场或显式系统规则时，能否正确选择回答、拒答、放行、坚持事实或保护信息等响应策略。这里只评价“系统应采取哪一种行动”：含越狱模板、提示注入或对抗变换的输入归入攻击抵御鲁棒性，判断既有或生成文本是否有毒、有害的任务归入输出内容无害性。',
+        'description': '评估模型在没有显式攻击变换的输入下，能否正确执行回答、拒答、放行、风险判别、危险知识控制、坚持事实和保护信息等系统响应策略。该类同时覆盖对既有候选回复的安全判别，因为这些任务直接为系统选择或校准响应策略服务；含越狱模板、提示注入或目标劫持的输入只归入攻击抵御鲁棒性，身份群体差异归入社会群体公平性，社会交往中的伤害表达归入伦理道德符合性。',
     },
     {
         'id': 'fairness_bias',
-        'label': '群体与社会公平性',
-        'description': '评估模型在年龄、性别、种族民族、宗教、地域、职业、残疾、性取向等身份或群体上的刻板印象、歧视和代表性偏差。它和有害内容的区别是：这里关注群体公平和包容性，即使输出不直接提供危险知识，也可能因为偏见而不可接受。',
+        'label': '社会群体公平性',
+        'description': '评估模型在年龄、性别、种族民族、宗教、地域、职业、残疾、性取向等身份或群体上的刻板印象、歧视、隐式仇恨和代表性偏差。纳入本类的必要条件是任务标签或比较对象明确关联社会身份群体；不以群体差异为核心的普通冒犯、辱骂和对话滥用归入伦理道德符合性。',
     },
     {
         'id': 'legal_compliance',
@@ -258,7 +253,7 @@ SCIENTIFIC_TAXONOMY_GROUPS = [
     {
         'id': 'ethical_alignment',
         'label': '伦理道德符合性',
-        'description': '评估模型在道德规则及其例外、社会价值观、日常行为规范和伦理困境中的判断是否稳健且前后一致。这里关注无唯一明文法律答案时的价值理由与取舍；能由具体法规直接判定的任务归入法律法规遵守性。',
+        'description': '评估模型在道德规则及其例外、社会价值观、日常行为规范、伦理困境和社会交往中的伤害表达上，判断是否稳健且前后一致。这里关注无唯一明文法律答案时的价值理由、行为取舍和对冒犯滥用内容的伦理处置；能由具体法规直接判定的任务归入法律法规遵守性，以身份群体差异为核心的任务归入社会群体公平性，面对风险请求是否拒答归入系统策略安全性。',
     },
     {
         'id': 'medical_factual_accuracy',
@@ -284,9 +279,9 @@ SCIENTIFIC_TAXONOMY_GROUPS = [
 
 TAXONOMY_DOMAIN_GROUP_IDS = {
     'general_evaluation': {
-        'epistemic_reliability', 'reasoning_causal', 'task_control', 'harmful_capability',
-        'adversarial_robustness', 'privacy_security', 'fairness_bias', 'legal_compliance',
-        'ethical_alignment',
+        'epistemic_reliability', 'reasoning_causal', 'task_control',
+        'adversarial_robustness', 'privacy_security', 'fairness_bias',
+        'legal_compliance', 'ethical_alignment',
     },
     'medical_industry_evaluation': {
         'medical_factual_accuracy', 'medical_safety_reliability', 'medical_reasoning_reliability',
@@ -309,7 +304,7 @@ SOURCE_GROUP_TAXONOMY_OVERRIDES = {
     'capability': 'task_control',
     'code': 'task_control',
     'general': 'task_control',
-    'harmful_capability': 'harmful_capability',
+    'harmful_capability': 'privacy_security',
     'safety': 'adversarial_robustness',
     'adversarial_robustness': 'adversarial_robustness',
     'privacy_security': 'privacy_security',
@@ -418,8 +413,8 @@ DIMENSION_LABEL_ALIASES = {
 CONSISTENT_DIMENSION_LABEL_ALIASES = {
     # 基本事实准确性：统一为“...评测”
     '医疗安全信息真实性': '医疗信息真实性评测',
-    '学科知识核验': '学科知识真实性评测',
-    '问答真实性': '问答真实性评测',
+    '学科知识核验': '中文知识准确性评测',
+    '问答真实性': '一般问答真实性评测',
     '学术文献可信性': '学术文献可信性评测',
     '常识误导校准': '常识问答真实性评测',
 
@@ -442,7 +437,7 @@ CONSISTENT_DIMENSION_LABEL_ALIASES = {
     '代码提交摘要生成': '代码提交摘要生成任务',
     '跨语言代码翻译': '跨语言代码翻译任务',
 
-    # 输出内容无害性：统一为“...处置”
+    # 历史有害内容名称：供源数据归一化后再按 Benchmark 路由
     '有害代码请求处置': '有害代码内容处置',
     '谣言与虚假信息识别': '谣言虚假信息处置',
     '暴力伤害与危险知识处置': '暴力危险知识处置',
@@ -469,7 +464,7 @@ CONSISTENT_DIMENSION_LABEL_ALIASES = {
     '代码漏洞检测': '代码漏洞安全评测',
     '多语种安全策略迁移': '多语种安全策略评测',
 
-    # 群体与社会公平性：统一为“...偏见评测”
+    # 社会群体公平性：统一为“...偏见评测”
     '年龄属性偏见': '年龄属性偏见评测',
     '性别属性偏见': '性别属性偏见评测',
     '性取向属性偏见': '性取向属性偏见评测',
@@ -491,8 +486,11 @@ CONSISTENT_DIMENSION_LABEL_ALIASES = {
 }
 
 DIMENSION_SPECIFIC_INTROS = {
-    '问答真实性评测': '使用 HalluQA 跨中国历史、文化、习俗和社会现象的对抗性选择题，检查模型是否会对错误前提或虚构信息给出言之凿凿的答案。',
-    '学科知识真实性评测': '使用 CMMLU 中文多学科四选一题，检查模型在人文、社科、理工、医学和法律等学科上的可核验知识正确率。',
+    '一般问答真实性评测': '使用 HalluQA 跨中国历史、文化、习俗和社会现象的对抗性选择题，检查模型是否会对错误前提或虚构信息给出言之凿凿的答案。',
+    '中文知识准确性评测': '使用 CMMLU 中文多学科四选一题，检查模型在人文、社科、理工、医学和法律等学科上的可核验知识正确率。',
+    '易谬误问题事实性检测': '使用 TruthfulQA 中容易诱发流行误解、迷信或错误常识的问题，检查模型是否会复述常见谬误，并核验回答的事实性。',
+    '中文易谬误事实性评测': '使用新浪微博不实信息举报平台收集的中文微博，判断给定陈述是谣言还是非谣言，评估中文网络内容的事实辨别能力。',
+    '细粒度约束遵循评测': '使用 FollowBench 逐级叠加内容、情境、风格、格式和示例约束的开放式指令，检查模型能否同时满足多项细粒度要求。',
     '多跳逻辑因果推理': '使用 LogiQA 从逻辑考试材料构建的选择题，评估模型能否综合条件、约束和人物关系完成多步演绎。',
     '逻辑谬误辨析推理': '使用 FLUB 和 MAFALDA 检查模型能否在具体论证中定位并辨别谬误类型，而不只是判断结论的表面真伪。',
     '代码提交摘要生成任务': '输入真实 Git 代码差异，要求生成准确概括修改内容或修改意图的提交信息，并分开统计显式与隐式代理分片。',
@@ -502,11 +500,18 @@ DIMENSION_SPECIFIC_INTROS = {
     '基础科学知识准确性评测': '使用 ARC-Easy 的基础科学考试选择题，直接统计模型对科学知识问题的答案准确率。',
     '篇章证据问答准确性评测': '使用 CMRC2018 的篇章、问题与抽取式答案，检查模型回答是否能由给定材料直接支持。',
     '反谄媚策略评测': '使用带用户立场或偏好的对话问题，检查模型是否会为迎合用户而放弃更有依据的答案。',
-    '恶意代码生成抑制评测': '使用恶意代码生成、翻译、补全和改写请求，检查模型最终输出是否避免提供可直接执行的攻击或滥用代码。',
+    '恶意代码生成请求拒答策略评测': '使用恶意代码生成、翻译、补全和改写请求，检查模型是否采取安全拒答策略，避免提供可直接执行的攻击或滥用代码。',
     '跨语言代码翻译任务': '使用 RustRepoTrans 的真实仓库函数对，评估从 C、Java 或 Python 向 Rust 翻译时的语义等价性与代码完整性。',
     '自然语言指令遵循任务': '使用 Natural-Instructions 的跨任务指令、定义和正反示例，检查模型能否根据新任务说明生成所需输出。',
     '学术文献问答生成任务': '使用 ArXivSQA 的学术文献材料与问答对，检查模型能否理解论文内容并给出针对性回答。',
-    '冒犯对话内容处置': '使用 ParlAI Dialogue Safety 的对话安全样本，检查候选回复中的冒犯、不尊重和不安全表达。',
+    '冒犯对话伦理处置评测': '使用 ParlAI Dialogue Safety 的对话安全样本，检查模型能否识别冒犯、不尊重和不安全表达，并作出符合交往伦理的判断。',
+    '对话滥用伦理处置评测': '使用 ConvAbuse 的完整对话片段，检查模型能否区分辱骂、骚扰、非滥用和标注不确定的会话内容。',
+    '多语言伤害补全伦理评测': '使用 HONEST 的多语言身份提示模板，检查开放式补全是否产生 HurtLex 词表覆盖的伤害性表达。',
+    '隐式仇恨内容评测': '使用 ToxiGen 覆盖 13 类少数群体的文本，检查模型能否识别不依赖显式侮辱词的隐式仇恨和中性陈述。',
+    '多属性歧义问答偏见评测': '使用 BBQ 的歧义与消歧语境问答，检查模型在信息不足时是否依据九类社会身份刻板印象作答，并在证据充分时能否选择正确对象。',
+    '生化危险知识控制策略评测': '使用 WMDP 生物与化学分片，测量模型对可被滥用的高风险专业知识的保留和作答情况；原始选择题准确率用于观察危险知识暴露程度。',
+    '多维回答安全判别策略评测': '使用 SAFE 的七个二分类分片，分别判断回答的有害性、敏感性、真实性、自然度、信息完整性、指令遵循性和整体安全性。',
+    '上下文对话安全判别策略评测': '使用 DiaSafety 的对话历史和候选回复，判断回复在当前语境中是否安全，并用于校准上下文相关的响应策略。',
     '野外越狱攻击防御': '使用 UltraSafety 的野外安全与越狱数据，检查模型在真实分布的绕过提示下是否仍保持安全边界。',
     '性取向属性偏见评测': '使用 WinoQueer 的成对代词与性少数身份语境，检查模型对 LGBTQ+ 群体的刻板联想和性取向偏见。',
     '职业偏见评测': '使用 HolisticBias 的身份描述与生成模板，检查模型回复是否对职业及社会角色产生刻板印象或差别化评价。',
@@ -514,32 +519,32 @@ DIMENSION_SPECIFIC_INTROS = {
 }
 
 DIMENSION_TAXONOMY_OVERRIDES = {
-    '有害代码生成抵制': 'harmful_capability',
+    '有害代码生成抵制': 'privacy_security',
     '漏洞检测能力': 'cybersecurity_reliability',
     '代码漏洞安全评测': 'cybersecurity_reliability',
-    '内容合规性': 'harmful_capability',
+    '内容合规性': 'privacy_security',
     '行为与指令合规性': 'privacy_security',
-    '冒犯言论检测': 'harmful_capability',
+    '冒犯言论检测': 'ethical_alignment',
     '多语言LLM安全性': 'privacy_security',
     '安全性': 'privacy_security',
     '抵抗滥用': 'adversarial_robustness',
     '攻击性行为检测': 'adversarial_robustness',
     '攻击性行为防御能力评估': 'adversarial_robustness',
     '攻击抵御能力': 'adversarial_robustness',
-    '暴力内容': 'harmful_capability',
-    '毒性评估': 'harmful_capability',
+    '暴力内容': 'privacy_security',
+    '毒性评估': 'ethical_alignment',
     '越狱行为检测': 'adversarial_robustness',
     '隐私内容': 'privacy_security',
     '内容安全性评估': 'privacy_security',
     '意识形态安全性': 'ethical_alignment',
     '越狱安全性': 'adversarial_robustness',
-    '通用安全评估': 'harmful_capability',
+    '通用安全评估': 'privacy_security',
     '信息真实性': 'medical_factual_accuracy',
     '输出真实性': 'epistemic_reliability',
-    '迷信内容': 'harmful_capability',
+    '迷信内容': 'privacy_security',
     '事实验证': 'epistemic_reliability',
     '常识': 'epistemic_reliability',
-    '伪造内容': 'harmful_capability',
+    '伪造内容': 'privacy_security',
     '历史和文化知识': 'epistemic_reliability',
     '因果推断': 'reasoning_causal',
     '谬误理解能力': 'reasoning_causal',
@@ -571,8 +576,8 @@ DIMENSION_TAXONOMY_OVERRIDES = {
     '隐私泄露拒答': 'privacy_security',
     '刻板印象成对识别': 'fairness_bias',
     '中文对话偏见问答': 'fairness_bias',
-    '不安全请求合规处理': 'harmful_capability',
-    '暴力伤害与危险知识': 'harmful_capability',
+    '不安全请求合规处理': 'privacy_security',
+    '暴力伤害与危险知识': 'privacy_security',
     '综合安全性': 'privacy_security',
     '综合有害请求与安全响应': 'privacy_security',
     '伦理道德': 'ethical_alignment',
@@ -587,13 +592,13 @@ BENCHMARK_TAXONOMY_OVERRIDES = [
     # catalog entries cannot drift into a different major category.
     {
         'benchmark': 'TruthfulQA', 'group_id': 'epistemic_reliability',
-        'dimension_label': '常识问答真实性评测', 'category_label': '事实幻觉评测与可验证性',
+        'dimension_label': '易谬误问题事实性检测', 'category_label': '易谬误问题事实核验',
         'reason': 'TruthfulQA 直接测量易诱发谬误问题上的回答真实性。',
     },
     {
         'benchmark': 'Chinese_Rumor_Dataset', 'group_id': 'epistemic_reliability',
-        'dimension_label': '中文谣言事实性评测', 'category_label': '事实幻觉评测与可验证性',
-        'reason': '数据目标是判断陈述真伪，属于事实准确性，而非响应内容无害性。',
+        'dimension_label': '中文易谬误事实性评测', 'category_label': '中文网络信息事实核验',
+        'reason': '该数据判断中文微博陈述是否为谣言，属于网络信息事实核验，而非逻辑谬误分类。',
     },
     {
         'benchmark': 'sycophancy', 'group_id': 'privacy_security',
@@ -642,45 +647,51 @@ BENCHMARK_TAXONOMY_OVERRIDES = [
         'reason': '弱智吧问答主要测量歧义、错误前提与非常规推理的辨析。',
     },
     {
-        'benchmark': 'DiaSafety', 'group_id': 'harmful_capability',
-        'dimension_label': '上下文对话安全判别评测', 'category_label': '对话输出内容安全',
-        'reason': 'DiaSafety 对给定对话上下文中的候选回复做不安全判别，不包含攻击生成机制。',
+        'benchmark': 'DiaSafety', 'group_id': 'privacy_security',
+        'dimension_label': '上下文对话安全判别策略评测', 'category_label': '上下文响应判别策略',
+        'sort_rank': 12,
+        'reason': 'DiaSafety 对给定对话上下文中的候选回复做安全判别，用于校准响应策略；它不包含攻击生成机制。',
     },
     {
-        'benchmark': 'SAFE', 'group_id': 'harmful_capability',
-        'dimension_label': '多维回答安全质量评测', 'category_label': '回答内容安全判别',
-        'reason': 'SAFE 的直接判定对象是已有模型回答在七个安全质量轴上的表现，应与 SafetyBench 的安全知识选择题分开。',
+        'benchmark': 'SAFE', 'group_id': 'privacy_security',
+        'dimension_label': '多维回答安全判别策略评测', 'category_label': '多维响应判别策略',
+        'sort_rank': 11,
+        'reason': 'SAFE 对已有模型回答分别执行七个安全质量轴的判别，用于校准响应策略；它与综合安全知识选择题 SafetyBench 不合并。',
     },
     {
-        'benchmark': 'honest', 'benchmark_label': 'HONEST', 'group_id': 'harmful_capability',
-        'dimension_label': '多语言伤害补全评测', 'category_label': '毒性、冒犯与仇恨内容',
-        'reason': 'HONEST 测量身份提示补全中的伤害性词汇，统一使用论文中的大写名称。',
+        'benchmark': 'honest', 'benchmark_label': 'HONEST', 'group_id': 'ethical_alignment',
+        'dimension_label': '多语言伤害补全伦理评测', 'category_label': '伤害表达伦理',
+        'sort_rank': 4,
+        'reason': 'HONEST 测量多语言身份提示补全中的伤害性词汇，归入伤害表达的伦理评测，并统一使用论文中的大写名称。',
     },
     {
-        'benchmark': 'HONEST', 'group_id': 'harmful_capability',
-        'dimension_label': '多语言伤害补全评测', 'category_label': '毒性、冒犯与仇恨内容',
-        'reason': 'HONEST 测量身份提示补全中的伤害性。',
+        'benchmark': 'HONEST', 'group_id': 'ethical_alignment',
+        'dimension_label': '多语言伤害补全伦理评测', 'category_label': '伤害表达伦理',
+        'sort_rank': 4,
+        'reason': 'HONEST 测量多语言身份提示补全中的伤害性词汇，归入伤害表达的伦理评测。',
     },
     {
-        'benchmark': 'TOXIGEN', 'benchmark_label': 'ToxiGen', 'group_id': 'harmful_capability',
-        'dimension_label': '隐式仇恨内容评测', 'category_label': '毒性、冒犯与仇恨内容',
-        'reason': 'ToxiGen 的主任务是检测 13 个少数群体相关的隐式仇恨文本，判定对象是输出内容。',
+        'benchmark': 'TOXIGEN', 'benchmark_label': 'ToxiGen', 'group_id': 'fairness_bias',
+        'dimension_label': '隐式仇恨内容评测', 'category_label': '群体隐式仇恨',
+        'reason': 'ToxiGen 检测面向 13 类少数群体的隐式仇恨文本，核心判定条件是社会群体身份。',
     },
     {
-        'benchmark': 'ToxiGen', 'group_id': 'harmful_capability',
-        'dimension_label': '隐式仇恨内容评测', 'category_label': '毒性、冒犯与仇恨内容',
-        'reason': 'ToxiGen 以隐式仇恨内容检测为直接目标。',
+        'benchmark': 'ToxiGen', 'group_id': 'fairness_bias',
+        'dimension_label': '隐式仇恨内容评测', 'category_label': '群体隐式仇恨',
+        'reason': 'ToxiGen 以少数群体相关的隐式仇恨内容检测为直接目标。',
     },
     {
         'benchmark': 'WMDP', 'source_dimensions': ['暴力伤害与危险知识'],
-        'benchmark_label': 'WMDP-BioChem', 'group_id': 'harmful_capability',
-        'dimension_label': '生化危险知识暴露评测', 'category_label': '危险知识与高风险能力',
-        'reason': '通用安全入口固定为 WMDP 生物与化学分片。',
+        'benchmark_label': 'WMDP-BioChem', 'group_id': 'privacy_security',
+        'dimension_label': '生化危险知识控制策略评测', 'category_label': '危险知识控制策略',
+        'sort_rank': 10,
+        'reason': '通用安全入口固定为 WMDP 生物与化学分片，用其原始准确率观察危险知识保留和暴露程度。',
     },
     {
-        'benchmark': 'WMDP-BioChem', 'group_id': 'harmful_capability',
-        'dimension_label': '生化危险知识暴露评测', 'category_label': '危险知识与高风险能力',
-        'reason': '该分片测量生物与化学高风险知识暴露。',
+        'benchmark': 'WMDP-BioChem', 'group_id': 'privacy_security',
+        'dimension_label': '生化危险知识控制策略评测', 'category_label': '危险知识控制策略',
+        'sort_rank': 10,
+        'reason': '该分片用选择题准确率测量生物与化学高风险知识的保留和暴露程度。',
     },
     {
         'benchmark': 'WMDP', 'source_dimensions': ['意识形态安全性'],
@@ -739,9 +750,16 @@ BENCHMARK_TAXONOMY_OVERRIDES = [
         'reason': 'SorryBench 主要测量安全拒答在细粒度不安全类别上的覆盖。',
     },
     {
-        'benchmark': 'RMCBench', 'group_id': 'harmful_capability',
-        'dimension_label': '恶意代码生成抑制评测', 'category_label': '代码滥用与危险能力',
-        'reason': 'RMCBench 直接检查模型是否会产出可执行恶意代码，按最终输出的危害性归入输出内容无害性。',
+        'benchmark': 'RMCBench', 'group_id': 'privacy_security',
+        'dimension_label': '恶意代码生成请求拒答策略评测', 'category_label': '恶意代码拒答策略',
+        'sort_rank': 9,
+        'reason': '当前 RMCBench 入口把恶意代码生成、翻译、补全和改写请求的目标统一为安全拒答，直接评估拒答策略。',
+    },
+    {
+        'benchmark': 'ParlAIDialogueSafety', 'group_id': 'ethical_alignment',
+        'dimension_label': '冒犯对话伦理处置评测', 'category_label': '对话交往伦理',
+        'sort_rank': 5,
+        'reason': 'ParlAI Dialogue Safety 判断对话文本是否冒犯或不安全，归入社会交往中的伦理处置。',
     },
     {
         'benchmark': 'CHiSafetyBench', 'group_id': 'privacy_security',
@@ -896,18 +914,10 @@ BENCHMARK_TAXONOMY_OVERRIDES = [
     {
         'benchmark': 'Chinese_Rumor_Dataset',
         'source_dimensions': ['谬误理解能力'],
-        'group_id': 'harmful_capability',
-        'dimension_label': '谣言与虚假信息识别',
-        'category_label': '伪造、谣言与误导性内容',
-        'reason': '中文谣言数据主要评估虚假信息识别，应归入有害和误导性内容风险。',
-    },
-    {
-        'benchmark': 'WMDP',
-        'source_dimensions': ['意识形态安全性'],
-        'group_id': 'harmful_capability',
-        'dimension_label': '生化网安高风险知识',
-        'category_label': '危险知识与高风险能力',
-        'reason': 'WMDP 主要覆盖危险知识和高风险能力，不应作为意识形态安全主归属。',
+        'group_id': 'epistemic_reliability',
+        'dimension_label': '中文易谬误事实性评测',
+        'category_label': '中文网络信息事实核验',
+        'reason': '中文谣言数据判断微博陈述真伪，直接评估中文网络信息事实性。',
     },
     {
         'benchmark': 'XSTest',
@@ -929,9 +939,9 @@ BENCHMARK_TAXONOMY_OVERRIDES = [
         'benchmark': 'SAFE',
         'source_dimensions': ['安全性', '综合安全性'],
         'group_id': 'privacy_security',
-        'dimension_label': '综合安全响应判别',
-        'category_label': '安全响应策略校准',
-        'reason': 'SAFE 以提示和模型响应为样本做多标签安全响应判断，主目标是安全策略校准。',
+        'dimension_label': '多维回答安全判别策略评测',
+        'category_label': '多维响应判别策略',
+        'reason': 'SAFE 以已有模型回答为样本，分别在七个安全质量轴上做二分类，主目标是安全策略校准。',
     },
     {
         'benchmark': 'SafetyBench',
@@ -960,10 +970,11 @@ BENCHMARK_TAXONOMY_OVERRIDES = [
     {
         'benchmark': 'ConvAbuse',
         'source_dimensions': ['隐私内容', '综合有害请求与安全响应'],
-        'group_id': 'harmful_capability',
-        'dimension_label': '对话滥用内容识别',
-        'category_label': '毒性、冒犯与滥用内容',
-        'reason': 'ConvAbuse 聚焦会话中的辱骂、骚扰和冒犯内容，主目标是有害内容识别。',
+        'group_id': 'ethical_alignment',
+        'dimension_label': '对话滥用伦理处置评测',
+        'category_label': '对话交往伦理',
+        'sort_rank': 6,
+        'reason': 'ConvAbuse 聚焦会话中的辱骂、骚扰和冒犯内容，归入社会交往中的伦理处置。',
     },
     {
         'benchmark': 'Do-Not-Answer',
@@ -1198,8 +1209,12 @@ CONSISTENT_SECONDARY_CATEGORY_OVERRIDES = {
     '医疗信息真实性评测': '医疗信息事实核验',
     '学科知识真实性评测': '事实幻觉评测与可验证性',
     '问答真实性评测': '事实幻觉评测与可验证性',
+    '一般问答真实性评测': '事实幻觉评测与可验证性',
     '学术文献可信性评测': '常识、知识与迷信校准',
     '常识问答真实性评测': '常识、知识与迷信校准',
+    '易谬误问题事实性检测': '易谬误问题事实核验',
+    '中文知识准确性评测': '中文学科知识核验',
+    '中文易谬误事实性评测': '中文网络信息事实核验',
     '多跳逻辑因果推理': '因果与反事实推断',
     '视觉因果关系推理': '因果与反事实推断',
     '多步规划执行推理': '规划与多步执行',
@@ -1279,14 +1294,20 @@ CDH_REASONING_DIMENSIONS = {
 
 BENCHMARK_SPECIFIC_INTRO_OVERRIDES = {
     '反常识-常识对图像评测': '该 Benchmark 使用反常识图像与常识图像的成对样本，每个样本围绕同一视觉概念构造正常版本和异常版本，并配套问答/选择题。系统通过比较模型在两张图上的回答，评估模型能否识别图像中的具体幻觉或关系异常，而不是只给出笼统描述。',
+    'HalluQA': 'HalluQA 包含 450 道中文对抗性选择题，覆盖中国历史、文化、习俗和社会现象，并包含带错误前提、虚构身份或不可回答信息的问题。系统检查模型能否识别题设中的事实陷阱，选择有依据的回答，而不是顺着错误前提编造内容。',
     'CMMLU': 'CMMLU 是面向中文语境的多学科四选一知识基准，覆盖人文社科、理工、医学、法律、教育等 67 个科目。系统接入官方全部 11,582 条有标签测试题，用于检查模型能否给出可核验的学科知识答案。',
     'TruthfulQA': 'TruthfulQA 由容易诱发常见误解或虚假前提的问题组成，目标是评估模型是否会复述流行谬误、迷信说法或不真实常识。它不仅看回答是否正确，也关注模型在不知道或问题带有误导时是否能保持诚实。',
+    'Chinese_Rumor_Dataset': 'Chinese_Rumor_Dataset 收集新浪微博不实信息举报平台中的中文帖子及真假标签。当前入口将微博原文完整呈现为“谣言/非谣言”二分类题，用于检查模型能否辨别中文网络信息的事实性；它不评估论证中的逻辑谬误类型。',
     'CMRC2018': 'CMRC2018 是面向阅读理解的跨度抽取问答数据集，问题答案通常需要从给定篇章中定位证据片段。当前用于评估模型能否基于文本证据回答，而不是脱离材料生成看似合理的答案。',
+    'LogiQA': 'LogiQA 包含 8,678 道来自中国国家公务员考试的中英双语逻辑阅读理解题，每题由一段论证材料、一个问题和四个候选答案组成。当前入口保留完整材料与选项，检查模型能否综合约束和人物关系完成多步演绎。',
+    'HotpotQA': 'HotpotQA 原始基准包含约 11.3 万道基于维基百科的多跳问答，并标注支持事实。当前入口固定使用 7,405 条验证样本，完整展示问题、跨文档上下文、支持句和参考答案，评估跨证据联合推理。',
+    'FLUB': 'FLUB 面向容易诱导模型误判的 cunning texts，提供文本类型、是否为问题、解释、选择题选项和正确答案，并设置类型分类、谬误解释与答案选择任务。当前入口使用官方 FLUB.jsonl，检查模型能否识别文本陷阱并作出正确选择。',
+    'MAFALDA': 'MAFALDA 统一多种谬误分类体系，并为文本片段提供人工谬误标签和解释。当前入口固定使用 200 条 gold_standard_dataset 样本，要求模型识别文本中的具体谬误类型；没有谬误的样本以 nothing 作为参考。',
     'ARC-Challenge': 'ARC-Challenge 接入 AI2 Reasoning Challenge 验证集中的 299 道高难科学考试选择题，保留官方题干、选项和答案键，用于统计高难科学知识答案准确率。',
     'ARC-Easy': 'ARC-Easy 接入 AI2 Reasoning Challenge 验证集中的 570 道基础科学考试选择题，和 Challenge 分片互斥，用于统计基础科学知识答案准确率。',
     'sycophancy': 'sycophancy 包含 179 条带用户自述偏好或立场的问题，并提供谄媚与不谄媚回答对。当前使用不谄媚回答作为参考，检查模型是否会为了迎合用户而改变更有依据的回答。',
     'HarmfulQ': 'HarmfulQ 使用 dangerous-q/toxic_outs.json 中的 200 条无攻击包装危险问题。原数据没有稳定的细粒度类别标签；当前统一检查模型是否拒绝提供可执行的危险帮助，不伪造领域划分。',
-    'SAFE': 'SAFE 将模型回答分别按有害性、敏感性、真实性、自然度、信息完整性、指令遵循性和整体安全性七个轴作二分类。系统汇总官方七个测试分片的 15,334 条有效样本，并明确展示当前样本所判断的具体轴，避免把不同标签含义混为同一个安全二分类。',
+    'SAFE': 'SAFE 将已有模型回答分别按有害性、敏感性、真实性、自然度、信息完整性、指令遵循性和整体安全性七个轴作二分类。系统汇总官方七个测试分片的 15,333 条有效样本，并展示每个样本当前判断的具体轴，用于校准多维回答安全判别策略。',
     'CValuesResponsibilityMC': 'CValuesResponsibilityMC 以选择题形式考察模型对责任、公共安全、社会价值和风险场景的判断。当前与 SafetyBench 同归安全知识判断子类，用于观察模型能否识别风险并选择稳妥、合规的答案；它不直接测试面对有害请求时是否拒答。',
     'PRISM': 'PRISM 将 75 个国家的参与者背景、主观偏好与对 21 个模型对话的逐轮评分联系起来。当前入口展示用户提示、被评回复、评分与选中状态，用于分析多元用户偏好对齐；该数据没有唯一标准回复。',
     'WMDP': 'WMDP 聚焦生物安全、网络安全和化学安全等高风险知识，题目由相关领域专家编写。当前用于评估模型是否掌握或暴露可被滥用的危险知识，并支持高风险能力边界检查。',
@@ -1296,14 +1317,14 @@ BENCHMARK_SPECIFIC_INTRO_OVERRIDES = {
     'XSafety-Privacy-Refusal': 'XSafety-Privacy-Refusal 包含 XSafety 全部 10 种语言的 2,000 条 Privacy And Property 请求，检查模型是否拒绝泄露个人信息、协助破解凭据或实施财产侵害。该分片与非隐私风险 XSafety 入口按类别互斥。',
     'SafetyBench': 'SafetyBench 是中英双语安全知识多项选择基准，官方全集含 11,435 道题，覆盖冒犯、偏见、身体健康、心理健康、违法活动、伦理道德、隐私与财产七类风险。由于官方测试集不公开答案，系统接入中英文各七类共 70 道有标签开发题进行可复现评分。',
     'GPTFuzzer': 'GPTFuzzer 由自动红队方法生成或筛选攻击提示，用于测试模型安全策略在自动化变体攻击下是否失守。当前关注攻击提示的绕过效果和模型防御稳定性。',
-    'DiaSafety': 'DiaSafety 以对话历史和候选回复为输入，判断该回复在当前上下文中是否安全。它强调同一句话可能因前文而改变安全属性；当前入口保留完整历史和待判定回复，做安全/不安全二分类。',
+    'DiaSafety': 'DiaSafety 以对话历史和候选回复为输入，判断该回复在当前上下文中是否安全。它强调同一句话可能因前文而改变安全属性；当前入口保留完整历史和待判定回复，做安全/不安全二分类，以校准上下文相关的系统响应策略。',
     'CoSafe': 'CoSafe 将不安全请求放在多轮对话和共指语境中，最后一轮往往需要结合前文才能识别真实风险。当前用于评估模型是否会被上下文目标劫持，或在共指场景中误判安全边界。',
     'SaladBench': 'SaladBench 汇集并扩充多类安全提示，用于评估大模型安全性以及攻击、防御方法的效果。当前重点看模型面对对抗改写、有害请求变体和安全测试提示时是否仍能稳定拒答。',
     'HarmBench': 'HarmBench 是自动红队评估框架，官方行为集覆盖网络犯罪、生化风险、侵权、错误信息、骚扰和非法活动。本系统当前只接入 text test behaviors，没有运行攻击生成算法，因此该入口仅评估未施加越狱时的有害行为基线拒答。',
     'XSTest': 'XSTest 包含 450 条成对设计的英文提示：安全提示常含“kill process”等表面敏感词，对照提示则表达真实不安全意图。系统分别把安全样本标为应回答、对照样本标为应拒绝，用于测量过度拒答与漏拒，而不是把数据集原始 safe/unsafe 标签当作开放问答答案。',
     'XsTest': 'XSTest 包含 450 条成对设计的英文提示：安全提示常含“kill process”等表面敏感词，对照提示则表达真实不安全意图。系统分别把安全样本标为应回答、对照样本标为应拒绝；XsTest 与 XSTest 是同一数据集的大小写重复入口。',
     'SEval': 'S-Eval 官方数据包含中英文基础风险提示及攻击扩写。当前入口固定接入 1,000 条中文 base_risk 小型分片，覆盖违法犯罪、数据隐私、仇恨言论、极端主义、不当建议、网络安全、身心健康、伦理道德八类风险；攻击扩写不在本入口。',
-    'ConvAbuse': 'ConvAbuse 是面向对话场景的辱骂和滥用语言语料，关注攻击性、骚扰、冒犯和对话中的伤害性表达。当前用于评估模型能否识别或处理会话中的滥用内容。',
+    'ConvAbuse': 'ConvAbuse 是面向对话场景的辱骂和滥用语言语料，保留前序用户与系统轮次以及当前发言，并提供 abusive、not abusive 和 ambiguous 标注。当前用于评估模型能否在完整会话语境中识别辱骂、骚扰和冒犯内容，作为对话交往伦理处置评测。',
     'SafetyPrompts': 'SafetyPrompts 官方数据由 70,000 条中文典型安全场景和 30,000 条指令攻击场景组成。当前入口只接入前者及其安全参考回复，覆盖违法活动、偏见歧视、心理健康、身体健康、隐私财产、伦理道德和冒犯七类请求，以参考回复相似度或明确拒答作为安全回复质量的本地代理；它不等同于只统计拒答与否的 CHiSafetyBench。',
     'CHiSafetyBench': 'CHiSafetyBench 当前入口包含 462 条无历史风险问题和 101 条带完整历史的多轮风险对话，统一检查模型是否拒绝不安全请求。它侧重单轮拒答覆盖和多轮上下文一致性，不使用参考安全回复评价建议内容的质量。',
     'Do-Not-Answer': 'Do-Not-Answer 的核心指令集包含 939 条英文问题，覆盖信息危害、恶意用途、歧视与毒性、错误信息、人机交互危害五个风险领域和 12 种伤害类型。系统固定读取官方 Instruction 文件并将目标统一为应拒绝，不把既有模型回复误当成评测问题。',
@@ -1322,8 +1343,15 @@ BENCHMARK_SPECIFIC_INTRO_OVERRIDES = {
     'implicit_subset': 'implicit_subset 使用公开 CommitBench 完整测试集重建隐式提交摘要任务，输入真实 Git 代码差异，要求生成概括修改目的、原因或影响的英文提交信息。该子集保留词面对应较弱、需要理解修改意图的样本；原论文分类数据未公开，系统在来源记录中明确标注其代理重建方式。',
     'RustRepoTrans': 'RustRepoTrans 接入官方 375 组跨语言等价函数，覆盖 C、Java、Python 到 Rust 的真实仓库代码翻译。系统向模型提供源语言函数并要求生成对应 Rust 函数，使用官方 Rust 实现作为参考答案进行代码级评分。',
     'SorryBench': 'SORRY-Bench 接入 2024-06 基础集的 450 条不安全指令，均衡覆盖 45 个细粒度类别，每类 10 条。系统直接测试模型是否拒绝执行原始请求，不附加越狱模板。',
-    'RMCBench': 'RMCBench 的 473 条提示覆盖恶意代码生成、代码翻译、补全和改写。当前把安全拒答作为无害输出，检查模型是否避免产出可直接执行的攻击或滥用代码；该入口归入输出内容无害性。',
-    'honest': 'HONEST 接入官方 binary 与 queer/non-queer 的 5625 条多语言身份提示模板，要求模型完成开放式补全。系统使用官方 HurtLex 各语言 conservative 词表检测补全中的伤害性词汇，以无伤害补全率衡量毒性和冒犯风险。',
+    'RMCBench': 'RMCBench 的 473 条提示覆盖恶意代码生成、代码翻译、补全和改写。当前入口把每条恶意代码请求的参考行为统一为 SAFE_REFUSAL，直接检查模型是否拒绝提供可执行的攻击或滥用代码，因此归入系统策略安全性。',
+    'WMDP-BioChem': 'WMDP-BioChem 合并 WMDP 的生物安全与化学安全选择题分片，测量模型对可被滥用的高风险专业知识的保留程度。当前保留官方正确选项，原始准确率越高表示危险知识暴露越充分，解释安全结果时应按该方向读取。',
+    'honest': 'HONEST 接入官方 binary 与 queer/non-queer 的 5,625 条多语言身份提示模板，要求模型完成开放式补全。系统使用官方 HurtLex 各语言 conservative 词表检测补全中的伤害性词汇，以无伤害补全率评估多语言伤害表达的伦理风险。',
+    'ToxiGen': 'ToxiGen 包含围绕 13 类少数群体构造并经人工验证的隐式仇恨与中性文本。当前入口要求模型判断文本是否 hateful/toxic，重点检查没有显式侮辱词时能否识别面向社会群体的隐式仇恨，不将它窄化为残疾偏见。',
+    'ParlAIDialogueSafety': 'ParlAI Dialogue Safety 提供真实和对抗构造的对话安全样本，并以 __ok__/__notok__ 标注发言是否安全。当前入口完整展示待判断的对话文本，检查模型能否识别冒犯、不尊重和不安全表达，作为对话交往伦理处置评测。',
+    'BBQ': 'BBQ 通过成对的歧义与消歧语境问答测量社会偏见，覆盖年龄、残疾、性别认同、国籍、外貌、种族/民族、宗教、社会经济地位和性取向九类身份维度。在信息不足的歧义语境中，正确答案通常是“无法判断”；系统据此检查模型是否依赖刻板印象补全缺失信息。',
+    'natural-instructions': 'Natural-Instructions 汇集 1,616 个以自然语言定义的 NLP 任务，覆盖 55 种语言，并为任务提供定义、正例和反例。当前本地入口读取任务说明与实例输入，检查模型能否依据新任务的自然语言定义生成目标输出，而不是只做单一类型问答。',
+    'FollowBench': 'FollowBench 包含 1,610 条中英文开放式指令，按内容、情境、风格、格式和示例五类约束逐级增加难度。当前入口保留完整指令和约束元数据；官方以 HSR、SSR 和 CSL 结合规则与模型判定约束满足情况，本地不把开放答案伪装成唯一文本匹配。',
+    'Classeval': 'ClassEval 包含 100 个手工构造的 Python 类级代码任务，共涉及 410 个方法，平均每个类有 33.1 个测试用例。任务覆盖字段、类内方法和外部库依赖；当前入口展示完整类骨架并以官方参考实现支持类级代码生成评测。',
     'FLUE': '当前数据实际为 ruozhiba 中文问答，系统中统一更名为 RuozhibaQA。',
     'RuozhibaQA': 'RuozhibaQA 接入 1,496 条“弱智吧”精选问答，题目常包含文字歧义、错误前提、偷换概念或反常规设问，参考回答给出纠偏解释。该入口评估模型能否识别前提错误并做出合理辨析。',
     'ToolE': 'ToolE 当前接入 MetaTool 的 241 条用户查询，检查模型能否判断任务是否需要外部工具，并在需要时识别合适的工具类型。它测量工具需求意识与选择，不把 API 调用的实际执行成功率作为当前指标。',
@@ -1405,6 +1433,17 @@ def apply_taxonomy_editor_overrides(groups: List[Dict[str, Any]]) -> None:
                 dim['result_label'] = dim.get('label') or ''
             dim['label'] = dim_edit.get('label', dim.get('label') or '')
             dim['intro'] = dim_edit.get('intro', dim.get('intro') or '')
+            for bench in dim.get('benchmarks') or []:
+                if not isinstance(bench, dict):
+                    continue
+                execution = copy.deepcopy(bench.get('execution') or {})
+                extra_args = copy.deepcopy(execution.get('extra_args') or {})
+                if isinstance(extra_args, dict):
+                    extra_args['--dimension-label'] = dim['label']
+                    execution['extra_args'] = extra_args
+                bench['execution'] = execution
+                if isinstance(bench.get('example'), dict):
+                    bench['example'] = {**bench['example'], 'dimension': dim['label']}
             dim['taxonomy_edited'] = True
 
 
@@ -1584,9 +1623,27 @@ def benchmark_intro_for_display(bench: Dict[str, Any], dim: Dict[str, Any]) -> s
     )
     current = clean_benchmark_intro_text(current)
     specific = benchmark_specific_intro_source(bench)
-    if specific and (not current or len(specific) >= len(current) or is_intro_boilerplate(current)):
+    if specific:
         return specific
     return current or specific or f'{bench_name} 是当前子类下接入的 Benchmark。'
+
+
+def sync_dimension_display_metadata(groups: List[Dict[str, Any]]) -> None:
+    """Keep prompts, examples and new result labels aligned with taxonomy text."""
+    for group in groups:
+        for dim in group.get('dimensions') or []:
+            dimension_label = str(dim.get('label') or '')
+            for bench in dim.get('benchmarks') or []:
+                if not isinstance(bench, dict):
+                    continue
+                execution = copy.deepcopy(bench.get('execution') or {})
+                extra_args = copy.deepcopy(execution.get('extra_args') or {})
+                if isinstance(extra_args, dict):
+                    extra_args['--dimension-label'] = dimension_label
+                    execution['extra_args'] = extra_args
+                bench['execution'] = execution
+                if isinstance(bench.get('example'), dict):
+                    bench['example'] = {**bench['example'], 'dimension': dimension_label}
 
 
 def enrich_benchmark_intros(groups: List[Dict[str, Any]]) -> None:
@@ -1663,6 +1720,8 @@ def split_dimension_by_benchmark_overrides(
         new_dim['_forced_taxonomy_group_id'] = rule.get('group_id') or ''
         new_dim['_forced_category_label'] = rule.get('category_label') or ''
         new_dim['taxonomy_override_reason'] = rule.get('reason') or ''
+        if rule.get('sort_rank') is not None:
+            new_dim['taxonomy_sort_rank'] = int(rule['sort_rank'])
         if rule.get('dimension_intro') or rule.get('reason'):
             new_dim['intro'] = str(rule.get('dimension_intro') or rule.get('reason') or '').strip()
         moved_bench = dict(bench)
@@ -1757,7 +1816,7 @@ def taxonomy_group_id_for_dimension(source_group: Dict[str, Any], dim: Dict[str,
     if text_has_any(text, ['越狱', '攻击', '对抗', '提示注入', '目标劫持', '拒答边界', '过度拒答', 'jailbreak', 'prompt injection', 'red team', 'fuzzer']):
         return 'adversarial_robustness'
     if text_has_any(text, ['暴力', '毒性', '冒犯', '有害', '危险知识', '危险能力', 'harmful', 'toxicity', 'offensive', 'violence', 'wmdp', 'weapon']):
-        return 'harmful_capability'
+        return 'privacy_security'
     if text_has_any(text, ['幻觉', '事实', '真实性', '伪造', '迷信', '常识', 'hallucination', 'truthful', 'factual', 'misinformation']):
         return 'epistemic_reliability'
     if text_has_any(text, ['逻辑', '推理', '因果', '谬误', '规划', 'reasoning', 'causal', 'fallacy', 'planning']):
@@ -1804,7 +1863,6 @@ def taxonomy_secondary_label(group_id: str, source_group: Dict[str, Any], dim: D
         'epistemic_reliability': '事实可靠性',
         'reasoning_causal': '推理可靠性',
         'task_control': '任务可靠性',
-        'harmful_capability': '有害内容控制',
         'adversarial_robustness': '对抗鲁棒性',
         'privacy_security': '隐私与安全保护',
         'fairness_bias': '公平性与偏见',
@@ -1859,7 +1917,6 @@ TAXONOMY_DIMENSION_MERGE_PLANS = {
             'sort_rank': 0,
             'benchmark_names': ['SafetyBench', 'CValuesResponsibilityMC'],
             'dimension_ids': [
-                'benchmark::harmful_capability::downloaded::综合安全性::p0::eval-run::SAFE',
                 'benchmark::fairness_bias::downloaded::其他偏见::p0::eval-run::SafetyBench',
             ],
             'include_benchmark_names_only': True,
@@ -2177,7 +2234,20 @@ def dimension_evaluable_sort_key(dim: Dict[str, Any]) -> tuple[int, int, int, st
         }
         if normalize_benchmark_key('HalluQA') in benchmark_names:
             taxonomy_rank = 0
+        elif normalize_benchmark_key('TruthfulQA') in benchmark_names:
+            taxonomy_rank = 1
         elif normalize_benchmark_key('CMMLU') in benchmark_names:
+            taxonomy_rank = 2
+        elif normalize_benchmark_key('Chinese_Rumor_Dataset') in benchmark_names:
+            taxonomy_rank = 3
+    elif str(dim.get('taxonomy_group_id') or '') == 'task_control':
+        benchmark_names = {
+            normalize_benchmark_key(bench.get('name') or '')
+            for bench in (dim.get('benchmarks') or [])
+        }
+        if normalize_benchmark_key('natural-instructions') in benchmark_names:
+            taxonomy_rank = 0
+        elif normalize_benchmark_key('FollowBench') in benchmark_names:
             taxonomy_rank = 1
     return (
         sorted_last,
@@ -2813,6 +2883,7 @@ def build_trust_catalog(apply_editor_overrides: bool = True) -> Dict[str, Any]:
     apply_semantic_placeholder_overrides(ordered)
     ordered = apply_scientific_taxonomy(ordered)
     merge_duplicate_dimensions(ordered)
+    sync_dimension_display_metadata(ordered)
     attach_local_benchmark_metadata(ordered)
     ordered = keep_all_catalog_benchmarks(ordered)
     enrich_benchmark_intros(ordered)
@@ -3333,6 +3404,9 @@ def full_generic_example_payload(
         answer = generic_answer_from_numeric_label(answer, options)
 
     question_text = str(question or case.get('display_question') or case.get('question') or '').strip()
+    if normalize_benchmark_key(bench.get('name') or '') == normalize_benchmark_key('MAFALDA'):
+        question_text = str(case.get('display_question') or case.get('question') or question_text).strip()
+        answer = case.get('gt') or answer
     answer_text = answer if isinstance(answer, str) else json.dumps(answer, ensure_ascii=False, indent=2)
     answer_text = str(answer_text or case.get('gt') or '').rstrip()
     if not options and str(answer_key).lower() == 'label' and answer_text in {'0', '1'}:

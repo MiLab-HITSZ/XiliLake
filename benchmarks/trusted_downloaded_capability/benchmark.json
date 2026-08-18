@@ -1286,14 +1286,15 @@
                 "benchmark": "natural-instructions",
                 "dimension": "指令遵循能力",
                 "task": "qa",
-                "question": "Afghanistan\n请直接给出答案。",
-                "answer": "AF",
+                "question": "Task instruction:\nIn this task, you are given a country name and you need to return the abbrevation name of the given country.\n\nInput:\nAngola\n请直接给出答案。",
+                "material": "Natural-Instructions task1314_country_abbreviation 的任务定义与实例输入。",
+                "answer": "AO",
                 "options": [],
                 "raw": {
-                  "input": "Afghanistan",
-                  "output": "AF",
-                  "explanation": "AF is the abbrevation name of the country called Afghanistan.",
-                  "category": "Positive Examples"
+                  "instruction": "In this task, you are given a country name and you need to return the abbrevation name of the given country.",
+                  "input": "Angola",
+                  "answer": "AO",
+                  "task_name": "task1314_country_abbreviation"
                 }
               },
               "metrics": [
@@ -1319,7 +1320,7 @@
                 }
               ],
               "paths": {
-                "dataset": "downloads/datasets/github_repos/allenai__natural-instructions",
+                "dataset": "benchmarks/trusted_downloaded_capability/natural_instructions.jsonl.gz",
                 "results": "result"
               },
               "display": {
