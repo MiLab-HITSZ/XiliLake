@@ -60,17 +60,16 @@
 - 新增 `verified_benchmarks` 可重建视图，对 34 个易误选文件的 Benchmark 固定官方分片；部署时由 `prepare_verified_benchmarks.py` 从本地官方下载源生成。
 - FollowBench、CHBias、GlobalOpinionQA 和 SALAD-Bench 的当前本地入口不冒充论文完整官方评分器；页面会显示“非评分收集”或代理指标说明。
 - MedSafetyBench 使用明确拒答或安全回复相似度代理；JBB-Behaviors 和 HarmBench behaviors 仅报告基线拒答；这些结果不等同于原论文的全部 judge 指标。
-- 当前网页实际计数为 3 个评测领域、11 个可见大类、82 个子类、102 个 Benchmark，全部标记为可评测。“医疗基本事实准确性”暂无符合定义的本地 Benchmark，因此不用 MedSafetyBench 填充该类。
+- 当前网页实际计数为 3 个评测领域、11 个可见大类、81 个子类、102 个 Benchmark，全部标记为可评测。“医疗基本事实准确性”暂无符合定义的本地 Benchmark，因此不用 MedSafetyBench 填充该类。
 
 ## 系统策略安全性边界
 
-系统策略安全性纳入未经攻击改写的普通请求、用户立场、显式系统规则、危险知识控制和回答安全判别，按系统应采取或校准的响应行动划为 13 个子类、19 个 Benchmark。所有子类统一以“策略评测”结尾：
+系统策略安全性纳入未经攻击改写的普通请求、用户立场、显式系统规则、危险知识控制和回答安全判别，按系统应采取或校准的响应行动划为 12 个子类、19 个 Benchmark。所有子类统一以“策略评测”结尾：
 
 | 子类 | 唯一判定边界 | Benchmark |
 | --- | --- | --- |
-| 安全风险判断策略评测 | 在安全与责任选择题中选择合适的处理方案，不判断既有文本毒性 | SafetyBench、CValuesResponsibilityMC |
-| 风险对话拒答策略评测 | 普通单轮及带历史的多轮风险对话，不含共指攻击结构 | CHiSafetyBench |
-| 综合有害请求拒答策略评测 | 合并普通有害请求和未附加攻击模板的标准行为目标，各 Benchmark 独立计分 | StrongREJECT、S-Eval、Do-Not-Answer、SORRY-Bench、JailbreakBench Behaviors、HarmBench |
+| 综合有害请求判断与拒答策略评测 | 选择题检查风险判断与安全方案选择，普通有害请求检查拒答；不含攻击模板，各 Benchmark 独立计分 | SafetyBench、CValuesResponsibilityMC、StrongREJECT、S-Eval、Do-Not-Answer、SORRY-Bench、JailbreakBench Behaviors、HarmBench |
+| 多轮风险对话拒答策略评测 | 只使用 101 条带完整历史的多轮风险对话，不含无历史单轮问题或共指攻击结构 | CHiSafetyBench |
 | 多学科知识滥用拒答策略评测 | 十个知识领域中的专业知识滥用请求 | HarmfulQA |
 | 安全请求放行策略评测 | 输入应当允许回答，检查模型是否发生过度拒答 | XSTest |
 | 反谄媚策略评测 | 用户表达偏好后仍坚持有依据的答案 | sycophancy |
@@ -82,6 +81,6 @@
 | 多维回答安全判别策略评测 | 对已有回答分别执行七个安全质量轴的二分类，不与综合安全知识题合并 | SAFE |
 | 上下文对话安全判别策略评测 | 给定对话历史和候选回复，校准上下文相关的安全判别 | DiaSafety |
 
-SafetyPrompts 因参考回复质量与普通拒答构念重复而从当前目录移除。JailbreakBench Behaviors 和 HarmBench Behaviors 没有附加攻击字符串，因此并入综合有害请求拒答策略；真正含越狱模板、提示注入、攻击增强或对抗改写的数据仍只归入攻击抵御鲁棒性。RMCBench 当前执行协议直接按安全拒答评分，因此保留在系统策略安全性。
+SafetyPrompts 因参考回复质量与普通拒答构念重复而从当前目录移除。JailbreakBench Behaviors 和 HarmBench Behaviors 没有附加攻击字符串，因此并入综合有害请求判断与拒答策略；真正含越狱模板、提示注入、攻击增强或对抗改写的数据仍只归入攻击抵御鲁棒性。RMCBench 当前执行协议直接按安全拒答评分，因此保留在系统策略安全性。
 
 XSafety 进一步按输入机制拆分为互斥数据：17,990 条普通风险请求保留在系统策略，2,000 条 Privacy And Property 进入隐私防护策略，2,000 条 Goal Hijacking 进入攻击抵御并与 DoAnythingNow、UltraSafety 合并为“多语种越狱提示攻击防御评测”。Prompt Leaking 和 Role Play Instruction 共 3,998 条因标签与实际内容混杂而不参与评分，三个可评测分片的样本 ID 交集为 0。

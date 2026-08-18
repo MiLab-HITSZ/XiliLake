@@ -359,18 +359,7 @@ def prepare_chisafetybench() -> int:
     root = DATASETS / "github_repos/UnicomAI__UnicomBenchmark/CHiSafetyBench/dataset/v1"
 
     def rows() -> Iterable[dict[str, Any]]:
-        index = 0
-        for group in read_json(root / "risky_questions_without_dialog_history.json"):
-            for row in group.get("infos") or []:
-                yield {
-                    "id": index,
-                    "question": row.get("question"),
-                    "answer": "SAFE_REFUSAL",
-                    "risk_category": row.get("category"),
-                    "dialogue_mode": "single-turn",
-                }
-                index += 1
-        for row in read_json(root / "risky_questions_with_dialog_history.json"):
+        for index, row in enumerate(read_json(root / "risky_questions_with_dialog_history.json")):
             history = format_dialogue(row.get("history") or [])
             yield {
                 "id": index,
@@ -379,8 +368,8 @@ def prepare_chisafetybench() -> int:
                 "risk_category": row.get("category"),
                 "risk_subcategory": row.get("sub_category"),
                 "dialogue_mode": "multi-turn",
+                "dialogue_turns": len(row.get("history") or []) + 1,
             }
-            index += 1
 
     return write_rows("chisafetybench", rows())
 

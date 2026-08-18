@@ -731,12 +731,12 @@ BENCHMARK_TAXONOMY_OVERRIDES = [
     },
     {
         'benchmark': 'JBBBehaviours', 'group_id': 'privacy_security',
-        'dimension_label': '综合有害请求拒答策略评测', 'category_label': '有害请求拒答策略',
+        'dimension_label': '综合有害请求判断与拒答策略评测', 'category_label': '综合风险处置策略',
         'reason': '当前入口只有行为目标，没有越狱攻击字符串，只能测量基线拒答。',
     },
     {
         'benchmark': 'HarmBench', 'group_id': 'privacy_security',
-        'dimension_label': '综合有害请求拒答策略评测', 'category_label': '有害请求拒答策略',
+        'dimension_label': '综合有害请求判断与拒答策略评测', 'category_label': '综合风险处置策略',
         'reason': '本地入口只接入 HarmBench 行为集，未运行其攻击算法。',
     },
     {
@@ -746,7 +746,7 @@ BENCHMARK_TAXONOMY_OVERRIDES = [
     },
     {
         'benchmark': 'SorryBench', 'group_id': 'privacy_security',
-        'dimension_label': '综合有害请求拒答策略评测', 'category_label': '有害请求拒答策略',
+        'dimension_label': '综合有害请求判断与拒答策略评测', 'category_label': '综合风险处置策略',
         'reason': 'SorryBench 主要测量安全拒答在细粒度不安全类别上的覆盖。',
     },
     {
@@ -763,12 +763,12 @@ BENCHMARK_TAXONOMY_OVERRIDES = [
     },
     {
         'benchmark': 'CHiSafetyBench', 'group_id': 'privacy_security',
-        'dimension_label': '风险对话拒答策略评测', 'category_label': '风险对话策略',
-        'reason': '当前入口使用官方单轮与多轮 risky questions，只测量拒答覆盖和多轮一致性，不评价参考回复质量。',
+        'dimension_label': '多轮风险对话拒答策略评测', 'category_label': '多轮风险对话策略',
+        'reason': '当前入口只使用官方 101 条带完整历史的多轮风险对话，测量上下文中的拒答策略一致性，不混入无历史单轮问题。',
     },
     {
         'benchmark': 'CValuesResponsibilityMC', 'group_id': 'privacy_security',
-        'dimension_label': '安全风险判断策略评测', 'category_label': '风险判断策略',
+        'dimension_label': '综合有害请求判断与拒答策略评测', 'category_label': '综合风险处置策略',
         'reason': '数据是安全和社会责任选择题，直接测量策略判断而非生成内容毒性。',
     },
     {
@@ -931,8 +931,8 @@ BENCHMARK_TAXONOMY_OVERRIDES = [
         'benchmark': 'SEval',
         'source_dimensions': ['安全拒答边界与过度拒答', '行为与指令合规性', '拒答边界与过度拒答'],
         'group_id': 'privacy_security',
-        'dimension_label': '综合有害请求拒答策略评测',
-        'category_label': '有害请求拒答策略',
+        'dimension_label': '综合有害请求判断与拒答策略评测',
+        'category_label': '综合风险处置策略',
         'reason': 'SEval 主要覆盖禁止请求是否应被拒答，属于策略边界校准，不是普通有害内容分类。',
     },
     {
@@ -947,8 +947,8 @@ BENCHMARK_TAXONOMY_OVERRIDES = [
         'benchmark': 'SafetyBench',
         'source_dimensions': ['其他偏见', '安全场景泛化偏见', '安全场景泛化偏见评测'],
         'group_id': 'privacy_security',
-        'dimension_label': '安全风险判断策略评测',
-        'category_label': '风险判断策略',
+        'dimension_label': '综合有害请求判断与拒答策略评测',
+        'category_label': '综合风险处置策略',
         'reason': 'SafetyBench 同时覆盖冒犯、偏见、身心健康、违法、伦理及隐私财产七类风险，是综合安全知识判别基准，不能仅按其中的偏见题归入群体公平性。',
     },
     {
@@ -980,16 +980,16 @@ BENCHMARK_TAXONOMY_OVERRIDES = [
         'benchmark': 'Do-Not-Answer',
         'source_dimensions': ['多语言LLM安全性', '跨语言安全一致性'],
         'group_id': 'privacy_security',
-        'dimension_label': '综合有害请求拒答策略评测',
-        'category_label': '有害请求拒答策略',
+        'dimension_label': '综合有害请求判断与拒答策略评测',
+        'category_label': '综合风险处置策略',
         'reason': 'Do-Not-Answer 覆盖不应直接回答的问题，主目标是禁止请求的拒答边界。',
     },
     {
         'benchmark': 'StrongREJECT',
         'source_dimensions': ['多语言LLM安全性', '跨语言安全一致性'],
         'group_id': 'privacy_security',
-        'dimension_label': '综合有害请求拒答策略评测',
-        'category_label': '有害请求拒答策略',
+        'dimension_label': '综合有害请求判断与拒答策略评测',
+        'category_label': '综合风险处置策略',
         'reason': 'StrongREJECT 用禁止请求评估拒答强度，未作为显式越狱攻击入口时归入安全策略校准。',
     },
     {
@@ -1326,7 +1326,7 @@ BENCHMARK_SPECIFIC_INTRO_OVERRIDES = {
     'SEval': 'S-Eval 官方数据包含中英文基础风险提示及攻击扩写。当前入口固定接入 1,000 条中文 base_risk 小型分片，覆盖违法犯罪、数据隐私、仇恨言论、极端主义、不当建议、网络安全、身心健康、伦理道德八类风险；攻击扩写不在本入口。',
     'ConvAbuse': 'ConvAbuse 是面向对话场景的辱骂和滥用语言语料，保留前序用户与系统轮次以及当前发言，并提供 abusive、not abusive 和 ambiguous 标注。当前用于评估模型能否在完整会话语境中识别辱骂、骚扰和冒犯内容，作为对话交往伦理处置评测。',
     'SafetyPrompts': 'SafetyPrompts 官方数据由 70,000 条中文典型安全场景和 30,000 条指令攻击场景组成。当前入口只接入前者及其安全参考回复，覆盖违法活动、偏见歧视、心理健康、身体健康、隐私财产、伦理道德和冒犯七类请求，以参考回复相似度或明确拒答作为安全回复质量的本地代理；它不等同于只统计拒答与否的 CHiSafetyBench。',
-    'CHiSafetyBench': 'CHiSafetyBench 当前入口包含 462 条无历史风险问题和 101 条带完整历史的多轮风险对话，统一检查模型是否拒绝不安全请求。它侧重单轮拒答覆盖和多轮上下文一致性，不使用参考安全回复评价建议内容的质量。',
+    'CHiSafetyBench': 'CHiSafetyBench 当前入口只接入官方 101 条多轮风险对话，并完整拼接系统消息、历史用户轮次、历史助手回复和末轮风险请求。它检查模型能否结合上下文持续采取安全拒答策略，不混入无历史单轮问题，也不使用参考安全回复评价文本质量。',
     'Do-Not-Answer': 'Do-Not-Answer 的核心指令集包含 939 条英文问题，覆盖信息危害、恶意用途、歧视与毒性、错误信息、人机交互危害五个风险领域和 12 种伤害类型。系统固定读取官方 Instruction 文件并将目标统一为应拒绝，不把既有模型回复误当成评测问题。',
     'StrongREJECT': 'StrongREJECT 包含 313 条英文基础禁止请求，覆盖非暴力犯罪、暴力、虚假信息与欺骗、仇恨骚扰与歧视、非法商品与服务、色情内容六类。当前只统计明确拒答，作为可复现代理指标，不等同于官方对非拒答回答说服力和具体性的完整评分器。',
     'CHBias': 'CHBias 是中文对话偏见基准，官方数据覆盖性别、性取向、年龄和外貌四类属性。当前入口展示官方测试句并收集去偏改写；由于原始测试集不提供唯一标准改写，该开放任务不伪造精确匹配准确率。',
@@ -1911,37 +1911,17 @@ TAXONOMY_DIMENSION_MERGE_PLANS = {
     ],
     'privacy_security': [
         {
-            'label': '安全风险判断策略评测',
-            'intro': '使用 SafetyBench 和 CValuesResponsibilityMC 的选择题，评估模型能否在冒犯、偏见、身心健康、违法活动、伦理道德、隐私财产和社会责任场景中选择安全、负责的处理方案。这里测量风险判断策略，不评价既有文本的毒性，也不包含越狱攻击。',
-            'category_label': '风险判断策略',
+            'label': '综合有害请求判断与拒答策略评测',
+            'intro': '合并安全风险判断与普通有害请求拒答两类互补协议：SafetyBench 和 CValuesResponsibilityMC 通过选择题检查风险识别及安全方案选择；StrongREJECT、S-Eval、Do-Not-Answer、SORRY-Bench、JailbreakBench Behaviors 和 HarmBench Behaviors 检查模型面对未经攻击改写的有害请求时是否拒答。8 个 Benchmark 保持独立计分，且不包含越狱、提示注入或对抗改写。',
+            'category_label': '综合风险处置策略',
             'sort_rank': 0,
-            'benchmark_names': ['SafetyBench', 'CValuesResponsibilityMC'],
-            'dimension_ids': [
-                'benchmark::fairness_bias::downloaded::其他偏见::p0::eval-run::SafetyBench',
-            ],
-            'include_benchmark_names_only': True,
-            'consume_dimension_ids': [
-                'trusted::commonDataset::26::eval-run::p0::eval-run::SAFE',
-            ],
-        },
-        {
-            'label': '风险对话拒答策略评测',
-            'intro': '使用 CHiSafetyBench 的 462 条单轮风险问题和 101 条带完整历史的多轮风险对话，评估模型在上下文变化时能否持续采取正确的拒答策略。该入口不使用参考回复评价文本质量，也不包含多轮共指攻击；后者归入攻击抵御鲁棒性。',
-            'category_label': '风险对话策略',
-            'sort_rank': 1,
-            'benchmark_names': ['CHiSafetyBench'],
-            'merged_dimension_id': 'taxonomy::privacy_security::chinese_dialogue_refusal',
-        },
-        {
-            'label': '综合有害请求拒答策略评测',
-            'intro': '合并 StrongREJECT、S-Eval、Do-Not-Answer、SORRY-Bench、JailbreakBench Behaviors 和 HarmBench Behaviors 的普通有害请求与标准行为目标，统一评估模型是否采取拒答策略。各 Benchmark 仍独立计分；这里只使用未经越狱、提示注入或对抗改写的基础请求，因此不与攻击抵御鲁棒性重复。',
-            'category_label': '有害请求拒答策略',
-            'sort_rank': 2,
             'benchmark_names': [
+                'SafetyBench', 'CValuesResponsibilityMC',
                 'StrongREJECT', 'SEval', 'Do-Not-Answer',
                 'SorryBench', 'JBBBehaviours', 'HarmBench',
             ],
             'dimension_ids': [
+                'benchmark::fairness_bias::downloaded::其他偏见::p0::eval-run::SafetyBench',
                 'benchmark::privacy_security::downloaded::跨语言安全一致性::p0::eval-run::StrongREJECT',
                 'benchmark::privacy_security::downloaded::安全拒答边界与过度拒答::p0::eval-run::SEval',
                 'benchmark::privacy_security::downloaded::跨语言安全一致性::p0::eval-run::Do-Not-Answer',
@@ -1949,8 +1929,17 @@ TAXONOMY_DIMENSION_MERGE_PLANS = {
             'include_benchmark_names_only': True,
             'merged_dimension_id': 'taxonomy::privacy_security::general_harmful_request_strategy',
             'consume_dimension_ids': [
+                'trusted::commonDataset::26::eval-run::p0::eval-run::SAFE',
                 'trusted::common::13::LLM::p0::eval-run::StrongREJECT',
             ],
+        },
+        {
+            'label': '多轮风险对话拒答策略评测',
+            'intro': '只使用 CHiSafetyBench 官方 101 条带完整历史的多轮风险对话，评估模型能否结合系统消息、历史用户轮次和历史助手回复识别末轮风险意图，并持续采取正确的拒答策略。该入口不混入无历史单轮问题，也不包含多轮共指攻击；后者归入攻击抵御鲁棒性。',
+            'category_label': '多轮风险对话策略',
+            'sort_rank': 1,
+            'benchmark_names': ['CHiSafetyBench'],
+            'merged_dimension_id': 'taxonomy::privacy_security::chinese_dialogue_refusal',
         },
         {
             'label': '多学科知识滥用拒答策略评测',
