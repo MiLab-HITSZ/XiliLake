@@ -397,7 +397,7 @@ function renderDimensions(){
     const group=currentGroup();
     const domain=currentDomain();
     const dims=group?.dimensions||[];
-    box.innerHTML=dims.length?dims.map(dim=>`<button type="button" class="selector-item ${dim.id===selectedDimId?'active':''}" onclick="selectDimension('${escapeHtml(dim.id)}')"><span class="name">${escapeHtml(dim.label)}</span><span class="meta">${escapeHtml(dim.category_label||group.label||'')} · ${(dim.benchmarks||[]).length} 个 Benchmark</span></button>`).join(''):'<div class="empty">当前大类下暂无子类。</div>';
+    box.innerHTML=dims.length?dims.map(dim=>`<button type="button" class="selector-item ${dim.id===selectedDimId?'active':''}" onclick="selectDimension('${escapeHtml(dim.id)}')"><span class="name">${escapeHtml(dim.label)}</span><span class="meta">${(dim.benchmarks||[]).length} 个 Benchmark</span></button>`).join(''):'<div class="empty">当前大类下暂无子类。</div>';
 }
 
 function renderBenchmarks(){
