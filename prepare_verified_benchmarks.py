@@ -6,8 +6,10 @@ import ast
 import csv
 import json
 import re
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Any, Callable, Iterable
+from urllib.request import Request, urlopen
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -30,6 +32,11 @@ def read_jsonl(path: Path) -> Iterable[Any]:
 def read_csv(path: Path) -> list[dict[str, str]]:
     with path.open("r", encoding="utf-8-sig", errors="replace", newline="") as stream:
         return [dict(row) for row in csv.DictReader(stream)]
+
+
+def read_tsv(path: Path) -> list[dict[str, str]]:
+    with path.open("r", encoding="utf-8-sig", errors="replace", newline="") as stream:
+        return [dict(row) for row in csv.DictReader(stream, delimiter="\t")]
 
 
 def read_parquet(path: Path) -> list[dict[str, Any]]:
@@ -374,6 +381,182 @@ def prepare_chisafetybench() -> int:
     return write_rows("chisafetybench", rows())
 
 
+LEGALBENCH_REASONING_LISTS = {
+    "issue_spotting": "ISSUE_TASKS",
+    "rule_recall": "RULE_TASKS",
+    "rule_conclusion": "CONCLUSION_TASKS",
+    "interpretation": "INTERPRETATION_TASKS",
+    "rhetoric": "RHETORIC_TASKS",
+}
+LEGALBENCH_HF_BASE = "https://huggingface.co/datasets/nguha/legalbench/resolve/main/data"
+LEGALBENCH_PRIVACY_TASKS = {
+    "privacy_policy_qa",
+    "privacy_policy_entailment",
+    "opp115_data_retention",
+    "opp115_data_security",
+    "opp115_do_not_track",
+    "opp115_first_party_collection_use",
+    "opp115_international_and_specific_audiences",
+    "opp115_policy_change",
+    "opp115_third_party_sharing_collection",
+    "opp115_user_access,_edit_and_deletion",
+    "opp115_user_choice_control",
+}
+LEGALBENCH_CONSUMER_TASKS = {
+    "consumer_contracts_qa",
+    "telemarketing_sales_rule",
+    "unfair_tos",
+}
+LEGALBENCH_EXISTING_TASKS = {
+    "privacy_policy_qa",
+    "telemarketing_sales_rule",
+    "unfair_tos",
+}
+LEGALBENCH_TEMPLATE_FIELD = re.compile(r"\{\{\s*([^{}]+?)\s*\}\}")
+
+
+def legalbench_task_groups() -> tuple[list[str], dict[str, list[str]]]:
+    source = DATASETS / "github_repos/HazyResearch__legalbench/tasks.py"
+    tree = ast.parse(source.read_text(encoding="utf-8"))
+    values: dict[str, list[str]] = {}
+    for node in tree.body:
+        if not isinstance(node, ast.Assign) or len(node.targets) != 1:
+            continue
+        target = node.targets[0]
+        if not isinstance(target, ast.Name):
+            continue
+        try:
+            value = ast.literal_eval(node.value)
+        except (TypeError, ValueError):
+            continue
+        if isinstance(value, list) and all(isinstance(item, str) for item in value):
+            values[target.id] = value
+
+    all_tasks = values.get("TASKS") or []
+    official_groups = {
+        group: list(values.get(variable) or [])
+        for group, variable in LEGALBENCH_REASONING_LISTS.items()
+    }
+    official_union = set().union(*(set(tasks) for tasks in official_groups.values()))
+    if len(all_tasks) != 162 or official_union != set(all_tasks):
+        raise RuntimeError("LegalBench official task taxonomy is incomplete or has changed")
+    if sum(len(tasks) for tasks in official_groups.values()) != len(official_union):
+        raise RuntimeError("LegalBench official reasoning groups overlap")
+
+    suites = {
+        "legalbench_privacy_additional": sorted(LEGALBENCH_PRIVACY_TASKS - LEGALBENCH_EXISTING_TASKS),
+        "legalbench_consumer_contracts": ["consumer_contracts_qa"],
+        "legalbench_issue_spotting": official_groups["issue_spotting"],
+        "legalbench_rule_recall": official_groups["rule_recall"],
+        "legalbench_rule_conclusion": [
+            task for task in official_groups["rule_conclusion"]
+            if task not in LEGALBENCH_EXISTING_TASKS
+        ],
+        "legalbench_interpretation": [
+            task for task in official_groups["interpretation"]
+            if task not in LEGALBENCH_PRIVACY_TASKS | LEGALBENCH_CONSUMER_TASKS
+        ],
+        "legalbench_rhetoric": official_groups["rhetoric"],
+    }
+    assigned = LEGALBENCH_EXISTING_TASKS | set().union(*(set(tasks) for tasks in suites.values()))
+    if assigned != set(all_tasks) or sum(len(tasks) for tasks in suites.values()) + 3 != 162:
+        raise RuntimeError("LegalBench suite partition must assign every task exactly once")
+    return all_tasks, suites
+
+
+def ensure_legalbench_test_files(task_names: Iterable[str]) -> None:
+    root = DATASETS / "huggingface/nguha__legalbench/data"
+    missing = [task for task in task_names if not (root / task / "test.tsv").is_file()]
+    if not missing:
+        return
+
+    def download(task: str) -> str:
+        target = root / task / "test.tsv"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        url = f"{LEGALBENCH_HF_BASE}/{task}/test.tsv"
+        request = Request(url, headers={"User-Agent": "XiliLake/0.1"})
+        try:
+            with urlopen(request, timeout=180) as response:
+                data = response.read()
+        except Exception as exc:
+            raise RuntimeError(f"LegalBench {task} download failed: {exc}") from exc
+        if not data.startswith(b"index\t"):
+            raise RuntimeError(f"LegalBench {task} returned an invalid TSV file")
+        temporary = target.with_suffix(".tsv.tmp")
+        temporary.write_bytes(data)
+        temporary.replace(target)
+        return task
+
+    with ThreadPoolExecutor(max_workers=min(8, len(missing))) as pool:
+        futures = [pool.submit(download, task) for task in missing]
+        for future in as_completed(futures):
+            future.result()
+
+
+def render_legalbench_prompt(template: str, row: dict[str, str]) -> tuple[str, str]:
+    matches = list(LEGALBENCH_TEMPLATE_FIELD.finditer(template))
+    if not matches:
+        raise RuntimeError("LegalBench prompt template has no input fields")
+    block_start = template.rfind("\n\n", 0, matches[0].start())
+    block_start = 0 if block_start < 0 else block_start + 2
+    context_template = template[:block_start].strip()
+    question_template = template[block_start:].strip()
+
+    def replace(match: re.Match[str]) -> str:
+        field = match.group(1).strip()
+        if field not in row:
+            raise RuntimeError(f"LegalBench prompt field is missing: {field}")
+        return str(row.get(field) or "")
+
+    context = LEGALBENCH_TEMPLATE_FIELD.sub(replace, context_template)
+    question = LEGALBENCH_TEMPLATE_FIELD.sub(replace, question_template)
+    return context, question
+
+
+def prepare_legalbench_suites() -> dict[str, int]:
+    all_tasks, suites = legalbench_task_groups()
+    ensure_legalbench_test_files(all_tasks)
+    prompt_root = DATASETS / "github_repos/HazyResearch__legalbench/tasks"
+    data_root = DATASETS / "huggingface/nguha__legalbench/data"
+    counts: dict[str, int] = {}
+
+    for suite_name, task_names in suites.items():
+        def rows(tasks: list[str] = task_names, output_name: str = suite_name) -> Iterable[dict[str, Any]]:
+            task_streams: list[tuple[str, str, Iterable[dict[str, str]]]] = []
+            for task in tasks:
+                template = (prompt_root / task / "base_prompt.txt").read_text(
+                    encoding="utf-8", errors="replace"
+                )
+                task_streams.append((task, template, iter(read_tsv(data_root / task / "test.tsv"))))
+
+            source_indexes = {task: 0 for task in tasks}
+            while task_streams:
+                active_streams: list[tuple[str, str, Iterable[dict[str, str]]]] = []
+                for task, template, stream in task_streams:
+                    try:
+                        source_row = next(stream)
+                    except StopIteration:
+                        continue
+                    index = source_indexes[task]
+                    source_indexes[task] += 1
+                    answer = source_row.get("answer") or source_row.get("label")
+                    context, question = render_legalbench_prompt(template, source_row)
+                    yield {
+                        "id": f"{task}:{source_row.get('index', index)}",
+                        "question": question,
+                        "context": context,
+                        "answer": answer,
+                        "legalbench_task": task,
+                        "legalbench_suite": output_name,
+                        "source_index": source_row.get("index", index),
+                    }
+                    active_streams.append((task, template, stream))
+                task_streams = active_streams
+
+        counts[suite_name] = write_rows(suite_name, rows())
+    return counts
+
+
 def replace_identity(template: str, name: str, pronouns: tuple[str, str, str]) -> str:
     subject, object_form, possessive = pronouns
     return (
@@ -635,6 +818,7 @@ PREPARERS: dict[str, Callable[[], Any]] = {
     "harmfulq": prepare_harmfulq,
     "rmcbench": prepare_rmcbench,
     "chisafetybench": prepare_chisafetybench,
+    "legalbench_suites": prepare_legalbench_suites,
     "calm": prepare_calm,
     "chbias": prepare_chbias,
     "crows_pairs": prepare_crows_pairs,

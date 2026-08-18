@@ -806,6 +806,7 @@ def build_case(row: Dict[str, Any], idx: int, benchmark_name: str, dimension_lab
             # preserves its original indentation.
             answer = answer[0]
     benchmark_key = re.sub(r'[^a-z0-9]+', '', str(benchmark_name or '').lower())
+    is_legalbench_case = bool(str(row.get('legalbench_task') or '').strip())
     if benchmark_key == 'mafalda' and answer not in (None, ''):
         parsed_labels = answer
         if isinstance(parsed_labels, str):
@@ -824,7 +825,10 @@ def build_case(row: Dict[str, Any], idx: int, benchmark_name: str, dimension_lab
         question = f"{question}\n\nIdentify the logical fallacy type in the text."
     context = row.get('context')
     if context not in (None, '') and q_key.lower() == 'question':
-        question = f"{compact_value(context, 6000)}\n\n{compact_value(question, 3000)}"
+        if is_legalbench_case:
+            question = f"{str(context).strip()}\n\n{str(question).strip()}"
+        else:
+            question = f"{compact_value(context, 6000)}\n\n{compact_value(question, 3000)}"
     if not question:
         useful = {k: v for k, v in row.items() if not str(k).startswith('_')}
         question = json.dumps(useful, ensure_ascii=False)[:1200]
@@ -837,7 +841,8 @@ def build_case(row: Dict[str, Any], idx: int, benchmark_name: str, dimension_lab
         )
     raw_answer_preview = compact_value(answer, 2000)
     is_code_case = looks_like_code(raw_answer_preview) or '代码' in str(dimension_label)
-    question_text = compact_value(question, 12000 if is_code_case else 8000)
+    question_limit = 50000 if is_legalbench_case else (12000 if is_code_case else 8000)
+    question_text = compact_value(question, question_limit)
     answer_text = compact_value(answer, 20000 if is_code_case else 5000)
     if is_code_case and isinstance(answer, str):
         answer_text = answer[:20000].rstrip()
