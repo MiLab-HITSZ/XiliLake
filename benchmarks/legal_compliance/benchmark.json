@@ -2,7 +2,7 @@
   "id": "legal_compliance",
   "label": "法律法规遵守性",
   "benchmark_name": "LegalBench 法律法规评测",
-  "description": "完整接入 LegalBench 的 162 个官方任务，按隐私政策、消费者权益、法律争点识别、法律规则知识、规则适用结论、法律文本解释和司法修辞分析划分为互斥子类。",
+  "description": "接入 LegalBench 中与法规遵守直接相关的 30 个官方任务，按隐私政策、消费者权益、法律规则知识和规则适用结论划分为互斥子类。",
   "source_type": "downloaded",
   "enabled": true,
   "paths": {
@@ -221,41 +221,10 @@
           ]
         },
         {
-          "id": "legal_issue_spotting",
-          "label": "法律争点识别准确性评测",
-          "name_en": "Legal Issue Spotting Accuracy",
-          "taxonomy_sort_rank": 2,
-          "intro": "使用 LegalBench 官方 Issue 组的 17 个互斥任务，判断事实陈述涉及的具体法律争点，覆盖商业、消费者、法院、刑事、家庭、健康、住房、移民、侵权和交通等领域。这里仅识别需要处理的法律问题，不要求给出最终法律结论。",
-          "category_label": "法律争点识别",
-          "benchmarks": [
-            {
-              "option_key": "legalbench_issue_spotting_suite",
-              "name": "LegalBench-IssueSpottingSuite",
-              "intro": "LegalBench IssueSpottingSuite 汇总官方 17 个 Issue 任务，包括 Corporate Lobbying 和 Learned Hands 的 16 个法律领域分类任务，评估模型从事实描述中定位适用法律争点的能力。",
-              "url": "https://github.com/HazyResearch/legalbench",
-              "language": "English",
-              "scale": "17 tasks / 11,599 labeled test cases",
-              "evaluation": "Official prompts with task-wise answer matching",
-              "paths": {
-                "dataset": "benchmarks/verified_benchmarks/data/legalbench_issue_spotting.jsonl",
-                "results": "result"
-              },
-              "execution": {
-                "extra_args": {
-                  "--benchmark-name": "LegalBench-IssueSpottingSuite",
-                  "--dimension-label": "法律争点识别准确性评测",
-                  "--benchmark-url": "https://github.com/HazyResearch/legalbench",
-                  "--max-cases": 17
-                }
-              }
-            }
-          ]
-        },
-        {
           "id": "legal_rule_recall",
           "label": "法律规则知识准确性评测",
           "name_en": "Legal Rule Knowledge Accuracy",
-          "taxonomy_sort_rank": 3,
+          "taxonomy_sort_rank": 2,
           "intro": "使用 LegalBench 官方 Rule 组的 5 个互斥任务，考察法律规则、国际公民身份规则、纽约州司法行为规范以及判例引用知识。这里评价规则和法源本身是否识别正确，不评价将规则适用于新事实后的结论。",
           "category_label": "法律规则与法源知识",
           "benchmarks": [
@@ -286,7 +255,7 @@
           "id": "legal_rule_conclusion",
           "label": "法律规则适用结论准确性评测",
           "name_en": "Legal Rule Conclusion Accuracy",
-          "taxonomy_sort_rank": 4,
+          "taxonomy_sort_rank": 3,
           "intro": "使用 LegalBench 官方 Conclusion 组中除已单列电话营销规则外的 11 个任务，将商标、管辖权、传闻证据、继受责任及统一商法典等规则适用于具体事实并判断法律结论。这里已知待适用的规则领域，核心是事实到结论的推导。",
           "category_label": "事实到法律结论",
           "benchmarks": [
@@ -308,68 +277,6 @@
                   "--dimension-label": "法律规则适用结论准确性评测",
                   "--benchmark-url": "https://github.com/HazyResearch/legalbench",
                   "--max-cases": 11
-                }
-              }
-            }
-          ]
-        },
-        {
-          "id": "legal_text_interpretation",
-          "label": "合同与法律文本解释准确性评测",
-          "name_en": "Contract and Legal Text Interpretation Accuracy",
-          "taxonomy_sort_rank": 5,
-          "intro": "使用 LegalBench 官方 Interpretation 组中除隐私和消费者任务外的 105 个任务，解释保密协议、商业合同、并购协议、供应链披露、保险政策和成文法文本。这里以给定法律文本的含义、条款属性或蕴含关系为依据，不预测案件裁判结果。",
-          "category_label": "合同与法律文本解释",
-          "benchmarks": [
-            {
-              "option_key": "legalbench_interpretation_suite",
-              "name": "LegalBench-InterpretationSuite",
-              "intro": "LegalBench InterpretationSuite 汇总 105 个不与隐私政策及消费者权益子类重复的官方 Interpretation 任务，覆盖 ContractNLI、CUAD、MAUD、供应链披露、保险政策、成文法和专业商业协议解释。当前接入 32,286 条有 gold 的测试样本，并排除 SSLA Company Defendants 中 9 条官方空标签记录。",
-              "url": "https://github.com/HazyResearch/legalbench",
-              "language": "English",
-              "scale": "105 tasks / 32,286 labeled test cases",
-              "evaluation": "Official prompts with task-wise answer matching",
-              "paths": {
-                "dataset": "benchmarks/verified_benchmarks/data/legalbench_interpretation.jsonl",
-                "results": "result"
-              },
-              "execution": {
-                "extra_args": {
-                  "--benchmark-name": "LegalBench-InterpretationSuite",
-                  "--dimension-label": "合同与法律文本解释准确性评测",
-                  "--benchmark-url": "https://github.com/HazyResearch/legalbench",
-                  "--max-cases": 105
-                }
-              }
-            }
-          ]
-        },
-        {
-          "id": "judicial_rhetoric_analysis",
-          "label": "司法文本结构与修辞分析评测",
-          "name_en": "Judicial Text Structure and Rhetoric Analysis",
-          "taxonomy_sort_rank": 6,
-          "intro": "使用 LegalBench 官方 Rhetoric 组的 10 个互斥任务，识别裁判文本中的定义、判决功能、因果关系、口头辩论提问目的、推翻先例关系和文本主义工具。这里分析法律文本如何论证和组织，不判断实体行为是否合法。",
-          "category_label": "司法文本结构与修辞",
-          "benchmarks": [
-            {
-              "option_key": "legalbench_rhetorical_understanding_suite",
-              "name": "LegalBench-RhetoricalUnderstandingSuite",
-              "intro": "LegalBench RhetoricalUnderstandingSuite 汇总官方 10 个 Rhetoric 任务，覆盖裁判结果、定义识别与抽取、判决段落功能、法律因果、口头辩论问题目的、先例推翻和文本主义分析。",
-              "url": "https://github.com/HazyResearch/legalbench",
-              "language": "English",
-              "scale": "10 tasks / 6,239 labeled test cases",
-              "evaluation": "Official prompts with task-wise answer matching",
-              "paths": {
-                "dataset": "benchmarks/verified_benchmarks/data/legalbench_rhetoric.jsonl",
-                "results": "result"
-              },
-              "execution": {
-                "extra_args": {
-                  "--benchmark-name": "LegalBench-RhetoricalUnderstandingSuite",
-                  "--dimension-label": "司法文本结构与修辞分析评测",
-                  "--benchmark-url": "https://github.com/HazyResearch/legalbench",
-                  "--max-cases": 10
                 }
               }
             }

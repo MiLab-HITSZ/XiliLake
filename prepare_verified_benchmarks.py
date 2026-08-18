@@ -446,22 +446,16 @@ def legalbench_task_groups() -> tuple[list[str], dict[str, list[str]]]:
     suites = {
         "legalbench_privacy_additional": sorted(LEGALBENCH_PRIVACY_TASKS - LEGALBENCH_EXISTING_TASKS),
         "legalbench_consumer_contracts": ["consumer_contracts_qa"],
-        "legalbench_issue_spotting": official_groups["issue_spotting"],
         "legalbench_rule_recall": official_groups["rule_recall"],
         "legalbench_rule_conclusion": [
             task for task in official_groups["rule_conclusion"]
             if task not in LEGALBENCH_EXISTING_TASKS
         ],
-        "legalbench_interpretation": [
-            task for task in official_groups["interpretation"]
-            if task not in LEGALBENCH_PRIVACY_TASKS | LEGALBENCH_CONSUMER_TASKS
-        ],
-        "legalbench_rhetoric": official_groups["rhetoric"],
     }
     assigned = LEGALBENCH_EXISTING_TASKS | set().union(*(set(tasks) for tasks in suites.values()))
-    if assigned != set(all_tasks) or sum(len(tasks) for tasks in suites.values()) + 3 != 162:
-        raise RuntimeError("LegalBench suite partition must assign every task exactly once")
-    return all_tasks, suites
+    if not assigned <= set(all_tasks) or sum(len(tasks) for tasks in suites.values()) + 3 != len(assigned):
+        raise RuntimeError("Selected LegalBench suites overlap or contain unknown tasks")
+    return sorted(assigned), suites
 
 
 def ensure_legalbench_test_files(task_names: Iterable[str]) -> None:
@@ -514,8 +508,8 @@ def render_legalbench_prompt(template: str, row: dict[str, str]) -> tuple[str, s
 
 
 def prepare_legalbench_suites() -> dict[str, int]:
-    all_tasks, suites = legalbench_task_groups()
-    ensure_legalbench_test_files(all_tasks)
+    selected_tasks, suites = legalbench_task_groups()
+    ensure_legalbench_test_files(selected_tasks)
     prompt_root = DATASETS / "github_repos/HazyResearch__legalbench/tasks"
     data_root = DATASETS / "huggingface/nguha__legalbench/data"
     counts: dict[str, int] = {}

@@ -8,9 +8,9 @@ XiliLake 是 MiLab 建设的大语言模型与多模态模型可信评测系统�
 
 - 3 个评测领域
 - 11 个大类
-- 86 个子类
-- 109 个 Benchmark（XSTest 的大小写及镜像重复项已合并）
-- 完整数据部署下，86 个子类和 109 个 Benchmark 全部可评测
+- 83 个子类
+- 106 个 Benchmark（XSTest 的大小写及镜像重复项已合并）
+- 完整数据部署下，83 个子类和 106 个 Benchmark 全部可评测
 
 数量由 Benchmark 配置动态生成，网页与 `/api/trust_catalog` 会随配置变更自动更新。完整归属关系见 [docs/current_taxonomy_full.md](docs/current_taxonomy_full.md)。
 
@@ -128,7 +128,7 @@ export XILILAKE_EXAMPLE_API_KEY='<your-key>'
 - `benchmarks/registry.py` 加载配置，`benchmarks/adapters.py` 解析数据路径并生成评测命令。
 - `downloads/datasets/download_manifest.json` 记录批量下载状态，可由下载脚本重新生成。
 - 网页可评测数量以配置、数据路径和执行适配器的实时检查结果为准。
-- LegalBench 套件按官方五类互斥任务清单接入全部 162 个任务；`prepare_verified_benchmarks.py` 会补齐缺失的官方测试 TSV，并生成按任务轮询排列的本地可评测视图。
+- LegalBench 接入与法规遵守直接相关的 30 个官方任务；`prepare_verified_benchmarks.py` 会补齐缺失的官方测试 TSV，并生成按任务轮询排列的本地可评测视图。
 
 查看配置中声明的可下载资源：
 
@@ -145,7 +145,7 @@ python3 download_datasets.py --skip-existing
 
 ## 运行检查
 
-页面右上角的“全子类快速检测”会用当前模型对 86 个可评测子类各运行 1 个真实样例。任务共享一个已拉起的模型服务，页面会显示总进度，并将结果汇总到 `result/current/`。该操作会替换当前结果，适合部署后验收 Benchmark 数据、评测适配器、进度回传和结果展示链路。
+页面右上角的“全子类快速检测”会用当前模型对 83 个可评测子类各运行 1 个真实样例。任务共享一个已拉起的模型服务，页面会显示总进度，并将结果汇总到 `result/current/`。该操作会替换当前结果，适合部署后验收 Benchmark 数据、评测适配器、进度回传和结果展示链路。
 
 评测样例会分区展示题目、完整材料或上下文、图片输入状态、模型回答和参考答案；多模态 CDH 样例同时展示反常识与常识成对图片。
 

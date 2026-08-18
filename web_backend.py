@@ -248,7 +248,7 @@ SCIENTIFIC_TAXONOMY_GROUPS = [
     {
         'id': 'legal_compliance',
         'label': '法律法规遵守性',
-        'description': '评估模型能否识别法律争点、掌握法源规则、将规则适用于事实，并准确解释隐私政策、消费者合同、商业协议、成文法和司法文本。当前完整覆盖 LegalBench 的 162 个官方任务，并按互斥任务清单归入七个子类；仅依赖道德直觉而没有可指定法源或法律文本的问题不归入本类。',
+        'description': '评估模型能否理解隐私政策与消费者合同、掌握法源规则，并将明确法律规则适用于具体事实。当前接入 LegalBench 中与法规遵守直接相关的 30 个官方任务，按四个互斥子类组织；法律争点识别、一般合同文本解释和司法修辞分析不纳入本类。',
     },
     {
         'id': 'ethical_alignment',
@@ -1341,11 +1341,8 @@ BENCHMARK_SPECIFIC_INTRO_OVERRIDES = {
     'LegalBench-TelemarketingSalesRule': 'LegalBench TelemarketingSalesRule 以电话营销的价格、附加费用和重要信息披露场景，要求判断行为是否违反美国联邦法规 16 C.F.R. § 310.3(a)(1)-(2)，用于评估模型将明确法规适用到具体事实的能力。',
     'LegalBench-PrivacyRulesSuite': 'LegalBench PrivacyRulesSuite 接入 Privacy Policy Entailment 和 OPP-115 的九个隐私政策任务，共 10 个官方任务，覆盖数据保存、安全、追踪、第一方收集使用、特定人群、政策变更、第三方共享、访问删除和用户选择控制；不重复已有 PrivacyPolicyQA 样本。',
     'LegalBench-ConsumerContractsQA': 'LegalBench ConsumerContractsQA 给出完整消费者合同和具体权利义务问题，要求依据合同文本回答 Yes 或 No。它补充合同问答能力，不重复 UnfairToS 的条款类型分类或 TelemarketingSalesRule 的法规适用样本。',
-    'LegalBench-IssueSpottingSuite': 'LegalBench IssueSpottingSuite 汇总官方 17 个 Issue 任务，覆盖企业游说以及商业、消费者、法院、刑事、家庭、健康、住房、移民、侵权和交通等 Learned Hands 法律争点分类。',
     'LegalBench-RuleRecallSuite': 'LegalBench RuleRecallSuite 汇总官方 5 个 Rule 任务，包括 RuleQA、国际公民身份规则、纽约州司法行为规范以及判例引用分类和开放生成，用于评估法律规则与法源知识。',
     'LegalBench-RuleConclusionSuite': 'LegalBench RuleConclusionSuite 汇总除已单列电话营销规则外的 11 个官方 Conclusion 任务，覆盖商标分类、多样性管辖、传闻证据、个人管辖、继受责任以及统一商法典与普通法适用。',
-    'LegalBench-InterpretationSuite': 'LegalBench InterpretationSuite 汇总 105 个不与隐私政策及消费者权益子类重复的官方 Interpretation 任务，覆盖 ContractNLI、CUAD、MAUD、供应链披露、保险政策、成文法和商业协议解释。当前接入 32,286 条有 gold 的测试样本，并排除 SSLA Company Defendants 中 9 条官方空标签记录。',
-    'LegalBench-RhetoricalUnderstandingSuite': 'LegalBench RhetoricalUnderstandingSuite 汇总官方 10 个 Rhetoric 任务，覆盖裁判结果、定义识别与抽取、判决段落功能、法律因果关系、口头辩论提问目的、先例推翻和文本主义工具。',
     'explicit_subset': 'explicit_subset 使用公开 CommitBench 完整测试集重建显式提交摘要任务，输入真实 Git 代码差异，要求生成直接描述新增、删除、修复或修改内容的英文提交信息。原论文分类数据未提供公开下载地址，因此系统按提交信息与差异标识符的显式对应程度进行可复现划分，并在本地来源记录中保留这一差异。',
     'implicit_subset': 'implicit_subset 使用公开 CommitBench 完整测试集重建隐式提交摘要任务，输入真实 Git 代码差异，要求生成概括修改目的、原因或影响的英文提交信息。该子集保留词面对应较弱、需要理解修改意图的样本；原论文分类数据未公开，系统在来源记录中明确标注其代理重建方式。',
     'RustRepoTrans': 'RustRepoTrans 接入官方 375 组跨语言等价函数，覆盖 C、Java、Python 到 Rust 的真实仓库代码翻译。系统向模型提供源语言函数并要求生成对应 Rust 函数，使用官方 Rust 实现作为参考答案进行代码级评分。',
@@ -2249,11 +2246,8 @@ def dimension_evaluable_sort_key(dim: Dict[str, Any]) -> tuple[int, int, int, st
         legal_order = {
             '隐私政策法规遵守性评测': 0,
             '消费者权益法规遵守性评测': 1,
-            '法律争点识别准确性评测': 2,
-            '法律规则知识准确性评测': 3,
-            '法律规则适用结论准确性评测': 4,
-            '合同与法律文本解释准确性评测': 5,
-            '司法文本结构与修辞分析评测': 6,
+            '法律规则知识准确性评测': 2,
+            '法律规则适用结论准确性评测': 3,
         }
         taxonomy_rank = legal_order.get(label, taxonomy_rank)
     return (
