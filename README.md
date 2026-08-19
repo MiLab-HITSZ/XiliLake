@@ -9,7 +9,7 @@ XiliLake 是 MiLab 建设的大语言模型与多模态模型可信评测系统�
 - 3 个评测领域
 - 11 个大类
 - 81 个子类
-- 106 个 Benchmark（XSTest 的大小写及镜像重复项已合并）
+- 106 个 Benchmark
 - 完整数据部署下，81 个子类和 106 个 Benchmark 全部可评测
 
 数量由 Benchmark 配置动态生成，网页与 `/api/trust_catalog` 会随配置变更自动更新。完整归属关系见 [docs/current_taxonomy_full.md](docs/current_taxonomy_full.md)。
@@ -61,7 +61,7 @@ python generate_downloaded_benchmark_configs.py
 分类编辑: http://<服务器内网 IP>:5001/taxonomy-editor
 ```
 
-访客页面 `/` 保持只读。分类编辑页面 `/taxonomy-editor` 可修改大类、子类名称及其说明，也可通过子类列表右侧的上下箭头调整同一大类内的显示顺序；保存内容写入 `data/taxonomy_overrides.json`，无需重启服务，已打开的访客页面会自动刷新分类文本与顺序。分类 ID、Benchmark 归属和历史评测结果标识不会随显示名称或顺序修改。
+访客页面 `/` 保持只读。分类编辑页面 `/taxonomy-editor` 可修改大类与子类名称、说明和 Benchmark 介绍，也可通过子类列表右侧的上下箭头调整同一大类内的显示顺序；保存内容写入 `data/taxonomy_overrides.json`，无需重启服务，已打开的访客页面会自动刷新分类文本与顺序。分类 ID、Benchmark 归属和历史评测结果标识不会随显示名称、介绍或顺序修改。
 
 自定义端口：
 

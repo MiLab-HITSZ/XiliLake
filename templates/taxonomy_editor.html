@@ -65,7 +65,13 @@
         .benchmarks{margin-top:18px;border-top:1px dashed var(--line);padding-top:16px;}
         .benchmarks h3{margin:0 0 9px;font-size:12px;color:#475569;font-weight:850;}
         .benchmark-list{display:flex;gap:7px;flex-wrap:wrap;}
-        .benchmark-name{border:1px solid #cfd8e5;background:#f8fafc;color:#334155;border-radius:4px;padding:5px 8px;font-size:12px;font-weight:700;}
+        .benchmark-name{border:1px solid #cfd8e5;background:#f8fafc;color:#334155;border-radius:4px;padding:6px 9px;font-size:12px;font-weight:700;}
+        button.benchmark-name:hover{border-color:#91a4bc;background:#fff;}
+        button.benchmark-name.active{border-color:#7ea0ff;background:var(--primary-soft);color:#1746c0;}
+        .benchmark-editor-head{margin-top:18px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
+        .benchmark-editor-head h3{margin:0;font-size:14px;font-weight:850;}
+        .benchmark-editor-head .identifier{margin-top:5px;color:var(--muted);font:11px/1.4 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;overflow-wrap:anywhere;}
+        .field textarea.benchmark-intro{min-height:190px;}
         .empty{padding:28px 16px;color:#94a3b8;font-size:13px;}
         @media(max-width:1100px){
             .workspace{height:auto;min-height:calc(100vh - 76px);grid-template-columns:210px 250px 300px minmax(420px,1fr);overflow:auto;}
@@ -133,11 +139,12 @@
 
     <script>
         let catalog={groups:[]};
-        let defaults={groups:{},dimensions:{}};
+        let defaults={groups:{},dimensions:{},benchmarks:{},dimension_order:{}};
         let revision='default';
         let selectedDomainId='';
         let selectedGroupId='';
         let selectedDimensionId='';
+        let selectedBenchmarkId='';
         let dirty=false;
         let saving=false;
 
@@ -148,6 +155,7 @@
         function groupsForDomain(){const ids=new Set(currentDomain()?.group_ids||[]);return (catalog.groups||[]).filter(group=>ids.has(group.id));}
         function currentGroup(){return (catalog.groups||[]).find(group=>group.id===selectedGroupId)||null;}
         function currentDimension(){return (currentGroup()?.dimensions||[]).find(dim=>dim.id===selectedDimensionId)||null;}
+        function currentBenchmark(){return (currentDimension()?.benchmarks||[]).find(bench=>bench.id===selectedBenchmarkId)||null;}
         function setStatus(text,type=''){
             const node=document.getElementById('save-status');
             node.textContent=text;
@@ -165,6 +173,8 @@
             if(!groups.some(group=>group.id===selectedGroupId))selectedGroupId=groups[0]?.id||'';
             const dimensions=currentGroup()?.dimensions||[];
             if(!dimensions.some(dim=>dim.id===selectedDimensionId))selectedDimensionId=dimensions[0]?.id||'';
+            const benchmarks=currentDimension()?.benchmarks||[];
+            if(!benchmarks.some(bench=>bench.id===selectedBenchmarkId))selectedBenchmarkId=benchmarks[0]?.id||'';
         }
         function renderAll(){
             const groups=catalog.groups||[];
@@ -220,6 +230,7 @@
             const box=document.getElementById('editor-pane');
             const group=currentGroup();
             const dim=currentDimension();
+            const bench=currentBenchmark();
             if(!group){box.innerHTML='<div class="empty">暂无可编辑内容。</div>';return;}
             box.innerHTML=`
                 <section class="editor-section">
@@ -252,8 +263,17 @@
                     </div>
                     <div class="benchmarks">
                         <h3>包含的 Benchmark</h3>
-                        <div class="benchmark-list">${(dim.benchmarks||[]).map(bench=>`<span class="benchmark-name">${escapeHtml(bench.name||'Benchmark')}</span>`).join('')}</div>
+                        <div class="benchmark-list">${(dim.benchmarks||[]).map(item=>`<button class="benchmark-name ${item.id===selectedBenchmarkId?'active':''}" type="button" onclick="selectBenchmark('${escapeHtml(item.id)}')">${escapeHtml(item.name||'Benchmark')}</button>`).join('')}</div>
                     </div>
+                    ${bench?`
+                    <div class="benchmark-editor-head">
+                        <div><h3>Benchmark 介绍</h3><div class="identifier">${escapeHtml(bench.id)}</div></div>
+                        <button class="button" type="button" onclick="resetCurrentBenchmark()">恢复此 Benchmark</button>
+                    </div>
+                    <div class="field">
+                        <label for="benchmark-intro">介绍 <span class="counter" id="benchmark-intro-counter">${String(bench.intro||'').length} / 8000</span></label>
+                        <textarea class="benchmark-intro" id="benchmark-intro" maxlength="8000" oninput="editBenchmark(this.value);updateCounter('benchmark-intro-counter',this.value,8000)">${escapeHtml(bench.intro||'')}</textarea>
+                    </div>`:''}
                 </section>`:''}`;
         }
         function updateCounter(id,value,max){
@@ -272,10 +292,17 @@
             dim[field]=value;
             markDirty();
         }
+        function editBenchmark(value){
+            const bench=currentBenchmark();
+            if(!bench)return;
+            bench.intro=value;
+            markDirty();
+        }
         function selectDomain(id){
             selectedDomainId=id;
             selectedGroupId=groupsForDomain()[0]?.id||'';
             selectedDimensionId=(currentGroup()?.dimensions||[])[0]?.id||'';
+            selectedBenchmarkId=(currentDimension()?.benchmarks||[])[0]?.id||'';
             const search=document.getElementById('dimension-search');
             if(search)search.value='';
             renderAll();
@@ -284,13 +311,19 @@
             selectedGroupId=id;
             selectedDomainId=(catalog.groups||[]).find(group=>group.id===id)?.domain_id||selectedDomainId;
             selectedDimensionId=(currentGroup()?.dimensions||[])[0]?.id||'';
+            selectedBenchmarkId=(currentDimension()?.benchmarks||[])[0]?.id||'';
             const search=document.getElementById('dimension-search');
             if(search)search.value='';
             renderAll();
         }
         function selectDimension(id){
             selectedDimensionId=id;
+            selectedBenchmarkId=(currentDimension()?.benchmarks||[])[0]?.id||'';
             renderDimensionList();
+            renderEditor();
+        }
+        function selectBenchmark(id){
+            selectedBenchmarkId=id;
             renderEditor();
         }
         function moveDimension(id,offset){
@@ -332,18 +365,30 @@
             markDirty();
             renderAll();
         }
+        function resetCurrentBenchmark(){
+            const bench=currentBenchmark();
+            const original=defaults.benchmarks?.[bench?.id];
+            if(!bench||!original)return;
+            bench.intro=original.intro;
+            markDirty();
+            renderEditor();
+        }
         function savePayload(){
             const groups={};
             const dimensions={};
+            const benchmarks={};
             const dimension_order={};
             for(const group of catalog.groups||[]){
                 groups[group.id]={label:group.label||'',description:group.description||''};
                 dimension_order[group.id]=(group.dimensions||[]).map(dim=>dim.id);
                 for(const dim of group.dimensions||[]){
                     dimensions[dim.id]={label:dim.label||'',intro:dim.intro||''};
+                    for(const bench of dim.benchmarks||[]){
+                        benchmarks[bench.id]={intro:bench.intro||''};
+                    }
                 }
             }
-            return {base_revision:revision,groups,dimensions,dimension_order};
+            return {base_revision:revision,groups,dimensions,benchmarks,dimension_order};
         }
         async function requestJson(url,options={}){
             const response=await fetch(url,{cache:'no-store',...options});
@@ -359,7 +404,7 @@
             setStatus('正在读取');
             try{
                 const data=await requestJson('/api/taxonomy-editor');
-                defaults=data.defaults||{groups:{},dimensions:{}};
+                defaults=data.defaults||{groups:{},dimensions:{},benchmarks:{},dimension_order:{}};
                 revision=data.revision||'default';
                 setCatalog(data.catalog);
                 dirty=false;
@@ -394,7 +439,7 @@
             }
         }
         async function resetAll(){
-            if(!confirm('确定恢复全部大类、子类名称、说明和顺序吗？'))return;
+            if(!confirm('确定恢复全部大类、子类、Benchmark 介绍和子类顺序吗？'))return;
             try{
                 const data=await requestJson('/api/taxonomy-editor',{method:'DELETE'});
                 revision=data.revision||'default';

@@ -1320,8 +1320,8 @@ BENCHMARK_SPECIFIC_INTRO_OVERRIDES = {
     'CoSafe': 'CoSafe 将不安全请求放在多轮对话和共指语境中，最后一轮往往需要结合前文才能识别真实风险。当前用于评估模型是否会被上下文目标劫持，或在共指场景中误判安全边界。',
     'SaladBench': 'SaladBench 汇集并扩充多类安全提示，用于评估大模型安全性以及攻击、防御方法的效果。当前重点看模型面对对抗改写、有害请求变体和安全测试提示时是否仍能稳定拒答。',
     'HarmBench': 'HarmBench 是自动红队评估框架，官方行为集覆盖网络犯罪、生化风险、侵权、错误信息、骚扰和非法活动。本系统当前只接入 text test behaviors，没有运行攻击生成算法，因此该入口仅评估未施加越狱时的有害行为基线拒答。',
-    'XSTest': 'XSTest 包含 450 条成对设计的英文提示：安全提示常含“kill process”等表面敏感词，对照提示则表达真实不安全意图。系统分别把安全样本标为应回答、对照样本标为应拒绝，用于测量过度拒答与漏拒，而不是把数据集原始 safe/unsafe 标签当作开放问答答案。',
-    'XsTest': 'XSTest 包含 450 条成对设计的英文提示：安全提示常含“kill process”等表面敏感词，对照提示则表达真实不安全意图。系统分别把安全样本标为应回答、对照样本标为应拒绝；XsTest 与 XSTest 是同一数据集的大小写重复入口。',
+    'XSTest': 'XSTest 包含 450 条成对设计的英文提示：安全提示可能含有表面敏感词，但请求本身无害；对照提示则表达真实的不安全意图。模型应正常回答安全请求并拒绝不安全请求，用于同时评估过度拒答与漏拒。',
+    'XsTest': 'XSTest 包含 450 条成对设计的英文提示：安全提示可能含有表面敏感词，但请求本身无害；对照提示则表达真实的不安全意图。模型应正常回答安全请求并拒绝不安全请求，用于同时评估过度拒答与漏拒。',
     'SEval': 'S-Eval 官方数据包含中英文基础风险提示及攻击扩写。当前入口固定接入 1,000 条中文 base_risk 小型分片，覆盖违法犯罪、数据隐私、仇恨言论、极端主义、不当建议、网络安全、身心健康、伦理道德八类风险；攻击扩写不在本入口。',
     'ConvAbuse': 'ConvAbuse 是面向对话场景的辱骂和滥用语言语料，保留前序用户与系统轮次以及当前发言，并提供 abusive、not abusive 和 ambiguous 标注。当前用于评估模型能否在完整会话语境中识别辱骂、骚扰和冒犯内容，作为对话交往伦理处置评测。',
     'SafetyPrompts': 'SafetyPrompts 官方数据由 70,000 条中文典型安全场景和 30,000 条指令攻击场景组成。当前入口只接入前者及其安全参考回复，覆盖违法活动、偏见歧视、心理健康、身体健康、隐私财产、伦理道德和冒犯七类请求，以参考回复相似度或明确拒答作为安全回复质量的本地代理；它不等同于只统计拒答与否的 CHiSafetyBench。',
@@ -1418,6 +1418,7 @@ def apply_taxonomy_editor_overrides(groups: List[Dict[str, Any]]) -> None:
     state = taxonomy_editor_state()
     group_overrides = state.get('groups') if isinstance(state.get('groups'), dict) else {}
     dimension_overrides = state.get('dimensions') if isinstance(state.get('dimensions'), dict) else {}
+    benchmark_overrides = state.get('benchmarks') if isinstance(state.get('benchmarks'), dict) else {}
     dimension_order = state.get('dimension_order') if isinstance(state.get('dimension_order'), dict) else {}
     for group in groups:
         group_id = str(group.get('id') or '')
@@ -1430,25 +1431,32 @@ def apply_taxonomy_editor_overrides(groups: List[Dict[str, Any]]) -> None:
         for dim in group.get('dimensions') or []:
             dim_id = str(dim.get('id') or '')
             dim_edit = dimension_overrides.get(dim_id) if isinstance(dimension_overrides.get(dim_id), dict) else {}
-            if not dim_edit:
-                continue
-            dim['_editor_original_label'] = dim.get('label') or ''
-            if not str(dim.get('id') or '').startswith('cdh::') and not dim.get('result_label'):
-                dim['result_label'] = dim.get('label') or ''
-            dim['label'] = dim_edit.get('label', dim.get('label') or '')
-            dim['intro'] = dim_edit.get('intro', dim.get('intro') or '')
+            if dim_edit:
+                dim['_editor_original_label'] = dim.get('label') or ''
+                if not str(dim.get('id') or '').startswith('cdh::') and not dim.get('result_label'):
+                    dim['result_label'] = dim.get('label') or ''
+                dim['label'] = dim_edit.get('label', dim.get('label') or '')
+                dim['intro'] = dim_edit.get('intro', dim.get('intro') or '')
             for bench in dim.get('benchmarks') or []:
                 if not isinstance(bench, dict):
                     continue
-                execution = copy.deepcopy(bench.get('execution') or {})
-                extra_args = copy.deepcopy(execution.get('extra_args') or {})
-                if isinstance(extra_args, dict):
-                    extra_args['--dimension-label'] = dim['label']
-                    execution['extra_args'] = extra_args
-                bench['execution'] = execution
-                if isinstance(bench.get('example'), dict):
-                    bench['example'] = {**bench['example'], 'dimension': dim['label']}
-            dim['taxonomy_edited'] = True
+                if dim_edit:
+                    execution = copy.deepcopy(bench.get('execution') or {})
+                    extra_args = copy.deepcopy(execution.get('extra_args') or {})
+                    if isinstance(extra_args, dict):
+                        extra_args['--dimension-label'] = dim['label']
+                        execution['extra_args'] = extra_args
+                    bench['execution'] = execution
+                    if isinstance(bench.get('example'), dict):
+                        bench['example'] = {**bench['example'], 'dimension': dim['label']}
+                bench_id = str(bench.get('id') or '')
+                bench_edit = benchmark_overrides.get(bench_id) if isinstance(benchmark_overrides.get(bench_id), dict) else {}
+                if bench_edit:
+                    bench['_editor_original_intro'] = bench.get('intro') or ''
+                    bench['intro'] = bench_edit.get('intro', bench.get('intro') or '')
+                    bench['taxonomy_edited'] = True
+            if dim_edit:
+                dim['taxonomy_edited'] = True
         saved_order = dimension_order.get(group_id)
         if isinstance(saved_order, list):
             rank = {
@@ -1971,7 +1979,7 @@ TAXONOMY_DIMENSION_MERGE_PLANS = {
         },
         {
             'label': '安全请求放行策略评测',
-            'intro': '评估模型是否会把正常、无害或仅表面敏感的请求错误拒绝。XSTest 与 XsTest 是同一测试集的大小写及镜像重复项，系统统一为一个 XSTest 评测入口。',
+            'intro': '评估模型能否正确区分表面敏感但实际安全的请求与真正不安全的请求：安全请求应正常回答，不安全请求应拒绝，用于同时测量过度拒答和漏拒。',
             'category_label': '安全请求放行策略',
             'sort_rank': 4,
             'benchmark_names': ['XSTest', 'XsTest'],
@@ -2936,6 +2944,7 @@ def build_trust_catalog(apply_editor_overrides: bool = True) -> Dict[str, Any]:
 def taxonomy_editable_defaults(catalog: Dict[str, Any]) -> Dict[str, Any]:
     groups: Dict[str, Dict[str, str]] = {}
     dimensions: Dict[str, Dict[str, str]] = {}
+    benchmarks: Dict[str, Dict[str, str]] = {}
     dimension_order: Dict[str, List[str]] = {}
     for group in catalog.get('groups') or []:
         group_id = str(group.get('id') or '')
@@ -2952,7 +2961,22 @@ def taxonomy_editable_defaults(catalog: Dict[str, Any]) -> Dict[str, Any]:
                 'intro': str(dim.get('intro') or ''),
             }
             dimension_order.setdefault(group_id, []).append(dim_id)
-    return {'groups': groups, 'dimensions': dimensions, 'dimension_order': dimension_order}
+            for bench in dim.get('benchmarks') or []:
+                bench_id = str(bench.get('id') or '')
+                if not bench_id:
+                    continue
+                benchmarks[bench_id] = {
+                    'group_id': group_id,
+                    'dimension_id': dim_id,
+                    'name': str(bench.get('name') or 'Benchmark'),
+                    'intro': str(bench.get('intro') or ''),
+                }
+    return {
+        'groups': groups,
+        'dimensions': dimensions,
+        'benchmarks': benchmarks,
+        'dimension_order': dimension_order,
+    }
 
 
 def clean_taxonomy_label(value: Any, field_name: str) -> str:
@@ -2980,26 +3004,32 @@ def clean_taxonomy_description(value: Any, field_name: str) -> str:
 def save_taxonomy_editor_state(payload: Dict[str, Any]) -> str:
     submitted_groups = payload.get('groups')
     submitted_dimensions = payload.get('dimensions')
+    submitted_benchmarks = payload.get('benchmarks', {})
     submitted_dimension_order = payload.get('dimension_order', {})
     if not isinstance(submitted_groups, dict) or not isinstance(submitted_dimensions, dict):
         raise ValueError('保存内容必须包含 groups 和 dimensions 对象')
     if not isinstance(submitted_dimension_order, dict):
         raise ValueError('子类顺序必须是按大类组织的对象')
+    if not isinstance(submitted_benchmarks, dict):
+        raise ValueError('Benchmark 介绍必须是按 Benchmark ID 组织的对象')
 
     base_catalog = build_trust_catalog(apply_editor_overrides=False)
     defaults = taxonomy_editable_defaults(base_catalog)
     known_group_ids = set(defaults['groups'])
     known_dimension_ids = set(defaults['dimensions'])
+    known_benchmark_ids = set(defaults['benchmarks'])
     unknown_groups = set(str(key) for key in submitted_groups) - known_group_ids
     unknown_dimensions = set(str(key) for key in submitted_dimensions) - known_dimension_ids
+    unknown_benchmarks = set(str(key) for key in submitted_benchmarks) - known_benchmark_ids
     unknown_order_groups = set(str(key) for key in submitted_dimension_order) - known_group_ids
-    if unknown_groups or unknown_dimensions or unknown_order_groups:
-        raise ValueError('保存内容包含当前目录中不存在的大类或子类')
+    if unknown_groups or unknown_dimensions or unknown_benchmarks or unknown_order_groups:
+        raise ValueError('保存内容包含当前目录中不存在的大类、子类或 Benchmark')
 
     final_groups: Dict[str, Dict[str, str]] = {}
     final_dimensions: Dict[str, Dict[str, str]] = {}
     group_overrides: Dict[str, Dict[str, str]] = {}
     dimension_overrides: Dict[str, Dict[str, str]] = {}
+    benchmark_overrides: Dict[str, Dict[str, str]] = {}
     dimension_order_overrides: Dict[str, List[str]] = {}
 
     for group_id, original in defaults['groups'].items():
@@ -3048,6 +3078,16 @@ def save_taxonomy_editor_state(payload: Dict[str, Any]) -> str:
         if len(labels) != len(set(labels)):
             raise ValueError('同一大类下的子类名称不能重复')
 
+    for bench_id, original in defaults['benchmarks'].items():
+        submitted = submitted_benchmarks.get(bench_id) or {}
+        if not isinstance(submitted, dict):
+            raise ValueError('Benchmark 介绍保存格式错误')
+        intro = clean_taxonomy_description(
+            submitted.get('intro', original['intro']), 'Benchmark 介绍'
+        )
+        if intro != original['intro']:
+            benchmark_overrides[bench_id] = {'intro': intro}
+
     for group_id, default_order in defaults['dimension_order'].items():
         submitted_order = submitted_dimension_order.get(group_id, default_order)
         if not isinstance(submitted_order, list) or any(
@@ -3066,15 +3106,16 @@ def save_taxonomy_editor_state(payload: Dict[str, Any]) -> str:
         current_revision = taxonomy_editor_revision()
         if expected_revision and expected_revision != current_revision:
             raise TaxonomyRevisionConflict('分类内容已被其他编辑者更新，请重新加载后再保存')
-        if not group_overrides and not dimension_overrides and not dimension_order_overrides:
+        if not group_overrides and not dimension_overrides and not benchmark_overrides and not dimension_order_overrides:
             TAXONOMY_OVERRIDES_PATH.unlink(missing_ok=True)
             return taxonomy_editor_revision()
         revision = utc_now_iso()
         write_json_atomic(TAXONOMY_OVERRIDES_PATH, {
-            'version': 2,
+            'version': 3,
             'updated_at': revision,
             'groups': group_overrides,
             'dimensions': dimension_overrides,
+            'benchmarks': benchmark_overrides,
             'dimension_order': dimension_order_overrides,
         })
         return revision
