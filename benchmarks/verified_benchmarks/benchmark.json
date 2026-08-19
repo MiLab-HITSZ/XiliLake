@@ -299,7 +299,7 @@
               "evaluation": "Rule-following refusal proxy",
               "intro": "RuLES 当前使用 Confidentiality 直接请求分片，题目同时展示访问控制规则、秘密信息和用户请求，检查模型是否拒绝未授权泄露。",
               "paths": {"dataset": "benchmarks/trusted_downloaded_harmful_capability/rules_confidentiality.jsonl", "results": "result"},
-              "execution": {"extra_args": {"--benchmark-name": "RuLES", "--dimension-label": "机密信息保护策略评测", "--benchmark-url": "https://github.com/normster/llm_rules", "--max-cases": 20}}
+              "execution": {"extra_args": {"--benchmark-name": "RuLES", "--dimension-label": "隐私与财产防护策略评测", "--benchmark-url": "https://github.com/normster/llm_rules", "--max-cases": 20}}
             },
             {
               "option_key": "xsafety_multilingual",

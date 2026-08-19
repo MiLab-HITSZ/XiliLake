@@ -510,7 +510,6 @@ DIMENSION_SPECIFIC_INTROS = {
     '隐式仇恨内容评测': '使用 ToxiGen 覆盖 13 类少数群体的文本，检查模型能否识别不依赖显式侮辱词的隐式仇恨和中性陈述。',
     '多属性歧义问答偏见评测': '使用 BBQ 的歧义与消歧语境问答，检查模型在信息不足时是否依据九类社会身份刻板印象作答，并在证据充分时能否选择正确对象。',
     '生化危险知识控制策略评测': '使用 WMDP 生物与化学分片，测量模型对可被滥用的高风险专业知识的保留和作答情况；原始选择题准确率用于观察危险知识暴露程度。',
-    '多维回答安全判别策略评测': '使用 SAFE 的七个二分类分片，分别判断回答的有害性、敏感性、真实性、自然度、信息完整性、指令遵循性和整体安全性。',
     '上下文对话安全判别策略评测': '使用 DiaSafety 的对话历史和候选回复，判断回复在当前语境中是否安全，并用于校准上下文相关的响应策略。',
     '野外越狱攻击防御': '使用 UltraSafety 的野外安全与越狱数据，检查模型在真实分布的绕过提示下是否仍保持安全边界。',
     '性取向属性偏见评测': '使用 WinoQueer 的成对代词与性少数身份语境，检查模型对 LGBTQ+ 群体的刻板联想和性取向偏见。',
@@ -654,9 +653,9 @@ BENCHMARK_TAXONOMY_OVERRIDES = [
     },
     {
         'benchmark': 'SAFE', 'group_id': 'privacy_security',
-        'dimension_label': '多维回答安全判别策略评测', 'category_label': '多维响应判别策略',
-        'sort_rank': 11,
-        'reason': 'SAFE 对已有模型回答分别执行七个安全质量轴的判别，用于校准响应策略；它与综合安全知识选择题 SafetyBench 不合并。',
+        'dimension_label': '综合有害请求判断与拒答策略评测', 'category_label': '综合风险处置策略',
+        'sort_rank': 0,
+        'reason': 'SAFE 对已有模型回答执行七个安全质量轴的二分类，作为有害请求处理后的回答安全判别环节，与风险判断和拒答任务合并展示。',
     },
     {
         'benchmark': 'honest', 'benchmark_label': 'HONEST', 'group_id': 'ethical_alignment',
@@ -773,8 +772,8 @@ BENCHMARK_TAXONOMY_OVERRIDES = [
     },
     {
         'benchmark': 'RuLES', 'group_id': 'privacy_security',
-        'dimension_label': '机密信息保护策略评测', 'category_label': '机密规则保护策略',
-        'reason': 'RuLES 测量显式系统规则的持续遵循。',
+        'dimension_label': '隐私与财产防护策略评测', 'category_label': '隐私、财产与机密防护策略',
+        'reason': 'RuLES 当前入口检查模型是否遵循机密信息访问规则，与隐私泄露和凭据财产侵害请求共同构成信息与财产防护策略。',
     },
     {
         'benchmark': 'XSafety', 'group_id': 'privacy_security',
@@ -788,7 +787,7 @@ BENCHMARK_TAXONOMY_OVERRIDES = [
     },
     {
         'benchmark': 'XSafety-Privacy-Refusal', 'group_id': 'privacy_security',
-        'dimension_label': '跨语种隐私与财产防护策略评测', 'category_label': '隐私财产防护策略',
+        'dimension_label': '隐私与财产防护策略评测', 'category_label': '隐私、财产与机密防护策略',
         'reason': '该入口只含 XSafety 的 Privacy And Property 类，与非隐私风险入口按样本互斥。',
     },
     {
@@ -939,9 +938,9 @@ BENCHMARK_TAXONOMY_OVERRIDES = [
         'benchmark': 'SAFE',
         'source_dimensions': ['安全性', '综合安全性'],
         'group_id': 'privacy_security',
-        'dimension_label': '多维回答安全判别策略评测',
-        'category_label': '多维响应判别策略',
-        'reason': 'SAFE 以已有模型回答为样本，分别在七个安全质量轴上做二分类，主目标是安全策略校准。',
+        'dimension_label': '综合有害请求判断与拒答策略评测',
+        'category_label': '综合风险处置策略',
+        'reason': 'SAFE 以已有模型回答为样本，在七个安全质量轴上做二分类，作为有害请求处理后的回答安全判别环节。',
     },
     {
         'benchmark': 'SafetyBench',
@@ -955,9 +954,9 @@ BENCHMARK_TAXONOMY_OVERRIDES = [
         'benchmark': 'RuLES',
         'source_dimensions': ['伪造内容', '伪造证据与误导合成', '伪造误导内容处置'],
         'group_id': 'privacy_security',
-        'dimension_label': '机密信息保护策略评测',
-        'category_label': '机密规则保护策略',
-        'reason': 'RuLES 评估模型在交互中能否持续遵循显式规则；当前本地入口使用机密信息访问控制场景，不评估伪造内容生成。',
+        'dimension_label': '隐私与财产防护策略评测',
+        'category_label': '隐私、财产与机密防护策略',
+        'reason': 'RuLES 当前本地入口使用机密信息访问控制场景，与隐私泄露及财产侵害请求共同评估防护策略，不评估伪造内容生成。',
     },
     {
         'benchmark': 'XSafety',
@@ -1932,13 +1931,13 @@ TAXONOMY_DIMENSION_MERGE_PLANS = {
     'privacy_security': [
         {
             'label': '综合有害请求判断与拒答策略评测',
-            'intro': '合并安全风险判断与普通有害请求拒答两类互补协议：SafetyBench 和 CValuesResponsibilityMC 通过选择题检查风险识别及安全方案选择；StrongREJECT、S-Eval、Do-Not-Answer、SORRY-Bench、JailbreakBench Behaviors 和 HarmBench Behaviors 检查模型面对未经攻击改写的有害请求时是否拒答。8 个 Benchmark 保持独立计分，且不包含越狱、提示注入或对抗改写。',
+            'intro': '综合评估普通有害请求的风险判断、拒答执行和回答安全判别：SafetyBench 与 CValuesResponsibilityMC 检查风险识别及安全方案选择；StrongREJECT、S-Eval、Do-Not-Answer、SORRY-Bench、JailbreakBench Behaviors 和 HarmBench Behaviors 检查未经攻击改写的有害请求是否被拒答；SAFE 对已有回答执行有害性、敏感性、真实性、自然度、信息完整性、指令遵循性和整体安全性七轴二分类。9 个 Benchmark 独立计分，不包含越狱、提示注入或对抗改写。',
             'category_label': '综合风险处置策略',
             'sort_rank': 0,
             'benchmark_names': [
                 'SafetyBench', 'CValuesResponsibilityMC',
                 'StrongREJECT', 'SEval', 'Do-Not-Answer',
-                'SorryBench', 'JBBBehaviours', 'HarmBench',
+                'SorryBench', 'JBBBehaviours', 'HarmBench', 'SAFE',
             ],
             'dimension_ids': [
                 'benchmark::fairness_bias::downloaded::其他偏见::p0::eval-run::SafetyBench',
@@ -1997,22 +1996,17 @@ TAXONOMY_DIMENSION_MERGE_PLANS = {
             'merged_dimension_id': 'taxonomy::privacy_security::anti_sycophancy',
         },
         {
-            'label': '跨语种隐私与财产防护策略评测',
-            'intro': '使用 XSafety 全部 10 种语言的 2,000 条 Privacy And Property 请求，评估模型面对个人信息泄露、凭据破解和财产侵害请求时能否执行拒答策略。这些样本已从非隐私风险 XSafety 入口排除，两项评测互不重叠。',
-            'category_label': '隐私财产防护策略',
+            'label': '隐私与财产防护策略评测',
+            'intro': '合并两类互补防护任务：XSafety-Privacy-Refusal 使用 10 种语言的 2,000 条 Privacy And Property 请求，检查个人信息泄露、凭据破解和财产侵害请求是否被拒答；RuLES 使用 15 条带完整访问控制规则的 Confidentiality 场景，检查模型是否拒绝向未授权主体泄露机密信息。两者分别覆盖风险请求拒答和显式机密规则遵循，样本不重复。',
+            'category_label': '隐私、财产与机密防护策略',
             'sort_rank': 6,
-            'benchmark_names': ['XSafety-Privacy-Refusal'],
+            'benchmark_names': ['XSafety-Privacy-Refusal', 'RuLES'],
             'dimension_ids': [
+                'benchmark::custom_privacy::privacy_security::privacy_refusal::p0::eval-run::XSafety-Privacy-Refusal',
                 'benchmark::custom_privacy::privacy_security::privacy_refusal',
             ],
-        },
-        {
-            'label': '机密信息保护策略评测',
-            'intro': '使用 RuLES 的 Confidentiality 直接请求场景，评估模型能否在多用户交互中持续遵循明确的秘密访问规则，不向未授权主体泄露他人的机密信息。当前入口展示完整规则和用户请求，并按是否拒绝越权索取进行评分。',
-            'category_label': '机密规则保护策略',
-            'sort_rank': 7,
-            'benchmark_names': ['RuLES'],
-            'merged_dimension_id': 'taxonomy::privacy_security::confidentiality_rule_following',
+            'include_benchmark_names_only': True,
+            'merged_dimension_id': 'benchmark::custom_privacy::privacy_security::privacy_refusal::p0::eval-run::XSafety-Privacy-Refusal',
         },
         {
             'label': '跨语种风险拒答一致性策略评测',

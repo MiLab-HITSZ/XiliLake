@@ -34,7 +34,7 @@
 | sycophancy | 误当成普通任务完成 | 改为反谄媚策略评测，检查模型能否在用户立场诱导下坚持有依据的答案 | [原始数据](https://github.com/nrimsky/LM-exp/tree/main/datasets/sycophancy) |
 | Arxiv-Filtered | 被称为学术文献真实性 | 当前本地字段是标题到摘要生成，移入学术摘要生成任务 | [数据页](https://huggingface.co/datasets/AI-dataset-evaluation-team/Arxiv-Filtered) |
 | DiaSafety | 误当成攻击鲁棒性 | 原任务是上下文敏感的候选回复安全分类，不含攻击生成；作为上下文响应判别策略移入系统策略安全性 | [Findings ACL 2022](https://aclanthology.org/2022.findings-acl.308/) |
-| SAFE / SafetyBench | 两者被合并 | SAFE 独立评估既有回答的七个质量轴；SafetyBench 保留为中英双语安全知识选择题，两者在系统策略下仍为不同子类 | [SAFE 官方仓库](https://github.com/xiaoqiao/EvalSafetyLLM) / [SafetyBench 官方数据](https://huggingface.co/datasets/thu-coai/SafetyBench) |
+| SAFE / SafetyBench | 两者任务协议不同 | 按当前目录要求合并到有害请求拒答策略评测，但保持独立计分：SAFE 判别既有回答的七个质量轴，SafetyBench 检查中英双语安全知识与风险方案选择 | [SAFE 官方仓库](https://github.com/xiaoqiao/EvalSafetyLLM) / [SafetyBench 官方数据](https://huggingface.co/datasets/thu-coai/SafetyBench) |
 | ToxiGen | 被窄化为残疾偏见 | 按 13 类少数群体隐式仇恨文本的主任务，移入社会群体公平性 | [ACL 2022](https://aclanthology.org/2022.acl-long.234/) |
 | WMDP | 两个入口重复且一个被归为意识形态 | 固定为 WMDP-BioChem 与 WMDP-Cyber 互斥分片，后者进入网络安全行业 | [WMDP 官方站点](https://www.wmdp.ai/) |
 | JBB-Behaviors / HarmBench | 只有行为集却宣称测量越狱攻击 | 当前入口改为未施加攻击时的基线拒答；不宣称攻击成功率 | [JailbreakBench](https://huggingface.co/datasets/JailbreakBench/JBB-Behaviors) / [HarmBench](https://github.com/centerforaisafety/HarmBench) |
@@ -60,7 +60,7 @@
 - 新增 `verified_benchmarks` 可重建视图，对 34 个易误选文件的 Benchmark 固定官方分片；部署时由 `prepare_verified_benchmarks.py` 从本地官方下载源生成。
 - FollowBench、CHBias、GlobalOpinionQA 和 SALAD-Bench 的当前本地入口不冒充论文完整官方评分器；页面会显示“非评分收集”或代理指标说明。
 - MedSafetyBench 使用明确拒答或安全回复相似度代理；JBB-Behaviors 和 HarmBench behaviors 仅报告基线拒答；这些结果不等同于原论文的全部 judge 指标。
-- 当前网页实际计数为 3 个评测领域、11 个可见大类、83 个子类、106 个 Benchmark，全部标记为可评测。“医疗基本事实准确性”暂无符合定义的本地 Benchmark，因此不用 MedSafetyBench 填充该类。
+- 当前网页实际计数为 3 个评测领域、11 个可见大类、81 个子类、106 个 Benchmark，全部标记为可评测。“医疗基本事实准确性”暂无符合定义的本地 Benchmark，因此不用 MedSafetyBench 填充该类。
 
 ## 法律法规遵守性边界
 
@@ -77,21 +77,19 @@
 
 ## 系统策略安全性边界
 
-系统策略安全性纳入未经攻击改写的普通请求、用户立场、显式系统规则、危险知识控制和回答安全判别，按系统应采取或校准的响应行动划为 12 个子类、19 个 Benchmark。所有子类统一以“策略评测”结尾：
+系统策略安全性纳入未经攻击改写的普通请求、用户立场、显式系统规则、危险知识控制和回答安全判别，按系统应采取或校准的响应行动划为 10 个子类、19 个 Benchmark。所有子类统一以“策略评测”结尾：
 
 | 子类 | 唯一判定边界 | Benchmark |
 | --- | --- | --- |
-| 综合有害请求判断与拒答策略评测 | 选择题检查风险判断与安全方案选择，普通有害请求检查拒答；不含攻击模板，各 Benchmark 独立计分 | SafetyBench、CValuesResponsibilityMC、StrongREJECT、S-Eval、Do-Not-Answer、SORRY-Bench、JailbreakBench Behaviors、HarmBench |
+| 有害请求拒答策略评测 | 选择题检查风险判断与安全方案选择，普通有害请求检查拒答，SAFE 对已有回答执行七轴安全判别；不含攻击模板，各 Benchmark 独立计分 | SafetyBench、CValuesResponsibilityMC、StrongREJECT、S-Eval、Do-Not-Answer、SORRY-Bench、JailbreakBench Behaviors、HarmBench、SAFE |
 | 多轮风险对话拒答策略评测 | 只使用 101 条带完整历史的多轮风险对话，不含无历史单轮问题或共指攻击结构 | CHiSafetyBench |
 | 多学科知识滥用拒答策略评测 | 十个知识领域中的专业知识滥用请求 | HarmfulQA |
 | 安全请求放行策略评测 | 输入应当允许回答，检查模型是否发生过度拒答 | XSTest |
 | 反谄媚策略评测 | 用户表达偏好后仍坚持有依据的答案 | sycophancy |
-| 跨语种隐私与财产防护策略评测 | 只含 Privacy And Property，覆盖 10 种语言 | XSafety-Privacy-Refusal |
-| 机密信息保护策略评测 | 给出显式访问规则，检查是否向未授权主体泄密 | RuLES |
+| 隐私与财产防护策略评测 | XSafety 检查跨语种隐私、凭据和财产侵害请求拒答；RuLES 检查显式访问规则下的机密信息保护 | XSafety-Privacy-Refusal、RuLES |
 | 跨语种风险拒答一致性策略评测 | 比较 10 种语言、9 类普通风险请求的拒答策略一致性 | XSafety |
 | 恶意代码生成请求拒答策略评测 | 恶意代码生成、翻译、补全和改写请求的 gold 均为安全拒答 | RMCBench |
 | 生化危险知识控制策略评测 | 用官方选择题准确率观察生物和化学危险知识的保留与暴露，分数方向需按“越高暴露越多”解释 | WMDP-BioChem |
-| 多维回答安全判别策略评测 | 对已有回答分别执行七个安全质量轴的二分类，不与综合安全知识题合并 | SAFE |
 | 上下文对话安全判别策略评测 | 给定对话历史和候选回复，校准上下文相关的安全判别 | DiaSafety |
 
 SafetyPrompts 因参考回复质量与普通拒答构念重复而从当前目录移除。JailbreakBench Behaviors 和 HarmBench Behaviors 没有附加攻击字符串，因此并入综合有害请求判断与拒答策略；真正含越狱模板、提示注入、攻击增强或对抗改写的数据仍只归入攻击抵御鲁棒性。RMCBench 当前执行协议直接按安全拒答评分，因此保留在系统策略安全性。
