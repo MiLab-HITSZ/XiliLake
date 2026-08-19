@@ -61,7 +61,7 @@ python generate_downloaded_benchmark_configs.py
 分类编辑: http://<服务器内网 IP>:5001/taxonomy-editor
 ```
 
-访客页面 `/` 保持只读。分类编辑页面 `/taxonomy-editor` 可修改大类、子类名称及其说明；保存内容写入 `data/taxonomy_overrides.json`，无需重启服务，已打开的访客页面会自动刷新分类文本。分类 ID、Benchmark 归属和历史评测结果标识不会随显示名称修改。
+访客页面 `/` 保持只读。分类编辑页面 `/taxonomy-editor` 可修改大类、子类名称及其说明，也可通过子类列表右侧的上下箭头调整同一大类内的显示顺序；保存内容写入 `data/taxonomy_overrides.json`，无需重启服务，已打开的访客页面会自动刷新分类文本与顺序。分类 ID、Benchmark 归属和历史评测结果标识不会随显示名称或顺序修改。
 
 自定义端口：
 
@@ -93,7 +93,7 @@ XiliLake/
 ├── evaluate_ehrperturb.py        # EHRPerturb 医疗评测器
 ├── config/                       # 不含密钥的 API 模型配置示例
 ├── data/                         # 分类和元数据源
-│   └── taxonomy_overrides.json   # 分类编辑页面保存的文本覆盖（首次保存后生成）
+│   └── taxonomy_overrides.json   # 分类编辑页面保存的文本与顺序覆盖（首次保存后生成）
 ├── downloads/                    # 下载的原始数据集与仓库
 ├── images/                       # CDH 图像数据
 ├── models/                       # 本地模型

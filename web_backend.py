@@ -1419,6 +1419,7 @@ def apply_taxonomy_editor_overrides(groups: List[Dict[str, Any]]) -> None:
     state = taxonomy_editor_state()
     group_overrides = state.get('groups') if isinstance(state.get('groups'), dict) else {}
     dimension_overrides = state.get('dimensions') if isinstance(state.get('dimensions'), dict) else {}
+    dimension_order = state.get('dimension_order') if isinstance(state.get('dimension_order'), dict) else {}
     for group in groups:
         group_id = str(group.get('id') or '')
         group_edit = group_overrides.get(group_id) if isinstance(group_overrides.get(group_id), dict) else {}
@@ -1449,6 +1450,21 @@ def apply_taxonomy_editor_overrides(groups: List[Dict[str, Any]]) -> None:
                 if isinstance(bench.get('example'), dict):
                     bench['example'] = {**bench['example'], 'dimension': dim['label']}
             dim['taxonomy_edited'] = True
+        saved_order = dimension_order.get(group_id)
+        if isinstance(saved_order, list):
+            rank = {
+                str(dim_id): index
+                for index, dim_id in enumerate(saved_order)
+                if isinstance(dim_id, str) and dim_id
+            }
+            original_rank = {
+                str(dim.get('id') or ''): index
+                for index, dim in enumerate(group.get('dimensions') or [])
+            }
+            group['dimensions'].sort(key=lambda dim: (
+                rank.get(str(dim.get('id') or ''), len(rank)),
+                original_rank.get(str(dim.get('id') or ''), len(original_rank)),
+            ))
 
 
 class TaxonomyRevisionConflict(RuntimeError):
@@ -2923,9 +2939,10 @@ def build_trust_catalog(apply_editor_overrides: bool = True) -> Dict[str, Any]:
     }
 
 
-def taxonomy_editable_defaults(catalog: Dict[str, Any]) -> Dict[str, Dict[str, Dict[str, str]]]:
+def taxonomy_editable_defaults(catalog: Dict[str, Any]) -> Dict[str, Any]:
     groups: Dict[str, Dict[str, str]] = {}
     dimensions: Dict[str, Dict[str, str]] = {}
+    dimension_order: Dict[str, List[str]] = {}
     for group in catalog.get('groups') or []:
         group_id = str(group.get('id') or '')
         groups[group_id] = {
@@ -2940,7 +2957,8 @@ def taxonomy_editable_defaults(catalog: Dict[str, Any]) -> Dict[str, Dict[str, D
                 'label': str(dim.get('label') or ''),
                 'intro': str(dim.get('intro') or ''),
             }
-    return {'groups': groups, 'dimensions': dimensions}
+            dimension_order.setdefault(group_id, []).append(dim_id)
+    return {'groups': groups, 'dimensions': dimensions, 'dimension_order': dimension_order}
 
 
 def clean_taxonomy_label(value: Any, field_name: str) -> str:
@@ -2968,8 +2986,11 @@ def clean_taxonomy_description(value: Any, field_name: str) -> str:
 def save_taxonomy_editor_state(payload: Dict[str, Any]) -> str:
     submitted_groups = payload.get('groups')
     submitted_dimensions = payload.get('dimensions')
+    submitted_dimension_order = payload.get('dimension_order', {})
     if not isinstance(submitted_groups, dict) or not isinstance(submitted_dimensions, dict):
         raise ValueError('保存内容必须包含 groups 和 dimensions 对象')
+    if not isinstance(submitted_dimension_order, dict):
+        raise ValueError('子类顺序必须是按大类组织的对象')
 
     base_catalog = build_trust_catalog(apply_editor_overrides=False)
     defaults = taxonomy_editable_defaults(base_catalog)
@@ -2977,13 +2998,15 @@ def save_taxonomy_editor_state(payload: Dict[str, Any]) -> str:
     known_dimension_ids = set(defaults['dimensions'])
     unknown_groups = set(str(key) for key in submitted_groups) - known_group_ids
     unknown_dimensions = set(str(key) for key in submitted_dimensions) - known_dimension_ids
-    if unknown_groups or unknown_dimensions:
+    unknown_order_groups = set(str(key) for key in submitted_dimension_order) - known_group_ids
+    if unknown_groups or unknown_dimensions or unknown_order_groups:
         raise ValueError('保存内容包含当前目录中不存在的大类或子类')
 
     final_groups: Dict[str, Dict[str, str]] = {}
     final_dimensions: Dict[str, Dict[str, str]] = {}
     group_overrides: Dict[str, Dict[str, str]] = {}
     dimension_overrides: Dict[str, Dict[str, str]] = {}
+    dimension_order_overrides: Dict[str, List[str]] = {}
 
     for group_id, original in defaults['groups'].items():
         submitted = submitted_groups.get(group_id) or {}
@@ -3031,20 +3054,34 @@ def save_taxonomy_editor_state(payload: Dict[str, Any]) -> str:
         if len(labels) != len(set(labels)):
             raise ValueError('同一大类下的子类名称不能重复')
 
+    for group_id, default_order in defaults['dimension_order'].items():
+        submitted_order = submitted_dimension_order.get(group_id, default_order)
+        if not isinstance(submitted_order, list) or any(
+            not isinstance(dim_id, str) or not dim_id for dim_id in submitted_order
+        ):
+            raise ValueError('子类顺序必须是有效的子类 ID 列表')
+        if len(submitted_order) != len(set(submitted_order)):
+            raise ValueError('同一大类的子类顺序不能包含重复项')
+        if set(submitted_order) != set(default_order):
+            raise ValueError('子类顺序必须完整，且不能包含其他大类的子类')
+        if submitted_order != default_order:
+            dimension_order_overrides[group_id] = list(submitted_order)
+
     expected_revision = str(payload.get('base_revision') or '')
     with TAXONOMY_EDITOR_LOCK:
         current_revision = taxonomy_editor_revision()
         if expected_revision and expected_revision != current_revision:
             raise TaxonomyRevisionConflict('分类内容已被其他编辑者更新，请重新加载后再保存')
-        if not group_overrides and not dimension_overrides:
+        if not group_overrides and not dimension_overrides and not dimension_order_overrides:
             TAXONOMY_OVERRIDES_PATH.unlink(missing_ok=True)
             return taxonomy_editor_revision()
         revision = utc_now_iso()
         write_json_atomic(TAXONOMY_OVERRIDES_PATH, {
-            'version': 1,
+            'version': 2,
             'updated_at': revision,
             'groups': group_overrides,
             'dimensions': dimension_overrides,
+            'dimension_order': dimension_order_overrides,
         })
         return revision
 

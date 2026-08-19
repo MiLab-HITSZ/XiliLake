@@ -38,6 +38,14 @@
         .nav-item.active{background:var(--primary-soft);border-color:#bfd0ff;color:#1746c0;}
         .nav-name{font-size:13px;font-weight:780;line-height:1.35;overflow-wrap:anywhere;}
         .nav-count{flex:0 0 auto;color:var(--muted);font-size:11px;}
+        .dimension-row{display:grid;grid-template-columns:minmax(0,1fr) 30px 30px;gap:4px;align-items:stretch;}
+        .dimension-row .nav-item{min-width:0;}
+        .order-button,.order-reset{border:1px solid var(--line);background:#fff;color:#475569;border-radius:5px;display:inline-flex;align-items:center;justify-content:center;font-weight:850;}
+        .order-button{width:30px;min-height:30px;align-self:center;font-size:15px;}
+        .order-button:hover,.order-reset:hover{border-color:#91a4bc;background:#f8fafc;color:#1e40af;}
+        .order-button:disabled{opacity:.3;cursor:not-allowed;}
+        .pane-title-row{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+        .order-reset{width:28px;height:28px;font-size:16px;}
         .search{width:100%;height:38px;margin-top:10px;border:1px solid var(--line);border-radius:5px;padding:8px 10px;color:var(--ink);outline:none;}
         .search:focus,.field input:focus,.field textarea:focus{border-color:#7ea0ff;box-shadow:0 0 0 3px rgba(36,88,230,.10);}
         .editor-pane{padding:0 28px 40px;}
@@ -108,7 +116,10 @@
 
         <section class="pane">
             <div class="pane-head">
-                <h2>子类</h2>
+                <div class="pane-title-row">
+                    <h2>子类</h2>
+                    <button class="order-reset" type="button" title="恢复当前大类的默认子类顺序" aria-label="恢复当前大类的默认子类顺序" onclick="resetDimensionOrder()">↺</button>
+                </div>
                 <div class="meta" id="dimension-count"></div>
                 <input class="search" id="dimension-search" type="search" placeholder="筛选子类" oninput="renderDimensionList()">
             </div>
@@ -192,11 +203,18 @@
             const all=group?.dimensions||[];
             const rows=all.filter(dim=>!query||String(dim.label||'').toLowerCase().includes(query)||String(dim.name_en||'').toLowerCase().includes(query));
             document.getElementById('dimension-count').textContent=group?`${rows.length} / ${all.length} 项`:'';
-            box.innerHTML=rows.length?rows.map(dim=>`
-                <button class="nav-item ${dim.id===selectedDimensionId?'active':''}" type="button" onclick="selectDimension('${escapeHtml(dim.id)}')">
-                    <span class="nav-name">${escapeHtml(dim.label)}</span>
-                    <span class="nav-count">${(dim.benchmarks||[]).length}</span>
-                </button>`).join(''):`<div class="empty">${group?'没有匹配的子类。':'请先选择大类。'}</div>`;
+            box.innerHTML=rows.length?rows.map(dim=>{
+                const index=all.findIndex(item=>item.id===dim.id);
+                const locked=Boolean(query);
+                return `<div class="dimension-row">
+                    <button class="nav-item ${dim.id===selectedDimensionId?'active':''}" type="button" onclick="selectDimension('${escapeHtml(dim.id)}')">
+                        <span class="nav-name">${escapeHtml(dim.label)}</span>
+                        <span class="nav-count">${(dim.benchmarks||[]).length}</span>
+                    </button>
+                    <button class="order-button" type="button" title="上移" aria-label="上移 ${escapeHtml(dim.label)}" onclick="moveDimension('${escapeHtml(dim.id)}',-1)" ${locked||index===0?'disabled':''}>↑</button>
+                    <button class="order-button" type="button" title="下移" aria-label="下移 ${escapeHtml(dim.label)}" onclick="moveDimension('${escapeHtml(dim.id)}',1)" ${locked||index===all.length-1?'disabled':''}>↓</button>
+                </div>`;
+            }).join(''):`<div class="empty">${group?'没有匹配的子类。':'请先选择大类。'}</div>`;
         }
         function renderEditor(){
             const box=document.getElementById('editor-pane');
@@ -275,6 +293,27 @@
             renderDimensionList();
             renderEditor();
         }
+        function moveDimension(id,offset){
+            const group=currentGroup();
+            const rows=group?.dimensions||[];
+            const index=rows.findIndex(dim=>dim.id===id);
+            const target=index+offset;
+            if(index<0||target<0||target>=rows.length)return;
+            const [moved]=rows.splice(index,1);
+            rows.splice(target,0,moved);
+            selectedDimensionId=id;
+            markDirty();
+            renderDimensionList();
+        }
+        function resetDimensionOrder(){
+            const group=currentGroup();
+            const order=defaults.dimension_order?.[group?.id];
+            if(!group||!Array.isArray(order))return;
+            const rank=new Map(order.map((id,index)=>[id,index]));
+            group.dimensions.sort((left,right)=>(rank.get(left.id)??order.length)-(rank.get(right.id)??order.length));
+            markDirty();
+            renderDimensionList();
+        }
         function resetCurrentGroup(){
             const group=currentGroup();
             const original=defaults.groups?.[group?.id];
@@ -296,13 +335,15 @@
         function savePayload(){
             const groups={};
             const dimensions={};
+            const dimension_order={};
             for(const group of catalog.groups||[]){
                 groups[group.id]={label:group.label||'',description:group.description||''};
+                dimension_order[group.id]=(group.dimensions||[]).map(dim=>dim.id);
                 for(const dim of group.dimensions||[]){
                     dimensions[dim.id]={label:dim.label||'',intro:dim.intro||''};
                 }
             }
-            return {base_revision:revision,groups,dimensions};
+            return {base_revision:revision,groups,dimensions,dimension_order};
         }
         async function requestJson(url,options={}){
             const response=await fetch(url,{cache:'no-store',...options});
@@ -353,7 +394,7 @@
             }
         }
         async function resetAll(){
-            if(!confirm('确定恢复全部大类、子类名称和说明吗？'))return;
+            if(!confirm('确定恢复全部大类、子类名称、说明和顺序吗？'))return;
             try{
                 const data=await requestJson('/api/taxonomy-editor',{method:'DELETE'});
                 revision=data.revision||'default';
