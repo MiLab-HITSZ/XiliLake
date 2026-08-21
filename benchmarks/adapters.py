@@ -134,6 +134,29 @@ def _append_arg(cmd: List[str], flag: str, value: Any) -> None:
     cmd.extend([flag, str(value)])
 
 
+def automatic_tasks(execution: Dict[str, Any]) -> List[str]:
+    supported = [
+        str(task).strip()
+        for task in (execution.get('supported_tasks') or ['qa'])
+        if str(task).strip() in {'qa', 'mc', 'caption'}
+    ]
+    script_name = Path(str(execution.get('script') or '')).name
+    if script_name == 'evaluate_cdh_bench.py' and 'mc' in supported:
+        return ['mc']
+    # The generic adapter infers each row's actual format; its qa mode keeps
+    # both open-ended and multiple-choice rows instead of filtering either out.
+    configured = [
+        str(task).strip()
+        for task in (execution.get('default_tasks') or supported)
+        if str(task).strip() in supported
+    ]
+    if 'qa' in configured:
+        return ['qa']
+    if 'mc' in supported:
+        return ['mc']
+    return configured[:1] or supported[:1]
+
+
 def build_eval_command(
     base_dir: Path,
     resolved_run: Dict[str, Any],

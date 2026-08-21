@@ -34,7 +34,7 @@ from benchmarks.registry import (
     load_benchmark_configs,
     parse_dimension_id,
 )
-from benchmarks.adapters import build_eval_command, resolve_real_benchmark_run
+from benchmarks.adapters import automatic_tasks, build_eval_command, resolve_real_benchmark_run
 from evaluate_generic_benchmark import (
     ANSWER_KEYS as GENERIC_ANSWER_KEYS,
     QUESTION_KEYS as GENERIC_QUESTION_KEYS,
@@ -81,8 +81,6 @@ TAXONOMY_OVERRIDES_PATH = (
     if _taxonomy_overrides_raw.is_absolute()
     else (BASE_DIR / _taxonomy_overrides_raw).resolve()
 )
-MITIGATION_CHOICES = {'none', 'visual_evidence', 'option_entailment', 'cp_vbc'}
-
 CDH_CATEGORY_LABELS = {
     'Counting Anomalies': '计数幻觉',
     'Relational Anomalies': '关系幻觉',
@@ -3411,6 +3409,23 @@ def apply_semantic_placeholder_overrides(groups: List[Dict[str, Any]]) -> None:
 
 
 _GENERIC_EXAMPLE_CACHE: Dict[str, Any] = {}
+_LAST_RANDOM_EXAMPLE_KEYS: Dict[str, str] = {}
+_RANDOM_EXAMPLE_LOCK = threading.Lock()
+
+
+def choose_nonrepeating_random(
+    scope: str,
+    candidates: List[Any],
+    key_fn: Callable[[Any], str],
+) -> Any:
+    if not candidates:
+        return None
+    with _RANDOM_EXAMPLE_LOCK:
+        previous_key = _LAST_RANDOM_EXAMPLE_KEYS.get(scope)
+        alternatives = [item for item in candidates if key_fn(item) != previous_key]
+        choice = random.choice(alternatives or candidates)
+        _LAST_RANDOM_EXAMPLE_KEYS[scope] = key_fn(choice)
+        return choice
 
 
 def build_cdh_example_payload(item: Dict[str, Any], category: str, subcategory: str) -> Dict[str, Any]:
@@ -3460,7 +3475,12 @@ def random_cdh_example_for_dimension(category: str, subcategory: str) -> Optiona
     candidates = cdh_candidates_for_dimension(category, subcategory)
     if not candidates:
         return None
-    return build_cdh_example_payload(random.choice(candidates), category, subcategory)
+    choice = choose_nonrepeating_random(
+        f'cdh::{category}::{subcategory}',
+        candidates,
+        lambda item: str(item.get('pair_id') or item.get('pair_name') or ''),
+    )
+    return build_cdh_example_payload(choice, category, subcategory)
 
 
 def random_generic_example_for_benchmark(bench: Dict[str, Any], dim: Dict[str, Any]) -> Optional[Dict[str, Any]]:
@@ -3473,16 +3493,27 @@ def random_generic_example_for_benchmark(bench: Dict[str, Any], dim: Dict[str, A
         dataset_path = (BASE_DIR / dataset_raw).resolve()
     try:
         from evaluate_generic_benchmark import build_case, load_dataset_rows
-        rows = load_dataset_rows(dataset_path, max_cases=30)
+        rows = load_dataset_rows(dataset_path, max_cases=200)
         if not rows:
             return None
-        row = random.choice(rows)
+        scope = f'generic::{dataset_path}::{bench.get("name")}::{dim.get("label")}'
+        indexed_rows = list(enumerate(rows))
+        _row_index, row = choose_nonrepeating_random(
+            scope,
+            indexed_rows,
+            lambda item: f'{item[0]}::{item[1].get("_source_file", "")}',
+        )
         case = build_case(row, 0, str(bench.get('name') or dim.get('label') or 'Benchmark'), str(dim.get('label') or ''))
         if not str(case.get('gt') or '').strip() and normalize_benchmark_key(bench.get('name') or '') == 'apps':
             fallback_path = BASE_DIR / 'downloads/datasets/huggingface/codeparrot__apps'
-            fallback_rows = load_dataset_rows(fallback_path, max_cases=30)
+            fallback_rows = load_dataset_rows(fallback_path, max_cases=200)
             if fallback_rows:
-                row = random.choice(fallback_rows)
+                indexed_fallback_rows = list(enumerate(fallback_rows))
+                _row_index, row = choose_nonrepeating_random(
+                    f'generic::{fallback_path}::{bench.get("name")}::{dim.get("label")}',
+                    indexed_fallback_rows,
+                    lambda item: f'{item[0]}::{item[1].get("_source_file", "")}',
+                )
                 case = build_case(row, 0, str(bench.get('name') or 'APPS'), str(dim.get('label') or ''))
         return full_generic_example_payload(row, case, bench, dim)
     except Exception:
@@ -3521,7 +3552,7 @@ def benchmark_example_for_selection(
         return random_cdh_example_for_dimension(category, subcategory) if refresh else (bench.get('example') or cdh_example_for_dimension(category, subcategory))
     execution = bench.get('execution') or {}
     if Path(str(execution.get('script') or '')).name == 'evaluate_ehrperturb.py':
-        medical_example = ehr_example_for_benchmark(bench, dim)
+        medical_example = ehr_example_for_benchmark(bench, dim, randomize=refresh)
         if medical_example:
             return normalize_benchmark_example_payload(medical_example, bench, dim)
     # A taxonomy entry may inherit the executable dataset from another entry
@@ -3764,7 +3795,11 @@ def complete_example_material(raw: Dict[str, Any], question: str = '') -> str:
     return json.dumps(remaining, ensure_ascii=False, indent=2) if remaining else ''
 
 
-def ehr_example_for_benchmark(bench: Dict[str, Any], dim: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+def ehr_example_for_benchmark(
+    bench: Dict[str, Any],
+    dim: Dict[str, Any],
+    randomize: bool = False,
+) -> Optional[Dict[str, Any]]:
     paths = bench.get('paths') or dim.get('paths') or {}
     dataset_raw = str(paths.get('dataset') or '').strip()
     if not dataset_raw:
@@ -3779,10 +3814,14 @@ def ehr_example_for_benchmark(bench: Dict[str, Any], dim: Dict[str, Any]) -> Opt
         return None
     try:
         from evaluate_ehrperturb import load_tasks
-        tasks = load_tasks(dataset_path, taxonomy, 1, track)
+        tasks = load_tasks(dataset_path, taxonomy, 0 if randomize else 1, track)
         if not tasks:
             return None
-        task = tasks[0]
+        task = choose_nonrepeating_random(
+            f'ehr::{dataset_path}::{taxonomy}::{track}',
+            tasks,
+            lambda item: f'{item.get("_case_path", "")}::{item.get("_slot_id", "")}::{item.get("question", "")}',
+        ) if randomize else tasks[0]
         expected = task.get('expected_output') if isinstance(task.get('expected_output'), dict) else {}
         return {
             'benchmark': bench.get('name') or '',
@@ -4720,22 +4759,22 @@ def create_job(payload: Dict[str, Any]) -> Dict[str, Any]:
     if smoke_all:
         requested_dimensions = []
         benchmark_ids = []
-        for group in build_trust_catalog().get('groups') or []:
+        trust_catalog = build_trust_catalog()
+        for group in trust_catalog.get('groups') or []:
             for dimension in group.get('dimensions') or []:
-                benchmark = next(
-                    (item for item in dimension.get('benchmarks') or [] if item.get('implemented')),
-                    None,
-                )
-                if not benchmark:
-                    continue
-                requested_dimensions.append(str(dimension.get('id') or ''))
-                execution_id = str(benchmark.get('execution_option_id') or benchmark.get('id') or '')
-                if execution_id:
+                for benchmark in dimension.get('benchmarks') or []:
+                    if not benchmark.get('implemented'):
+                        continue
+                    execution_id = str(benchmark.get('execution_option_id') or benchmark.get('id') or '')
+                    if not execution_id:
+                        continue
+                    requested_dimensions.append(str(dimension.get('id') or ''))
                     benchmark_ids.append(execution_id)
-        if not requested_dimensions or len(requested_dimensions) != int(build_trust_catalog().get('evaluable_dimensions') or 0):
-            raise ValueError('无法为全部可评测子类生成快速检测任务。')
+        expected_benchmarks = int(trust_catalog.get('evaluable_benchmarks') or 0)
+        if not requested_dimensions or len(benchmark_ids) != expected_benchmarks:
+            raise ValueError('无法为全部可评测 Benchmark 生成快速检测任务。')
         real_run = None
-        tasks = ['qa']
+        tasks = ['mc']
     else:
         requested_dimensions = selected_dimensions_from_payload(payload)
         benchmark_ids = selected_benchmark_ids_from_payload(payload)
@@ -4745,23 +4784,10 @@ def create_job(payload: Dict[str, Any]) -> Dict[str, Any]:
         if not benchmark_ids and real_run.get('benchmark_option_id'):
             benchmark_ids = [str(real_run.get('benchmark_option_id'))]
         execution_cfg = real_run.get('execution') or {}
-        supported_task_set = {
-            str(t).strip()
-            for t in (execution_cfg.get('supported_tasks') or ['qa'])
-            if str(t).strip() in {'qa', 'mc', 'caption'}
-        }
-        default_tasks = [
-            str(t).strip()
-            for t in (execution_cfg.get('default_tasks') or sorted(supported_task_set) or ['qa'])
-            if str(t).strip() in supported_task_set
-        ]
-        requested_tasks = payload.get('tasks') if payload.get('tasks') is not None else default_tasks
-        tasks = [str(t).strip() for t in (requested_tasks or []) if str(t).strip() in supported_task_set]
+        tasks = automatic_tasks(execution_cfg)
         if not tasks:
-            raise ValueError('请至少选择一种评测类型')
-    mitigation = str(payload.get('mitigation') or 'none').strip()
-    if mitigation not in MITIGATION_CHOICES:
-        raise ValueError('未知的幻觉缓解策略')
+            raise ValueError('当前 Benchmark 没有可用的评测格式')
+    mitigation = 'none'
     real_dimension_ids: List[str] = []
     if real_run:
         # Selecting a concrete executable benchmark is sufficient to make its
@@ -4813,8 +4839,8 @@ def create_job(payload: Dict[str, Any]) -> Dict[str, Any]:
             'local_model': str(preset.get('local_model') or '').strip(),
             'served_model_name': '',
             'vllm_port': find_free_port(),
-            'gpu_memory_utilization': float(os.environ.get('TRUSTED_EVAL_GPU_MEMORY_UTILIZATION', '0.90')),
-            'max_model_len': int(os.environ.get('TRUSTED_EVAL_MAX_MODEL_LEN', '20000')),
+            'gpu_memory_utilization': float(os.environ.get('TRUSTED_EVAL_GPU_MEMORY_UTILIZATION', '0.30')),
+            'max_model_len': int(os.environ.get('TRUSTED_EVAL_MAX_MODEL_LEN', '8192')),
             'tensor_parallel_size': auto_tensor_parallel_size(str(preset.get('local_model') or '')),
             'vllm_host': '127.0.0.1',
         })
@@ -4878,10 +4904,6 @@ def run_job(job_id: str) -> None:
         log('Job started')
 
         result_dir = RESULT_DIR / job['result_model']
-        if result_dir.exists():
-            log(f'Removing existing result directory: {result_dir}')
-            shutil.rmtree(result_dir)
-
         python_bin = find_python_bin()
         base_url = ''
         model_value = ''
@@ -4990,6 +5012,10 @@ def run_job(job_id: str) -> None:
             model_value = payload['api_model']
             log(f'Using remote API: {base_url} model={model_value}')
 
+        if result_dir.exists():
+            log(f'Removing existing result directory: {result_dir}')
+            shutil.rmtree(result_dir)
+
         models_cfg = [{
             'name': job['result_model'],
             'display_name': payload.get('selected_model_name') or job['result_model'],
@@ -5013,7 +5039,7 @@ def run_job(job_id: str) -> None:
                 '--python-bin', python_bin,
                 '--workers', str(max(1, int(os.environ.get('TRUSTED_EVAL_SMOKE_WORKERS', '4')))),
                 '--timeout-s', str(min(180, int(payload.get('timeout_s') or 180))),
-                '--max-tokens', str(min(256, int(payload.get('max_tokens') or 192))),
+                '--max-tokens', str(min(128, int(payload.get('max_tokens') or 128))),
             ]
             if payload.get('api_key_env'):
                 eval_cmd.extend(['--api-key-env', str(payload['api_key_env'])])

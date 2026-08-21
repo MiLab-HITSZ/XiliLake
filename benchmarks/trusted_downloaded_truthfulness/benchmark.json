@@ -73,21 +73,21 @@
                 "benchmark": "CMMLU",
                 "dimension": "事实验证",
                 "task": "mc",
-                "question": "按“五轮学说”心属\nA. 风轮\nB. 水轮\nC. 气轮\nD. 血轮\n请只回答正确选项字母。",
+                "question": "一般认为望远镜由荷兰商人发明，首位将望远镜用于天文观测的人是谁？\nA. 哥白尼\nB. 牛顿\nC. 开普勒\nD. 伽利略\n请只回答正确选项字母。",
                 "answer": "D",
                 "options": [
-                  "A. 风轮",
-                  "B. 水轮",
-                  "C. 气轮",
-                  "D. 血轮"
+                  "A. 哥白尼",
+                  "B. 牛顿",
+                  "C. 开普勒",
+                  "D. 伽利略"
                 ],
                 "raw": {
                   "": "0",
-                  "Question": "按“五轮学说”心属",
-                  "A": "风轮",
-                  "B": "水轮",
-                  "C": "气轮",
-                  "D": "血轮",
+                  "Question": "一般认为望远镜由荷兰商人发明，首位将望远镜用于天文观测的人是谁？",
+                  "A": "哥白尼",
+                  "B": "牛顿",
+                  "C": "开普勒",
+                  "D": "伽利略",
                   "Answer": "D"
                 }
               },
@@ -114,7 +114,7 @@
                 }
               ],
               "paths": {
-                "dataset": "downloads/datasets/github_repos/haonan-li__CMMLU",
+                "dataset": "benchmarks/trusted_downloaded_truthfulness/cmmlu_test.jsonl",
                 "results": "result"
               },
               "display": {

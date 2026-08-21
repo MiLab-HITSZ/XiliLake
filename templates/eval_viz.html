@@ -69,8 +69,7 @@
         .intro-text{white-space:pre-wrap;line-height:1.8;color:#334155;font-size:16px;}
         .dataset-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
         .dataset-meta span{display:inline-flex;align-items:center;padding:5px 11px;border:1px solid #dbe4f0;border-radius:999px;background:#fff;font-size:13px;color:#475569;}
-        .form-grid{display:grid;grid-template-columns:minmax(220px,340px) auto minmax(200px,260px) auto;gap:14px;align-items:end;margin-top:16px;padding-top:16px;border-top:1px solid var(--line);}
-        .task-box{display:flex;gap:16px;flex-wrap:wrap;padding:10px 12px;border:1px solid var(--line);background:#fff;min-height:42px;align-items:center;}
+        .form-grid{display:grid;grid-template-columns:minmax(260px,420px) minmax(0,1fr);gap:14px;align-items:end;margin-top:16px;padding-top:16px;border-top:1px solid var(--line);}
         .toolbar{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;}
         .empty{padding:18px 0;color:#94a3b8;font-size:14px;}
         .status-pill{display:inline-flex;border-radius:999px;padding:5px 10px;font-weight:800;font-size:12px;background:#dbeafe;color:#1d4ed8;}
@@ -136,7 +135,7 @@
             <div class="subtitle" id="catalog-meta">11 个大类 · 85 个子类 · 102 个数据集</div>
         </div>
         <div class="head-actions">
-            <button class="btn btn-outline-primary" id="smoke-test-button" type="button" onclick="startSystemSmokeTest()">全子类快速检测</button>
+            <button class="btn btn-outline-primary" id="smoke-test-button" type="button" onclick="startSystemSmokeTest()">全 Benchmark 快速检测</button>
             <button class="btn btn-primary" type="button" onclick="openLeaderboardPopup()">总榜</button>
         </div>
     </header>
@@ -177,7 +176,7 @@
                 <div class="section-head">
                     <div>
                         <h2>启动评测</h2>
-                        <div class="meta">选择模型、评测任务与缓解策略后启动当前 Benchmark。</div>
+                        <div class="meta">选择模型后启动当前 Benchmark；系统优先使用选择题格式。</div>
                     </div>
                 </div>
                 <div id="evaluation-launcher"><div class="empty">请选择子类与 Benchmark。</div></div>
@@ -187,7 +186,7 @@
                 <div class="section-head">
                     <div>
                         <h2>评测进度</h2>
-                        <div class="meta">显示当前选择对应的任务；全子类快速检测会在任意子类下显示总进度。</div>
+                        <div class="meta">显示当前选择对应的任务；全 Benchmark 快速检测会在任意子类下显示总进度。</div>
                     </div>
                     <button class="btn btn-sm btn-outline-secondary" type="button" onclick="refreshJobs(true)">刷新</button>
                 </div>
@@ -209,9 +208,9 @@
                 <div class="section-head">
                     <div>
                         <h2>评测样例</h2>
-                        <div class="meta">未评测时展示 Benchmark 原始样例；评测完成后展示同一 Benchmark 的模型结果。</div>
+                        <div class="meta">未评测时展示 Benchmark 原始样例；评测完成后展示同一 Benchmark 的模型结果，也可重新抽取原始样例。</div>
                     </div>
-                    <button class="btn btn-sm btn-outline-secondary" type="button" onclick="fetchEvalSamples(true)">刷新</button>
+                    <button class="btn btn-sm btn-outline-secondary" type="button" onclick="fetchEvalSamples(true)">重新随机生成</button>
                 </div>
                 <div id="samples-shell"><div class="empty">暂无评测样例。</div></div>
             </section>
@@ -231,7 +230,6 @@ let selectedDomainId='';
 let selectedGroupId='';
 let selectedDimId='';
 let selectedBenchmarkId='';
-let selectedMitigation='none';
 let currentResult={exists:false};
 let fullSummary={};
 let placeholderItems=[];
@@ -239,12 +237,12 @@ let evalSamples=[];
 let benchmarkExample=null;
 let benchmarkExampleSelectionKey='';
 let evalSamplesCacheKey='';
+let showingRandomBenchmarkExample=false;
 let activePollingJobId=null;
 let selectedModelId='';
-let taskSelectionState={qa:true,mc:true};
 let selectionTouched=false;
 let taxonomyRevision='default';
-const TASK_LABELS={qa:'直接问答',mc:'选择题',caption:'描述题'};
+const TASK_LABELS={qa:'直接问答',mc:'选择题',caption:'描述题',system_smoke:'快速检测'};
 const METRIC_LABELS={CF_Acc:'反常识准确率 CF Acc',CS_Acc:'常识准确率 CS Acc',Gap:'性能差值 Gap',CCR:'一致纠错率 CCR',RPD:'相对性能下降 RPD'};
 
 function escapeHtml(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
@@ -287,7 +285,6 @@ function selectedBenchmarkIds(){const id=selectedExecutionBenchmarkId();return i
 function selectedCdhDims(){return selectedDims().filter(isCdh)}
 function selectedPlaceholderDims(){return selectedDims().filter(id=>!isCdh(id))}
 function selectedBenchmarkImplemented(){return !!selectedBenchmark()?.implemented}
-function visibleTasks(){const checks=[...document.querySelectorAll('[data-task-checkbox]')];const picked=checks.filter(x=>x.checked).map(x=>x.value);return picked.length?picked:['qa','mc']}
 function benchmarkMetrics(bench){const rows=bench?.metrics||[];if(Array.isArray(rows)&&rows.length){return rows.map(item=>typeof item==='string'?{label:item,key:item,format:'text'}:item)}return []}
 function benchmarkMetaTags(bench){
     const tags=[];
@@ -312,6 +309,7 @@ function setBenchmarkExampleFromSelection(){
     benchmarkExample=null;
     evalSamples=[];
     evalSamplesCacheKey='';
+    showingRandomBenchmarkExample=false;
 }
 function cleanBenchmarkIntro(text){
     const metaLine=/^\s*(?:(?:语言|规模|指标|时间)：[^；\n]+)(?:；\s*(?:语言|规模|指标|时间)：[^；\n]+)*\s*$/;
@@ -320,9 +318,6 @@ function cleanBenchmarkIntro(text){
 function captureFormState(){
     const modelSel=document.getElementById('model-select');
     if(modelSel&&modelSel.value)selectedModelId=modelSel.value;
-    const mitigationSel=document.getElementById('mitigation-select');
-    if(mitigationSel)selectedMitigation=mitigationSel.value||'none';
-    document.querySelectorAll('[data-task-checkbox]').forEach(cb=>{taskSelectionState[cb.value]=cb.checked});
 }
 function jobMatchesSelection(job){
     if(!job||!selectedDimId)return false;
@@ -450,8 +445,6 @@ function renderSelectionDetail(){
         return;
     }
     const benchmarkTags=bench?benchmarkMetaTags(bench):[];
-    const taskHtml=bench?.implemented?renderTaskChecks(bench):'<div class="task-box"><span class="subtle">当前 Benchmark 不提供真实评测，启动后生成该数据集对应的展示结果。</span></div>';
-    const mitigationHtml=bench?.implemented?renderMitigationSelect():'<div class="task-box"><span class="subtle">—</span></div>';
     shell.innerHTML=`
         <div class="intro-grid">
             <div class="intro-box">
@@ -482,36 +475,11 @@ function renderSelectionDetail(){
                 <label class="form-label fw-semibold">评测模型</label>
                 <select id="model-select" class="form-select" onchange="onModelChange()">${modelOptionsHtml()}</select>
             </div>
-            <div>
-                <label class="form-label fw-semibold">评测任务</label>
-                ${taskHtml}
-            </div>
-            <div>
-                <label class="form-label fw-semibold">缓解策略</label>
-                ${mitigationHtml}
-            </div>
             <div class="toolbar">
                 <button class="btn btn-primary" type="button" onclick="submitEval()">启动评测</button>
                 <button class="btn btn-outline-danger" type="button" onclick="deleteCurrentResult()">删除当前结果</button>
             </div>
         </div>`;
-}
-
-function renderTaskChecks(bench){
-    const execution=bench?.execution||selectedDimension()?.execution||{};
-    const supported=(execution.supported_tasks||['qa','mc']).filter(task=>['qa','mc','caption'].includes(task));
-    const defaults=new Set((execution.default_tasks||supported).filter(task=>['qa','mc','caption'].includes(task)));
-    return `<div class="task-box">${supported.map(task=>`<label class="form-check mb-0"><input class="form-check-input" type="checkbox" value="${escapeHtml(task)}" data-task-checkbox ${((task in taskSelectionState)?taskSelectionState[task]:defaults.has(task))?'checked':''}><span class="form-check-label ms-1">${escapeHtml(TASK_LABELS[task]||task)}</span></label>`).join('')}</div>`;
-}
-
-function renderMitigationSelect(){
-    const rows=[
-        ['none','无'],
-        ['visual_evidence','视觉证据锚定'],
-        ['option_entailment','选择题声明核验'],
-        ['cp_vbc','先验贝叶斯校正']
-    ];
-    return `<select id="mitigation-select" class="form-select" onchange="selectedMitigation=this.value||'none'">${rows.map(([value,label])=>`<option value="${escapeHtml(value)}" ${selectedMitigation===value?'selected':''}>${escapeHtml(label)}</option>`).join('')}</select>`;
 }
 
 function modelOptionsHtml(){
@@ -873,16 +841,14 @@ function renderJob(job){
 
 async function fetchJobs(){const res=await fetch('/api/evaluations');return await res.json()}
 async function waitUntilNoActiveJob(timeoutMs=20000){const start=Date.now();while(Date.now()-start<timeoutMs){const jobs=await fetchJobs();if(!jobs.find(isActiveJob))return;await new Promise(r=>setTimeout(r,1000))}throw new Error('等待当前任务停止超时')}
-async function maybePreemptActiveJob(modelId,tasks,dims,benchmarkIds,mitigation){
+async function maybePreemptActiveJob(modelId,dims,benchmarkIds){
     const jobs=await fetchJobs();
     const active=jobs.find(isActiveJob);
     if(!active)return;
     const sameDims=arraysEqualAsSet(active.payload?.trust_dimensions||[],dims);
-    const sameTasks=arraysEqualAsSet(active.payload?.tasks||[],tasks);
     const sameModel=(active.payload?.selected_model_id||'')===modelId;
     const sameBenchmarks=arraysEqualAsSet(active.payload?.benchmark_ids||[],benchmarkIds);
-    const sameMitigation=(active.payload?.mitigation||'none')===(mitigation||'none');
-    if(sameDims&&sameTasks&&sameModel&&sameBenchmarks&&sameMitigation)return;
+    if(sameDims&&sameModel&&sameBenchmarks)return;
     const ok=confirm(`当前正在进行 ${describeJob(active)} 的评测，是否停止并开启新的评测？`);
     if(!ok)throw new Error('已取消启动新评测');
     const res=await fetch(`/api/evaluations/${active.id}/cancel`,{method:'POST'});
@@ -908,6 +874,7 @@ async function refreshOptions(){
 }
 
 async function refreshCurrentResult(resetViews=true){
+    if(resetViews)showingRandomBenchmarkExample=false;
     const res=await fetch('/api/current_result');
     currentResult=await res.json();
     if(!selectionTouched&&!selectedDimId&&currentResult.trust_dimensions?.length){
@@ -962,7 +929,9 @@ async function fetchEvalSamples(force){
     const dim=selectedDimension();
     const bench=selectedBenchmark();
     if(!dim||!bench){benchmarkExample=null;renderEvalSamples();return}
-    if(currentResult.exists&&hasRealResultForSelection()){
+    if(force)showingRandomBenchmarkExample=true;
+    if(!force&&showingRandomBenchmarkExample&&benchmarkExample){evalSamples=[];renderEvalSamples();return}
+    if(!force&&currentResult.exists&&hasRealResultForSelection()){
         const cacheKey=`result::${currentResult.created_at||''}::${selectedDimId}::${selectedBenchmarkId}`;
         if(!force && evalSamplesCacheKey===cacheKey && benchmarkExampleSelectionKey===`${selectedDimId}::${selectedBenchmarkId}`){
             renderEvalSamples();
@@ -978,7 +947,6 @@ async function fetchEvalSamples(force){
         if(executionId)url.searchParams.set('benchmark_id',executionId);
         url.searchParams.set('page','1');
         url.searchParams.set('per_page','3');
-        if(force)url.searchParams.set('shuffle','1');
         evalSamples=[];
         const res=await fetch(url);
         const data=await res.json();
@@ -1084,15 +1052,12 @@ async function submitEval(){
     if(!benchmarkIds.length){alert('请选择 Benchmark');return}
     const modelId=document.getElementById('model-select')?.value||'';
     if(!modelId){alert('请选择评测模型');return}
-    const mitigation=document.getElementById('mitigation-select')?.value||selectedMitigation||'none';
-    selectedMitigation=mitigation;
-    const tasks=selectedBenchmarkImplemented()?visibleTasks():[];
     const trigger=document.querySelector('#evaluation-launcher .btn.btn-primary');
     if(trigger){trigger.disabled=true;trigger.textContent='正在启动...';}
     try{
-        await maybePreemptActiveJob(modelId,tasks,dims,benchmarkIds,mitigation);
+        await maybePreemptActiveJob(modelId,dims,benchmarkIds);
         if(selectedBenchmarkImplemented()){
-            const res=await fetch('/api/evaluations',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model_id:modelId,tasks,dimensions:dims,benchmark_ids:benchmarkIds,mitigation})});
+            const res=await fetch('/api/evaluations',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model_id:modelId,dimensions:dims,benchmark_ids:benchmarkIds})});
             const data=await res.json();
             if(!res.ok)throw new Error(data.error||'启动失败');
             activePollingJobId=data.id;
@@ -1121,7 +1086,7 @@ async function refreshJobs(refreshResult){
 async function startSystemSmokeTest(){
     const modelId=document.getElementById('model-select')?.value||selectedModelId||'';
     if(!modelId){alert('请先选择一个模型');return}
-    if(!confirm('将使用当前模型对全部可评测子类各运行 1 个真实样例，并替换当前结果。是否继续？'))return;
+    if(!confirm('将使用当前模型对全部可评测 Benchmark 各运行 1 个真实样例，并替换当前结果。是否继续？'))return;
     const button=document.getElementById('smoke-test-button');
     if(button){button.disabled=true;button.textContent='正在启动...';}
     try{
@@ -1134,7 +1099,7 @@ async function startSystemSmokeTest(){
         activePollingJobId=data.id;
         await refreshJobs(true);
     }catch(e){alert(e.message||'启动失败');}
-    finally{if(button){button.disabled=false;button.textContent='全子类快速检测';}}
+    finally{if(button){button.disabled=false;button.textContent='全 Benchmark 快速检测';}}
 }
 
 async function cancelJob(id){

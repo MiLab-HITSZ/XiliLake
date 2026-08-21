@@ -31,6 +31,9 @@ echo "[INFO] Using python: $PYTHON_BIN"
 # Rebuild deterministic, source-verified views from the locally downloaded
 # official datasets before the catalog is loaded.
 "$PYTHON_BIN" "$BASE_DIR/prepare_verified_benchmarks.py" --skip-missing
+if [[ -d "$BASE_DIR/downloads/datasets/github_repos/haonan-li__CMMLU/data/test" ]]; then
+  "$PYTHON_BIN" "$BASE_DIR/benchmarks/trusted_downloaded_truthfulness/prepare_cmmlu.py"
+fi
 if [[ -d "$BASE_DIR/downloads/datasets/github_repos/allenai__natural-instructions/tasks" ]]; then
   "$PYTHON_BIN" "$BASE_DIR/benchmarks/trusted_downloaded_capability/prepare_natural_instructions.py"
 fi

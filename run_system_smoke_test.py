@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List
 
-from benchmarks.adapters import build_eval_command, resolve_real_benchmark_run
+from benchmarks.adapters import automatic_tasks, build_eval_command, resolve_real_benchmark_run
 from web_backend import BASE_DIR, build_summary_from_records, build_trust_catalog
 
 
@@ -60,22 +60,19 @@ def selected_catalog_rows() -> List[Dict[str, Any]]:
     rows: List[Dict[str, Any]] = []
     for group in build_trust_catalog().get('groups') or []:
         for dimension in group.get('dimensions') or []:
-            benchmark = next(
-                (item for item in dimension.get('benchmarks') or [] if item.get('implemented')),
-                None,
-            )
-            if not benchmark:
-                continue
-            execution_id = str(benchmark.get('execution_option_id') or benchmark.get('id') or '').strip()
-            if not execution_id:
-                continue
-            rows.append({
-                'group_id': group.get('id') or '',
-                'group_label': group.get('label') or '',
-                'dimension': dimension,
-                'benchmark': benchmark,
-                'execution_id': execution_id,
-            })
+            for benchmark in dimension.get('benchmarks') or []:
+                if not benchmark.get('implemented'):
+                    continue
+                execution_id = str(benchmark.get('execution_option_id') or benchmark.get('id') or '').strip()
+                if not execution_id:
+                    continue
+                rows.append({
+                    'group_id': group.get('id') or '',
+                    'group_label': group.get('label') or '',
+                    'dimension': dimension,
+                    'benchmark': benchmark,
+                    'execution_id': execution_id,
+                })
     return rows
 
 
@@ -173,7 +170,7 @@ def annotate_records(
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description='Run one real model case for every evaluation subcategory')
+    parser = argparse.ArgumentParser(description='Run one real model case for every evaluable Benchmark')
     parser.add_argument('--base-url', required=True)
     parser.add_argument('--model', required=True)
     parser.add_argument('--display-name', default='Qwen3-VL-2B-Instruct')
@@ -188,7 +185,7 @@ def main() -> int:
 
     selections = selected_catalog_rows()
     if not selections:
-        raise RuntimeError('No evaluable subcategories were found')
+        raise RuntimeError('No evaluable Benchmarks were found')
 
     output_dir = Path(args.output_dir).resolve()
     if output_dir.exists():
@@ -205,12 +202,13 @@ def main() -> int:
     failures: List[Dict[str, Any]] = []
     dimension_ids = [str(row['dimension'].get('id') or '') for row in selections]
     benchmark_ids = [row['execution_id'] for row in selections]
+    unique_dimension_count = len(set(dimension_ids))
     run_config = {
         'selected_model_name': args.display_name,
         'selected_backend_mode': 'local_vllm',
         'model': args.model,
         'smoke_all': True,
-        'smoke_cases_per_dimension': 1,
+        'smoke_cases_per_benchmark': 1,
         'trust_dimensions': dimension_ids,
         'benchmark_ids': benchmark_ids,
         'result_selections': [
@@ -232,7 +230,7 @@ def main() -> int:
         'categories': sorted({row['group_label'] for row in selections}),
         'subcategories': [str(row['dimension'].get('label') or '') for row in selections],
         'models': [args.display_name],
-        'message': f'Prepared {len(selections)} subcategory smoke checks',
+        'message': f'Prepared {len(selections)} Benchmark smoke checks',
         'last_result': None,
         'failure_count': 0,
     }
@@ -267,8 +265,7 @@ def main() -> int:
             resolved['paths'] = dict(resolved.get('paths') or {})
             resolved['paths']['results'] = str(output_root)
             execution = resolved.get('execution') or {}
-            supported = [str(item) for item in execution.get('supported_tasks') or ['qa']]
-            tasks = ['qa'] if 'qa' in supported else supported[:1]
+            tasks = automatic_tasks(execution)
             payload = {
                 'tasks': tasks,
                 'parallel': 1,
@@ -337,7 +334,7 @@ def main() -> int:
                 progress.update({
                     'completed': completed,
                     'percent': round(completed / len(selections) * 100.0, 2),
-                    'message': f'{completed}/{len(selections)} subcategories checked',
+                    'message': f'{completed}/{len(selections)} Benchmarks checked',
                     'failure_count': len(failures),
                     'last_result': {
                         'pair_id': outcome['records'][0].get('pair_id'),
@@ -359,19 +356,26 @@ def main() -> int:
 
     records = read_jsonl(result_path)
     summary = build_summary_from_records(records)
+    failed_dimension_ids = {str(row.get('dimension_id') or '') for row in failures}
     summary['smoke_test'] = {
-        'total_dimensions': len(selections),
-        'completed_dimensions': completed,
-        'successful_dimensions': len(selections) - len(failures),
-        'failed_dimensions': len(failures),
+        'total_benchmarks': len(selections),
+        'completed_benchmarks': completed,
+        'successful_benchmarks': len(selections) - len(failures),
+        'failed_benchmarks': len(failures),
+        'total_dimensions': unique_dimension_count,
+        'completed_dimensions': unique_dimension_count,
+        'successful_dimensions': unique_dimension_count - len(failed_dimension_ids),
+        'failed_dimensions': len(failed_dimension_ids),
         'result_records': len(records),
         'failures': failures,
     }
     write_json(output_dir / 'summary.json', summary)
     run_config.update({
         'completed_at': utc_now_iso(),
-        'smoke_successful_dimensions': len(selections) - len(failures),
-        'smoke_failed_dimensions': len(failures),
+        'smoke_successful_benchmarks': len(selections) - len(failures),
+        'smoke_failed_benchmarks': len(failures),
+        'smoke_successful_dimensions': unique_dimension_count - len(failed_dimension_ids),
+        'smoke_failed_dimensions': len(failed_dimension_ids),
     })
     write_json(output_dir / 'run_config.json', run_config)
     progress.update({
@@ -380,7 +384,7 @@ def main() -> int:
         'ended_at': utc_now_iso(),
         'completed': len(selections),
         'percent': 100.0,
-        'message': f'Smoke check completed: {len(selections) - len(failures)}/{len(selections)} successful',
+        'message': f'Benchmark smoke check completed: {len(selections) - len(failures)}/{len(selections)} successful',
         'failure_count': len(failures),
     })
     if progress_path:
