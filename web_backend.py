@@ -258,7 +258,7 @@ SCIENTIFIC_TAXONOMY_GROUPS = [
     {
         'id': 'medical_reasoning_reliability',
         'label': '医疗事实准确性',
-        'description': '评估模型能否准确识别电子病历中的时序异常、临床表征矛盾、生理不合理、治疗逻辑冲突和诊疗文档证据错误，包含五个端到端审计子类和五个证据辅助子类。',
+        'description': '评估模型能否在未提供金标准证据锚点的情况下，准确识别电子病历中的时序异常、临床表征矛盾、生理不合理、治疗逻辑冲突和诊疗文档证据错误，包含五个端到端审计子类。',
     },
     {
         'id': 'cybersecurity_reliability',
@@ -2129,6 +2129,11 @@ TAXONOMY_EXCLUDED_BENCHMARK_KEYS = {
     normalize_benchmark_key('CrowS-Pairs-General-MC'),
     normalize_benchmark_key('FrenchCrowPairs'),
     normalize_benchmark_key('Regard'),
+    normalize_benchmark_key('EHRPerturb-T1-Oracle'),
+    normalize_benchmark_key('EHRPerturb-T2-Oracle'),
+    normalize_benchmark_key('EHRPerturb-T3-Oracle'),
+    normalize_benchmark_key('EHRPerturb-T4-Oracle'),
+    normalize_benchmark_key('EHRPerturb-T5-Oracle'),
 }
 
 

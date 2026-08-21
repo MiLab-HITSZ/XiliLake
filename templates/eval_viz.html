@@ -46,6 +46,8 @@
         .selector-item.active .dimension-language{border-left-color:#818cf8;color:#4338ca;}
         .dimension-heading{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
         .dimension-heading .dimension-language{font-size:13px;}
+        .dimension-language-divider{grid-column:1/-1;display:flex;align-items:center;gap:10px;margin:6px 0 2px;color:#64748b;font-size:12px;font-weight:800;}
+        .dimension-language-divider::before,.dimension-language-divider::after{content:"";height:1px;background:#cbd5e1;flex:1;}
         .selector-item .meta{display:block;font-size:12px;color:var(--muted);margin-top:4px;line-height:1.35;}
         .selector-item.active .meta{color:#4f46e5;}
         .content{padding:22px 28px 32px;}
@@ -131,7 +133,7 @@
     <header class="page-head">
         <div class="page-head-main">
             <h1>多模态大模型可信评测系统-XiliLake v0.1</h1>
-            <div class="subtitle" id="catalog-meta">3 个评测领域 · 11 个大类 · 82 个子类 · 106 个数据集</div>
+            <div class="subtitle" id="catalog-meta">11 个大类 · 77 个子类 · 101 个数据集</div>
         </div>
         <div class="head-actions">
             <button class="btn btn-outline-primary" id="smoke-test-button" type="button" onclick="startSystemSmokeTest()">全子类快速检测</button>
@@ -377,13 +379,12 @@ function ensureSelection(){
 function benchmarksContain(dim, benchId){return !!(dim?.benchmarks||[]).find(b=>b.id===benchId)}
 
 function renderHeaderMeta(){
-    const totalDomains=(catalog.domains||[]).length;
     const totalGroups=(catalog.groups||[]).length;
     const domainDimensionTotal=(catalog.domains||[]).reduce((sum,domain)=>sum+Number(domain.dimension_count||0),0);
     const domainBenchmarkTotal=(catalog.domains||[]).reduce((sum,domain)=>sum+Number(domain.benchmark_count||0),0);
     const totalDims=domainDimensionTotal||catalog.total_dimensions||0;
     const totalBenchmarks=domainBenchmarkTotal||catalog.total_benchmarks||0;
-    document.getElementById('catalog-meta').textContent=`${totalDomains} 个评测领域 · ${totalGroups} 个大类 · ${totalDims} 个子类 · ${totalBenchmarks} 个数据集`;
+    document.getElementById('catalog-meta').textContent=`${totalGroups} 个大类 · ${totalDims} 个子类 · ${totalBenchmarks} 个数据集`;
 }
 
 function renderDomainGroups(){
@@ -401,9 +402,13 @@ function renderDomainGroups(){
 function renderDimensions(){
     const box=document.getElementById('dimension-list');
     const group=currentGroup();
-    const domain=currentDomain();
     const dims=group?.dimensions||[];
-    box.innerHTML=dims.length?dims.map(dim=>`<button type="button" class="selector-item ${dim.id===selectedDimId?'active':''}" onclick="selectDimension('${escapeHtml(dim.id)}')"><span class="name dimension-name"><span>${escapeHtml(dimensionDisplayLabel(dim))}</span>${dim.language_label?`<span class="dimension-language">${escapeHtml(dim.language_label)}</span>`:''}</span><span class="meta">${(dim.benchmarks||[]).length} 个 Benchmark</span></button>`).join(''):'<div class="empty">当前大类下暂无子类。</div>';
+    if(!dims.length){box.innerHTML='<div class="empty">当前大类下暂无子类。</div>';return}
+    const renderDimension=dim=>`<button type="button" class="selector-item ${dim.id===selectedDimId?'active':''}" onclick="selectDimension('${escapeHtml(dim.id)}')"><span class="name dimension-name"><span>${escapeHtml(dimensionDisplayLabel(dim))}</span>${dim.language_label?`<span class="dimension-language">${escapeHtml(dim.language_label)}</span>`:''}</span><span class="meta">${(dim.benchmarks||[]).length} 个 Benchmark</span></button>`;
+    const generalDimensions=dims.filter(dim=>dim.language_label!=='中文');
+    const chineseDimensions=dims.filter(dim=>dim.language_label==='中文');
+    const divider=generalDimensions.length&&chineseDimensions.length?'<div class="dimension-language-divider" role="separator"><span>中文评测</span></div>':'';
+    box.innerHTML=generalDimensions.map(renderDimension).join('')+divider+chineseDimensions.map(renderDimension).join('');
 }
 
 function renderBenchmarks(){

@@ -1,6 +1,6 @@
 # Benchmark 原文与分类核验报告
 
-> 核验日期：2026-08-21。核验对象为网页实际加载的 106 个 Benchmark 实例（93 个唯一名称）。逐子类、逐 Benchmark 的当前归属、介绍、分类核验结论和原文链接见 [current_taxonomy_full.md](current_taxonomy_full.md)。
+> 核验日期：2026-08-21。核验对象为网页实际加载的 101 个 Benchmark 实例（88 个唯一名称）。逐子类、逐 Benchmark 的当前归属、介绍、分类核验结论和原文链接见 [current_taxonomy_full.md](current_taxonomy_full.md)。
 
 ## 核验方法
 
@@ -59,7 +59,7 @@
 - 新增 `verified_benchmarks` 可重建视图，对 34 个易误选文件的 Benchmark 固定官方分片；部署时由 `prepare_verified_benchmarks.py` 从本地官方下载源生成。
 - FollowBench、CHBias、GlobalOpinionQA 和 SALAD-Bench 的当前本地入口不冒充论文完整官方评分器；页面会显示“非评分收集”或代理指标说明。
 - MedSafetyBench 使用明确拒答或安全回复相似度代理；JBB-Behaviors 和 HarmBench behaviors 仅报告基线拒答；这些结果不等同于原论文的全部 judge 指标。
-- 当前网页实际计数为 3 个评测领域、11 个可见大类、82 个子类、106 个 Benchmark，全部标记为可评测。
+- 当前网页实际计数为 3 个评测领域、11 个可见大类、77 个子类、101 个 Benchmark，全部标记为可评测；网页标题下方仅展示大类、子类和数据集数量。
 
 ## 法律法规遵守性边界
 
@@ -98,5 +98,5 @@ XSafety 按输入机制拆分为互斥数据：17,990 条普通风险请求进�
 
 ## 行业大类边界
 
-- 医疗行业统一使用“医疗事实准确性”，十个 EHRPerturb 子类分别检查五类电子病历事实异常的端到端识别和证据辅助识别。
+- 医疗行业统一使用“医疗事实准确性”，五个 EHRPerturb 端到端子类分别检查病历时序、临床表征、临床生理、治疗逻辑和诊疗文档证据异常；模型需要从完整病历中自主发现异常，不使用给定金标准证据的 Oracle 辅助设置。
 - 网络安全行业拆分为“网络安全可靠性”和“漏洞识别准确性”：WMDP-Cyber 衡量网络安全高风险知识作答，PairVul 衡量真实漏洞函数与修复函数的二分类准确率。
