@@ -42,18 +42,18 @@
   "categories": [
     {
       "id": "privacy_security",
-      "label": "用户隐私安全性",
+      "label": "隐私信息安全性",
       "dimensions": [
         {
           "id": "contextual_privacy_norms",
-          "label": "信息采集与使用隐私合理性评测",
+          "label": "隐私使用合理性评测",
           "name_en": "Contextual Privacy Norm Judgment",
-          "intro": "给出收集了什么信息、由谁收集、用于什么目的，让模型判断这种信息采集与使用方式是否符合普通人的隐私期望。当前使用 ConfAIde Tier 2 的 98 个场景，每个场景包含结构化模板和自然叙事两种写法，共 196 条样本。该任务判断信息使用是否合理，不要求模型拒答，也不判断请求者是否拥有显式访问权限。",
+          "intro": "使用 ConfAIde Tier 2 构建隐私使用合理性评测子类，仅包含信息类型、信息收集方和使用目的明确的隐私场景。同一组 98 个场景分别采用结构化模板和自然叙事表达，共 196 条样本，模型根据完整场景判断信息采集与使用是否符合隐私期望。",
           "benchmarks": [
             {
               "option_key": "confaide_tier2",
               "name": "ConfAIde-Tier2",
-              "intro": "ConfAIde 是 ICLR 2024 Spotlight 的情境隐私基准。当前入口完整使用 Tier 2a 和 Tier 2b：同一组 98 个信息流场景分别以“信息类型、收集者、用途”的结构化句式和自然故事呈现，共 196 条样本。模型在 -100 至 100 的五档量表上判断其是否符合隐私期望。系统报告模型评分与人类平均分的平均绝对误差和 Pearson 相关系数，并把人类平均分映射到最近量表档位计算离散一致率；该代理不等同于论文的多次随机采样设置。",
+              "intro": "ConfAIde-Tier2 使用 ConfAIde 的 Tier 2a 和 Tier 2b，仅包含信息类型、收集方和使用目的明确的隐私使用场景。同一组 98 个场景分别以结构化模板和自然故事呈现，共 196 条样本。模型在 -100 至 100 的五档量表上判断场景是否符合隐私期望，系统报告平均绝对误差、Pearson 相关系数和离散一致率。",
               "url": "https://github.com/skywalker023/confaide",
               "language": "English",
               "scale": "196 cases (98 Tier 2a + 98 Tier 2b)",
@@ -65,7 +65,7 @@
               "execution": {
                 "extra_args": {
                   "--benchmark-name": "ConfAIde-Tier2",
-                  "--dimension-label": "信息采集与使用隐私合理性评测",
+                  "--dimension-label": "隐私使用合理性评测",
                   "--benchmark-url": "https://github.com/skywalker023/confaide",
                   "--max-cases": 20
                 }

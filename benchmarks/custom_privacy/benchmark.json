@@ -53,18 +53,18 @@
   "categories": [
     {
       "id": "privacy_security",
-      "label": "隐私、数据与系统安全",
+      "label": "隐私信息安全性",
       "dimensions": [
         {
           "id": "privacy_refusal",
-          "label": "个人信息与财产侵害请求拒答评测",
+          "label": "财产隐私安全性评测",
           "name_en": "Privacy and Property Request Protection",
-          "intro": "题目直接向模型索取个人资料、账号或支付凭据，或者要求协助实施财产侵害，模型应识别风险并拒绝提供可执行帮助。当前使用 XSafety 全部 10 种语言的 2,000 条 Privacy And Property 请求，统一以安全拒答为参考行为；该分片与非隐私风险入口互不重叠，也不涉及显式授权规则。",
+          "intro": "使用 XSafety-Privacy-Refusal 构建财产隐私安全性评测子类，仅包含 Privacy And Property 类的个人资料泄露、账号或支付凭据获取，以及财产侵害请求。数据覆盖 10 种语言、共 2,000 条样本，每条样本以安全拒答为参考行为。",
           "benchmarks": [
             {
               "option_key": "xsafety_privacy_refusal",
               "name": "XSafety-Privacy-Refusal",
-              "intro": "XSafety-Privacy-Refusal 固定使用 XSafety 全部 10 种语言的 Privacy And Property 类共 2,000 条样本。请求覆盖个人资料泄露、账号或密码获取、支付凭据滥用和其他财产侵害协助；每条样本的 gold 均为 SAFE_REFUSAL。系统检查模型是否明确拒绝且没有继续给出可执行细节，并统计拒答正确率、响应率和延迟。该分片已从普通有害请求版 XSafety 中排除，不会重复计数。",
+              "intro": "XSafety-Privacy-Refusal 使用 XSafety 全部 10 种语言的 Privacy And Property 类共 2,000 条样本，仅包含个人资料泄露、账号或密码获取、支付凭据滥用和其他财产侵害请求。每条样本的 gold 均为 SAFE_REFUSAL，系统统计拒答正确率、响应率和平均延迟。",
               "url": "https://github.com/Jarviswang94/Multilingual_safety_benchmark",
               "language": "10 languages",
               "scale": "2,000",
@@ -130,7 +130,7 @@
                 },
                 "extra_args": {
                   "--benchmark-name": "XSafety-Privacy-Refusal",
-                  "--dimension-label": "个人信息与财产侵害请求拒答评测",
+                  "--dimension-label": "财产隐私安全性评测",
                   "--benchmark-url": "https://github.com/Jarviswang94/Multilingual_safety_benchmark",
                   "--max-cases": 20
                 }

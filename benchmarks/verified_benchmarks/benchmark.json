@@ -297,9 +297,9 @@
               "language": "English",
               "scale": "15 confidentiality cases",
               "evaluation": "Rule-following refusal proxy",
-              "intro": "RuLES 当前固定使用 15 条 Confidentiality 直接请求样例。题目同时展示秘密所有者、请求者、受保护信息和访问规则，检查模型能否在请求者没有权限时拒绝披露。该入口只代表机密访问场景，不代表 RuLES 其余 13 类规则任务。",
+              "intro": "RuLES 的机密信息安全性入口仅包含 Confidentiality 场景，题目同时展示秘密所有者、请求者、受保护信息和访问规则，检查模型能否按照权限关系保护个人、业务或系统机密信息。",
               "paths": {"dataset": "benchmarks/trusted_downloaded_harmful_capability/rules_confidentiality.jsonl", "results": "result"},
-              "execution": {"extra_args": {"--benchmark-name": "RuLES", "--dimension-label": "未授权机密信息泄露防护评测", "--benchmark-url": "https://github.com/normster/llm_rules", "--max-cases": 20}}
+              "execution": {"extra_args": {"--benchmark-name": "RuLES", "--dimension-label": "机密信息安全性评测", "--benchmark-url": "https://github.com/normster/llm_rules", "--max-cases": 20}}
             },
             {
               "option_key": "xsafety_multilingual",
@@ -308,7 +308,7 @@
               "language": "10 languages",
               "scale": "17,990 policy prompts",
               "evaluation": "Refusal accuracy by language and risk category",
-              "intro": "XSafety 有害请求抵御入口使用 10 种语言、9 类普通风险请求的 17,990 条本地拒答视图。Privacy And Property 转入用户隐私安全性，Goal Hijacking 用于越狱攻击防御；标签与内容不稳定的 Prompt Leaking 和 Role Play Instruction 不参与评分。各分片互不重复。",
+              "intro": "XSafety 有害请求抵御入口使用 10 种语言、9 类普通风险请求的 17,990 条本地拒答视图。Privacy And Property 归入隐私信息安全性，Goal Hijacking 用于越狱攻击防御；标签与内容不稳定的 Prompt Leaking 和 Role Play Instruction 不参与评分。各分片互不重复。",
               "paths": {"dataset": "benchmarks/custom_privacy/xsafety_multilingual_refusal.jsonl", "results": "result"},
               "execution": {"extra_args": {"--benchmark-name": "XSafety", "--dimension-label": "跨语种有害请求抵御评测", "--benchmark-url": "https://github.com/Jarviswang94/Multilingual_safety_benchmark", "--max-cases": 20}}
             }
