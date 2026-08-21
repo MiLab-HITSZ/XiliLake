@@ -633,6 +633,18 @@ BENCHMARK_TAXONOMY_OVERRIDES = [
         'reason': 'ToolE/MetaTool 数据检查模型是否知道何时需要工具以及应选择何种工具，不直接测量完整工具执行链。',
     },
     {
+        'benchmark': 'FLUB', 'group_id': 'reasoning_causal',
+        'dimension_label': '语言陷阱辨析推理', 'category_label': '语言陷阱与非常规推理',
+        'dimension_intro': '使用 FLUB 的文字游戏、错误前提和非常规设问，评估模型能否理解文本中的语言陷阱，并从候选解释中选出真正化解陷阱的答案。该子类不要求为论证标注形式谬误类型。',
+        'reason': 'FLUB 主要测量文字游戏、错误前提和非常规问题的辨析，与 MAFALDA 的论证谬误类型标注任务不同。',
+    },
+    {
+        'benchmark': 'MAFALDA', 'group_id': 'reasoning_causal',
+        'dimension_label': '论证谬误类型识别推理', 'category_label': '论证谬误识别',
+        'dimension_intro': '使用 MAFALDA 的人工标注论证片段，评估模型能否识别滑坡、诉诸权威等具体谬误类型，并正确处理没有谬误的文本。该子类关注论证结构，不评测文字游戏式问题。',
+        'reason': 'MAFALDA 直接要求识别论证中的具体谬误类型，与 FLUB 的语言陷阱选择题任务不同。',
+    },
+    {
         'benchmark': 'FLUE', 'benchmark_label': 'RuozhibaQA', 'group_id': 'reasoning_causal',
         'dimension_label': '错误前提辨析推理', 'category_label': '逻辑谬误识别',
         'reason': '实际数据来自 ruozhiba 问答，检查歧义、错误前提和偷换概念；FLUE 不是该数据的正式名称。',
@@ -679,15 +691,15 @@ BENCHMARK_TAXONOMY_OVERRIDES = [
     {
         'benchmark': 'WMDP', 'source_dimensions': ['暴力伤害与危险知识'],
         'benchmark_label': 'WMDP-BioChem', 'group_id': 'adversarial_robustness',
-        'dimension_label': '高风险知识滥用抵御评测', 'category_label': '高风险知识滥用抵御',
+        'dimension_label': '生化高风险知识暴露评测', 'category_label': '生化危险知识暴露',
         'sort_rank': 10,
-        'reason': '通用安全入口固定为 WMDP 生物与化学分片，用其原始准确率观察模型抵御高风险知识诱导的能力。',
+        'reason': '通用安全入口固定为 WMDP 生物与化学分片，用选择题准确率观察模型对危险知识的保留和暴露程度。',
     },
     {
         'benchmark': 'WMDP-BioChem', 'group_id': 'adversarial_robustness',
-        'dimension_label': '高风险知识滥用抵御评测', 'category_label': '高风险知识滥用抵御',
+        'dimension_label': '生化高风险知识暴露评测', 'category_label': '生化危险知识暴露',
         'sort_rank': 10,
-        'reason': '该分片用选择题准确率测量生物与化学高风险知识的保留和暴露程度，属于高风险知识滥用抵御。',
+        'reason': '该分片用选择题准确率测量生物与化学高风险知识的保留和暴露程度，不把知识题作答与有害请求拒答混为同一任务。',
     },
     {
         'benchmark': 'WMDP', 'source_dimensions': ['意识形态安全性'],
@@ -737,7 +749,7 @@ BENCHMARK_TAXONOMY_OVERRIDES = [
     },
     {
         'benchmark': 'HarmfulQA', 'group_id': 'adversarial_robustness',
-        'dimension_label': '高风险知识滥用抵御评测', 'category_label': '高风险知识滥用抵御',
+        'dimension_label': '多学科知识滥用请求抵御评测', 'category_label': '多学科知识滥用抵御',
         'reason': 'HarmfulQA 检查模型能否抵御跨学科知识被用于伤害、欺骗、歧视或违法目的的请求。',
     },
     {
@@ -802,6 +814,18 @@ BENCHMARK_TAXONOMY_OVERRIDES = [
         'benchmark': 'MoralExceptQA', 'group_id': 'ethical_alignment',
         'dimension_label': '道德规则例外判断评测', 'category_label': '道德规则与例外',
         'reason': 'MoralExceptQA 测量人类对道德规则破例情境的可允许性判断。',
+    },
+    {
+        'benchmark': 'LegalBench-PrivacyPolicyQA', 'group_id': 'legal_compliance',
+        'dimension_label': '隐私政策证据问答准确性评测', 'category_label': '隐私政策证据定位',
+        'dimension_intro': '给出用户的隐私问题和一段真实隐私政策条款，评估模型能否准确判断该条款是否包含足以回答问题的证据。该子类只测量问题与政策证据的相关性，不承担数据处理行为类型识别。',
+        'reason': 'PrivacyPolicyQA 是隐私问题与政策条款的证据相关性判断，应与多任务隐私规则分类套件分开统计。',
+    },
+    {
+        'benchmark': 'LegalBench-PrivacyRulesSuite', 'group_id': 'legal_compliance',
+        'dimension_label': '隐私政策数据处理规则识别评测', 'category_label': '隐私数据处理规则',
+        'dimension_intro': '汇总 LegalBench 的隐私政策蕴含任务和 OPP-115 九类数据处理任务，评估模型能否识别数据保存、安全、追踪、收集使用、特定人群、政策变更、第三方共享、访问删除和用户选择控制等规则。',
+        'reason': 'PrivacyRulesSuite 直接识别隐私政策中的数据处理规则，与 PrivacyPolicyQA 的问题证据相关性判断不同。',
     },
     {
         'benchmark': 'MoralStories', 'group_id': 'ethical_alignment',
@@ -1364,7 +1388,7 @@ BENCHMARK_SPECIFIC_INTRO_OVERRIDES = {
 
 CHINESE_ONLY_BENCHMARK_NAMES = {
     'HalluQA', 'CMMLU', 'Chinese_Rumor_Dataset', 'CMRC2018',
-    'CHID', 'RuozhibaQA', 'CHBias', 'CHiSafetyBench',
+    'CHID', 'RuozhibaQA', 'FLUB', 'CHBias', 'CHiSafetyBench',
 }
 
 
@@ -2001,13 +2025,22 @@ TAXONOMY_DIMENSION_MERGE_PLANS = {
             'merged_dimension_id': 'taxonomy::adversarial_robustness::chinese_dialogue_resistance',
         },
         {
-            'label': '高风险知识滥用抵御评测',
-            'intro': '综合评估模型面对高风险专业知识诱导时的安全边界：HarmfulQA 覆盖十个学科中用于伤害、欺骗、歧视或违法目的的请求，WMDP-BioChem 通过生物与化学选择题观察危险知识的保留和暴露程度。',
-            'category_label': '高风险知识滥用抵御',
+            'label': '多学科知识滥用请求抵御评测',
+            'intro': '使用 HarmfulQA 的 1,960 条问题，覆盖社会科学、数学逻辑、商业经济、健康医学等十个学科，评估模型能否拒绝把专业知识用于伤害、欺骗、歧视或违法目的。',
+            'category_label': '多学科知识滥用抵御',
             'sort_rank': 7,
-            'benchmark_names': ['HarmfulQA', 'WMDP-BioChem'],
+            'benchmark_names': ['HarmfulQA'],
             'include_benchmark_names_only': True,
-            'merged_dimension_id': 'taxonomy::adversarial_robustness::high_risk_knowledge_resistance',
+            'merged_dimension_id': 'taxonomy::adversarial_robustness::multidisciplinary_knowledge_misuse_resistance',
+        },
+        {
+            'label': '生化高风险知识暴露评测',
+            'intro': '使用 WMDP 生物安全与化学安全选择题，测量模型对可被滥用的危险知识的保留和暴露程度。该任务按官方正确选项计分，原始准确率越高表示危险知识暴露越充分，不等同于有害请求拒答率。',
+            'category_label': '生化危险知识暴露',
+            'sort_rank': 7,
+            'benchmark_names': ['WMDP-BioChem'],
+            'include_benchmark_names_only': True,
+            'merged_dimension_id': 'taxonomy::adversarial_robustness::biochemical_hazardous_knowledge_exposure',
         },
         {
             'label': '安全请求误拒鲁棒性评测',
@@ -2109,13 +2142,22 @@ TAXONOMY_DIMENSION_MERGE_PLANS = {
             'merged_dimension_id': 'taxonomy::ethical_alignment::moral_stories',
         },
         {
-            'label': '道德困境决策评测',
-            'intro': '评估模型在无法同时满足所有伦理目标的两难情境中如何取舍，覆盖自动驾驶事故选择、个体权益、总体伤害和跨语言决策稳定性。',
-            'category_label': '伦理困境与取舍',
+            'label': '情境道德两难行动取舍评测',
+            'intro': '使用 MoralChoice 中两个行动都伴随伦理代价的情境，评估模型在权利、义务、伤害和后果相互冲突时如何取舍，并区分高模糊性与低模糊性场景。',
+            'category_label': '道德两难行动取舍',
             'sort_rank': 3,
-            'benchmark_names': ['moralchoice', 'MultiTP'],
+            'benchmark_names': ['moralchoice'],
             'include_benchmark_names_only': True,
-            'merged_dimension_id': 'taxonomy::ethical_alignment::moral_dilemmas',
+            'merged_dimension_id': 'taxonomy::ethical_alignment::situational_moral_dilemmas',
+        },
+        {
+            'label': '跨语言自动驾驶伦理取舍评测',
+            'intro': '使用 MultiTP 的 107 种语言自动驾驶两难场景，评估模型在物种、人数、年龄、社会角色和守法状态等取舍因素上的选择，并比较跨语言稳定性与全球人类参考偏好。',
+            'category_label': '自动驾驶伦理取舍',
+            'sort_rank': 3,
+            'benchmark_names': ['MultiTP'],
+            'include_benchmark_names_only': True,
+            'merged_dimension_id': 'taxonomy::ethical_alignment::multilingual_autonomous_driving_ethics',
         },
     ],
 }
@@ -2317,10 +2359,11 @@ def dimension_evaluable_sort_key(dim: Dict[str, Any]) -> tuple[int, int, int, st
             taxonomy_rank = 1
     elif str(dim.get('taxonomy_group_id') or '') == 'legal_compliance':
         legal_order = {
-            '隐私政策法规遵守性评测': 0,
-            '消费者权益法规遵守性评测': 1,
-            '法律规则知识准确性评测': 2,
-            '法律规则适用结论准确性评测': 3,
+            '隐私政策证据问答准确性评测': 0,
+            '隐私政策数据处理规则识别评测': 1,
+            '消费者权益法规遵守性评测': 2,
+            '法律规则知识准确性评测': 3,
+            '法律规则适用结论准确性评测': 4,
         }
         taxonomy_rank = legal_order.get(label, taxonomy_rank)
     return (
