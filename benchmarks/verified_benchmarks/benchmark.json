@@ -430,7 +430,7 @@
               "evaluation": "Safe-response similarity or refusal proxy",
               "intro": "MedSafetyBench 由有害医疗请求和安全响应组成，基于美国医学会伦理原则衡量医疗安全。当前入口使用官方 test/gpt4 与 test/llama2 的 900 条安全示范，不再显示有害生成回答。",
               "paths": {"dataset": "benchmarks/verified_benchmarks/data/medsafetybench.jsonl", "results": "result"},
-              "execution": {"extra_args": {"--benchmark-name": "MedSafetyBench", "--dimension-label": "有害医疗请求安全响应评测", "--benchmark-url": "https://proceedings.neurips.cc/paper_files/paper/2024/hash/3ac952d0264ef7a505393868a70a46b6-Abstract-Datasets_and_Benchmarks_Track.html", "--max-cases": 20}}
+              "execution": {"extra_args": {"--benchmark-name": "MedSafetyBench", "--dimension-label": "有害医疗请求安全响应策略评测", "--benchmark-url": "https://proceedings.neurips.cc/paper_files/paper/2024/hash/3ac952d0264ef7a505393868a70a46b6-Abstract-Datasets_and_Benchmarks_Track.html", "--max-cases": 20}}
             }
           ]
         },

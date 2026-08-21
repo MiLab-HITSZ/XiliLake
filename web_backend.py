@@ -238,7 +238,7 @@ SCIENTIFIC_TAXONOMY_GROUPS = [
     {
         'id': 'privacy_security',
         'label': '系统策略安全性',
-        'description': '评估模型在没有显式攻击变换的输入下，能否正确执行回答、拒答、放行、风险判别、危险知识控制、坚持事实和保护信息等系统响应策略。该类同时覆盖对既有候选回复的安全判别，因为这些任务直接为系统选择或校准响应策略服务；含越狱模板、提示注入或目标劫持的输入只归入攻击抵御鲁棒性，身份群体差异归入社会群体公平性，社会交往中的伤害表达归入伦理道德符合性。',
+        'description': '评估模型在没有显式攻击变换的输入下，能否正确执行回答、拒答、放行、风险判别、危险知识控制、坚持事实和保护信息等系统响应策略，并覆盖医疗等专业领域中的有害请求安全响应。该类同时覆盖对既有候选回复的安全判别，因为这些任务直接为系统选择或校准响应策略服务；含越狱模板、提示注入或目标劫持的输入只归入攻击抵御鲁棒性，身份群体差异归入社会群体公平性，社会交往中的伤害表达归入伦理道德符合性。',
     },
     {
         'id': 'fairness_bias',
@@ -258,12 +258,7 @@ SCIENTIFIC_TAXONOMY_GROUPS = [
     {
         'id': 'medical_factual_accuracy',
         'label': '基本事实准确性',
-        'description': '评估医疗知识和诊疗陈述是否符合可核验的医学事实。只有以医学知识正确性为直接目标的基准才归入此类；有害医疗请求的安全回复归入医疗安全可靠性。',
-    },
-    {
-        'id': 'medical_safety_reliability',
-        'label': '医疗安全可靠性',
-        'description': '评估模型面对可能造成医疗伤害、违反医学伦理或诱导危险操作的请求时，能否拒绝不当协助并给出安全、有责任的替代回复。这里评价安全响应策略，不等同于医学事实问答。',
+        'description': '评估医疗知识和诊疗陈述是否符合可核验的医学事实。只有以医学知识正确性为直接目标的基准才归入此类；有害医疗请求的安全回复归入通用评测的系统策略安全性。',
     },
     {
         'id': 'medical_reasoning_reliability',
@@ -284,7 +279,7 @@ TAXONOMY_DOMAIN_GROUP_IDS = {
         'legal_compliance', 'ethical_alignment',
     },
     'medical_industry_evaluation': {
-        'medical_factual_accuracy', 'medical_safety_reliability', 'medical_reasoning_reliability',
+        'medical_factual_accuracy', 'medical_reasoning_reliability',
     },
     'cybersecurity_industry_evaluation': {'cybersecurity_reliability'},
 }
@@ -791,9 +786,10 @@ BENCHMARK_TAXONOMY_OVERRIDES = [
         'reason': '该入口只含 XSafety 的 Privacy And Property 类，与非隐私风险入口按样本互斥。',
     },
     {
-        'benchmark': 'MedSafetyBench', 'group_id': 'medical_safety_reliability',
-        'dimension_label': '有害医疗请求安全响应评测', 'category_label': '医疗伦理与伤害防范',
-        'reason': 'MedSafetyBench 由有害医疗请求与安全回复构成，核心是医疗安全而非事实问答。',
+        'benchmark': 'MedSafetyBench', 'group_id': 'privacy_security',
+        'dimension_label': '有害医疗请求安全响应策略评测', 'category_label': '专业领域风险响应策略',
+        'sort_rank': 11,
+        'reason': 'MedSafetyBench 评估模型面对有害医疗请求时能否给出安全回复，核心是专业领域响应策略，因此归入系统策略安全性。',
     },
     {
         'benchmark': 'GlobalOpinionQA', 'group_id': 'ethical_alignment',
@@ -1881,8 +1877,6 @@ def taxonomy_secondary_label(group_id: str, source_group: Dict[str, Any], dim: D
         return '电子病历辅助推理'
     if group_id == 'medical_factual_accuracy':
         return '医疗信息事实核验'
-    if group_id == 'medical_safety_reliability':
-        return '医疗伦理与伤害防范'
     if group_id == 'cybersecurity_reliability':
         return '代码与软件漏洞检测'
 
@@ -1896,7 +1890,6 @@ def taxonomy_secondary_label(group_id: str, source_group: Dict[str, Any], dim: D
         'legal_compliance': '法律法规适用',
         'ethical_alignment': '伦理道德判断',
         'medical_factual_accuracy': '医疗信息事实核验',
-        'medical_safety_reliability': '医疗安全响应',
         'medical_reasoning_reliability': '医疗推理与决策',
         'cybersecurity_reliability': '代码与系统安全检测',
     }

@@ -41,7 +41,7 @@
 | SaladBench | 本地扫描误选安全选择题 | 固定到官方 attack_enhanced_set，归入对抗改写攻击防御 | [SALAD-Bench 官方仓库](https://github.com/OpenSafetyLab/SALAD-BENCH) |
 | GPTFuzzer / LatentJailbreak / DoAnythingNow / CoSafe | 部分入口误选标签、响应或不完整文件 | 分别固定到越狱模板+有害目标、潜在任务模板、野外越狱+禁止问题、完整多轮共指对话 | [GPTFuzz](https://github.com/sherdencooper/GPTFuzz) / [LatentJailbreak](https://github.com/qiuhuachuan/latent-jailbreak) / [DoAnythingNow](https://github.com/verazuo/jailbreak_llms) / [CoSafe](https://aclanthology.org/2024.emnlp-main.968/) |
 | RMCBench / CHiSafetyBench | 存在选错文件或错误 gold（如恶意请求对应 GOOD） | 固定到官方风险提示，gold 改为安全拒答 | [RMCBench](https://github.com/qing-yuan233/RMCBench) / [CHiSafetyBench](https://github.com/UnicomAI/UnicomBenchmark/tree/main/CHiSafetyBench) |
-| MedSafetyBench | 误称为医疗信息真实性 | 移入独立的医疗安全可靠性；使用 900 条有害医疗请求与安全回复示范 | [NeurIPS 2024](https://proceedings.neurips.cc/paper_files/paper/2024/hash/3ac952d0264ef7a505393868a70a46b6-Abstract-Datasets_and_Benchmarks_Track.html) |
+| MedSafetyBench | 误称为医疗信息真实性 | 作为专业领域有害请求安全响应策略移入系统策略安全性；使用 900 条有害医疗请求与安全回复示范 | [NeurIPS 2024](https://proceedings.neurips.cc/paper_files/paper/2024/hash/3ac952d0264ef7a505393868a70a46b6-Abstract-Datasets_and_Benchmarks_Track.html) |
 | BBQ / CALM / CHBias | 整套数据被窄化为单一身份属性 | 按原文保留多属性歧义问答、性别种族多任务和中文四属性偏见任务；CHBias 统一命名为中文综合偏见评测 | [BBQ](https://aclanthology.org/2022.findings-acl.165/) / [CALM](https://arxiv.org/abs/2308.12539) / [CHBias](https://aclanthology.org/2023.acl-long.757/) |
 | CrowS-Pairs | 两个入口重复读全量数据 | 当前目录仅保留 Religion 分片，General 分片已移除 | [官方仓库](https://github.com/nyu-mll/crows-pairs) |
 | APPS | 两个入口会扫描同一全量目录 | 固定为 Introductory-Interview 和 Competition 两个难度互斥分片 | [APPS 官方仓库](https://github.com/hendrycks/apps) |
@@ -60,7 +60,7 @@
 - 新增 `verified_benchmarks` 可重建视图，对 34 个易误选文件的 Benchmark 固定官方分片；部署时由 `prepare_verified_benchmarks.py` 从本地官方下载源生成。
 - FollowBench、CHBias、GlobalOpinionQA 和 SALAD-Bench 的当前本地入口不冒充论文完整官方评分器；页面会显示“非评分收集”或代理指标说明。
 - MedSafetyBench 使用明确拒答或安全回复相似度代理；JBB-Behaviors 和 HarmBench behaviors 仅报告基线拒答；这些结果不等同于原论文的全部 judge 指标。
-- 当前网页实际计数为 3 个评测领域、11 个可见大类、81 个子类、106 个 Benchmark，全部标记为可评测。“医疗基本事实准确性”暂无符合定义的本地 Benchmark，因此不用 MedSafetyBench 填充该类。
+- 当前网页实际计数为 3 个评测领域、10 个可见大类、81 个子类、106 个 Benchmark，全部标记为可评测。“医疗基本事实准确性”暂无符合定义的本地 Benchmark，因此不用 MedSafetyBench 填充该类。
 
 ## 法律法规遵守性边界
 
@@ -77,7 +77,7 @@
 
 ## 系统策略安全性边界
 
-系统策略安全性纳入未经攻击改写的普通请求、用户立场、显式系统规则、危险知识控制和回答安全判别，按系统应采取或校准的响应行动划为 10 个子类、19 个 Benchmark。所有子类统一以“策略评测”结尾：
+系统策略安全性纳入未经攻击改写的普通请求、用户立场、显式系统规则、危险知识控制、专业领域风险响应和回答安全判别，按系统应采取或校准的响应行动划为 11 个子类、20 个 Benchmark。所有子类统一以“策略评测”结尾：
 
 | 子类 | 唯一判定边界 | Benchmark |
 | --- | --- | --- |
@@ -91,6 +91,7 @@
 | 恶意代码生成请求拒答策略评测 | 恶意代码生成、翻译、补全和改写请求的 gold 均为安全拒答 | RMCBench |
 | 生化危险知识控制策略评测 | 用官方选择题准确率观察生物和化学危险知识的保留与暴露，分数方向需按“越高暴露越多”解释 | WMDP-BioChem |
 | 上下文对话安全判别策略评测 | 给定对话历史和候选回复，校准上下文相关的安全判别 | DiaSafety |
+| 有害医疗请求安全响应策略评测 | 面对可能造成医疗伤害或违反医学伦理的请求，检查模型能否拒绝不当协助并给出安全替代回复 | MedSafetyBench |
 
 SafetyPrompts 因参考回复质量与普通拒答构念重复而从当前目录移除。JailbreakBench Behaviors 和 HarmBench Behaviors 没有附加攻击字符串，因此并入综合有害请求判断与拒答策略；真正含越狱模板、提示注入、攻击增强或对抗改写的数据仍只归入攻击抵御鲁棒性。RMCBench 当前执行协议直接按安全拒答评分，因此保留在系统策略安全性。
 
