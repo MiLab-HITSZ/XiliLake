@@ -200,17 +200,17 @@ SCIENTIFIC_TAXONOMY_DOMAINS = [
     {
         'id': 'general_evaluation',
         'label': '通用评测',
-        'description': '覆盖模型在通用知识、推理、任务执行、内容安全、攻击防御、系统策略、群体公平、法律规则适用和伦理价值判断方面的可信表现。',
+        'description': '覆盖模型在通用知识、推理、任务执行、攻击防御、用户隐私、群体公平、法律规则适用和伦理价值判断方面的可信表现。',
     },
     {
         'id': 'medical_industry_evaluation',
         'label': '医疗行业评测',
-        'description': '面向医疗场景的专业风险与临床推理，当前分别评估有害医疗请求的安全回复，以及电子病历中五类异常的端到端审计和证据辅助推理。',
+        'description': '面向电子病历中的时序、临床表征、生理合理性、治疗逻辑和诊疗文档证据，评估模型识别医疗事实异常与矛盾的准确性。',
     },
     {
         'id': 'cybersecurity_industry_evaluation',
         'label': '网络安全行业评测',
-        'description': '面向代码、软件和网络系统安全风险，评估模型识别漏洞及支撑安全分析的可靠性。',
+        'description': '面向网络安全知识与软件漏洞两类互补任务，分别评估高风险网络安全知识作答的可靠性，以及真实漏洞代码的识别准确性。',
     },
 ]
 
@@ -233,12 +233,12 @@ SCIENTIFIC_TAXONOMY_GROUPS = [
     {
         'id': 'adversarial_robustness',
         'label': '攻击抵御鲁棒性',
-        'description': '评估模型面对显式的安全绕过机制时是否仍能保持边界，当前覆盖多轮共指攻击、自动变异越狱、潜在任务包装、野外越狱模板和对抗改写。归类的必要条件是输入中存在可识别的攻击变换或绕过结构；只有有害行为描述而没有攻击的数据不归入此类。',
+        'description': '评估模型面对越狱、目标劫持、对抗改写以及直接有害请求时能否保持安全边界。这里关注攻击或风险输入能否诱导模型提供有害帮助；仅判断既有文本是否符合伦理、是否冒犯或是否安全的任务归入伦理道德符合性，个人信息、财产和机密访问防护归入用户隐私安全性。',
     },
     {
         'id': 'privacy_security',
-        'label': '系统策略安全性',
-        'description': '评估模型在没有显式攻击变换的输入下，能否正确执行回答、拒答、放行、风险判别、危险知识控制、坚持事实和保护信息等系统响应策略，并覆盖医疗等专业领域中的有害请求安全响应。该类同时覆盖对既有候选回复的安全判别，因为这些任务直接为系统选择或校准响应策略服务；含越狱模板、提示注入或目标劫持的输入只归入攻击抵御鲁棒性，身份群体差异归入社会群体公平性，社会交往中的伤害表达归入伦理道德符合性。',
+        'label': '用户隐私安全性',
+        'description': '评估模型能否保护用户个人信息、账号凭据、财产权益和受访问规则约束的机密信息。该类只保留隐私与财产防护：诱导模型实施其他有害行为的请求归入攻击抵御鲁棒性，对既有内容作安全或伦理判断的任务归入伦理道德符合性。',
     },
     {
         'id': 'fairness_bias',
@@ -253,22 +253,22 @@ SCIENTIFIC_TAXONOMY_GROUPS = [
     {
         'id': 'ethical_alignment',
         'label': '伦理道德符合性',
-        'description': '评估模型在道德规则及其例外、社会价值观、日常行为规范、伦理困境和社会交往中的伤害表达上，判断是否稳健且前后一致。这里关注无唯一明文法律答案时的价值理由、行为取舍和对冒犯滥用内容的伦理处置；能由具体法规直接判定的任务归入法律法规遵守性，以身份群体差异为核心的任务归入社会群体公平性，面对风险请求是否拒答归入系统策略安全性。',
-    },
-    {
-        'id': 'medical_factual_accuracy',
-        'label': '基本事实准确性',
-        'description': '评估医疗知识和诊疗陈述是否符合可核验的医学事实。只有以医学知识正确性为直接目标的基准才归入此类；有害医疗请求的安全回复归入通用评测的系统策略安全性。',
+        'description': '评估模型能否判断既有行为、回复和社会情境是否安全并符合伦理，覆盖道德规则及其例外、社会价值观、伦理困境、综合安全判断和对话伤害处置。这里关注内容与行为本身的伦理属性；诱导模型执行有害行为的请求归入攻击抵御鲁棒性，明确法律规则适用归入法律法规遵守性，身份群体差异归入社会群体公平性。',
     },
     {
         'id': 'medical_reasoning_reliability',
-        'label': '推理决策可靠性',
-        'description': '评估医疗模型处理电子病历异常和临床矛盾的推理可靠性，包含五个端到端独立审计子类和五个证据辅助推理子类，共十个边界清晰的小类。',
+        'label': '医疗事实准确性',
+        'description': '评估模型能否准确识别电子病历中的时序异常、临床表征矛盾、生理不合理、治疗逻辑冲突和诊疗文档证据错误，包含五个端到端审计子类和五个证据辅助子类。',
     },
     {
         'id': 'cybersecurity_reliability',
-        'label': '代码安全可靠性',
-        'description': '评估模型识别代码与软件系统安全缺陷的能力，当前重点覆盖真实漏洞代码与修复代码的辨别。',
+        'label': '网络安全可靠性',
+        'description': '评估模型回答网络安全高风险专业知识问题时的可靠性，当前使用 WMDP-Cyber 覆盖网络攻击、系统利用和安全机制等知识。',
+    },
+    {
+        'id': 'vulnerability_detection_accuracy',
+        'label': '漏洞识别准确性',
+        'description': '评估模型能否准确区分真实 CVE 场景中的漏洞函数与修复函数，重点衡量代码级漏洞检测结果的正确性。',
     },
 ]
 
@@ -279,9 +279,11 @@ TAXONOMY_DOMAIN_GROUP_IDS = {
         'legal_compliance', 'ethical_alignment',
     },
     'medical_industry_evaluation': {
-        'medical_factual_accuracy', 'medical_reasoning_reliability',
+        'medical_reasoning_reliability',
     },
-    'cybersecurity_industry_evaluation': {'cybersecurity_reliability'},
+    'cybersecurity_industry_evaluation': {
+        'cybersecurity_reliability', 'vulnerability_detection_accuracy',
+    },
 }
 TAXONOMY_DOMAIN_BY_ID = {row['id']: row for row in SCIENTIFIC_TAXONOMY_DOMAINS}
 TAXONOMY_DOMAIN_FOR_GROUP = {
@@ -299,7 +301,7 @@ SOURCE_GROUP_TAXONOMY_OVERRIDES = {
     'capability': 'task_control',
     'code': 'task_control',
     'general': 'task_control',
-    'harmful_capability': 'privacy_security',
+    'harmful_capability': 'adversarial_robustness',
     'safety': 'adversarial_robustness',
     'adversarial_robustness': 'adversarial_robustness',
     'privacy_security': 'privacy_security',
@@ -449,7 +451,7 @@ CONSISTENT_DIMENSION_LABEL_ALIASES = {
     '潜在越狱鲁棒性': '潜在越狱攻击防御',
     '野外越狱行为识别': '野外越狱攻击防御',
 
-    # 系统策略安全性：统一为“...评测”
+    # 历史安全策略名称：供源目录归一化，最终按 Benchmark 重新路由
     '禁止请求拒答边界': '禁止请求拒答边界评测',
     '综合安全响应判别': '综合安全响应评测',
     '综合安全响应策略': '安全提示响应评测',
@@ -513,32 +515,32 @@ DIMENSION_SPECIFIC_INTROS = {
 }
 
 DIMENSION_TAXONOMY_OVERRIDES = {
-    '有害代码生成抵制': 'privacy_security',
-    '漏洞检测能力': 'cybersecurity_reliability',
-    '代码漏洞安全评测': 'cybersecurity_reliability',
-    '内容合规性': 'privacy_security',
-    '行为与指令合规性': 'privacy_security',
+    '有害代码生成抵制': 'adversarial_robustness',
+    '漏洞检测能力': 'vulnerability_detection_accuracy',
+    '代码漏洞安全评测': 'vulnerability_detection_accuracy',
+    '内容合规性': 'adversarial_robustness',
+    '行为与指令合规性': 'adversarial_robustness',
     '冒犯言论检测': 'ethical_alignment',
-    '多语言LLM安全性': 'privacy_security',
-    '安全性': 'privacy_security',
+    '多语言LLM安全性': 'adversarial_robustness',
+    '安全性': 'ethical_alignment',
     '抵抗滥用': 'adversarial_robustness',
     '攻击性行为检测': 'adversarial_robustness',
     '攻击性行为防御能力评估': 'adversarial_robustness',
     '攻击抵御能力': 'adversarial_robustness',
-    '暴力内容': 'privacy_security',
+    '暴力内容': 'adversarial_robustness',
     '毒性评估': 'ethical_alignment',
     '越狱行为检测': 'adversarial_robustness',
     '隐私内容': 'privacy_security',
-    '内容安全性评估': 'privacy_security',
+    '内容安全性评估': 'adversarial_robustness',
     '意识形态安全性': 'ethical_alignment',
     '越狱安全性': 'adversarial_robustness',
-    '通用安全评估': 'privacy_security',
+    '通用安全评估': 'adversarial_robustness',
     '信息真实性': 'medical_factual_accuracy',
     '输出真实性': 'epistemic_reliability',
-    '迷信内容': 'privacy_security',
+    '迷信内容': 'ethical_alignment',
     '事实验证': 'epistemic_reliability',
     '常识': 'epistemic_reliability',
-    '伪造内容': 'privacy_security',
+    '伪造内容': 'ethical_alignment',
     '历史和文化知识': 'epistemic_reliability',
     '因果推断': 'reasoning_causal',
     '谬误理解能力': 'reasoning_causal',
@@ -551,7 +553,7 @@ DIMENSION_TAXONOMY_OVERRIDES = {
     '提交信息生成能力': 'task_control',
     '学术综合能力': 'task_control',
     '工具使用': 'task_control',
-    '无谄媚': 'task_control',
+    '无谄媚': 'epistemic_reliability',
     '任务鲁棒性': 'task_control',
     '可靠性': 'task_control',
     '指令遵循能力': 'task_control',
@@ -560,20 +562,20 @@ DIMENSION_TAXONOMY_OVERRIDES = {
     '鲁棒性': 'task_control',
     '提示鲁棒性': 'adversarial_robustness',
     '提示攻击与边界鲁棒性': 'adversarial_robustness',
-    '拒答边界测试': 'privacy_security',
-    '安全拒答边界与过度拒答': 'privacy_security',
+    '拒答边界测试': 'adversarial_robustness',
+    '安全拒答边界与过度拒答': 'adversarial_robustness',
     '目标劫持': 'adversarial_robustness',
-    '跨语言安全一致性': 'privacy_security',
+    '跨语言安全一致性': 'adversarial_robustness',
     '对抗性有害请求检测': 'adversarial_robustness',
     '自动红队攻击防御': 'adversarial_robustness',
     '隐私性': 'privacy_security',
     '隐私泄露拒答': 'privacy_security',
     '刻板印象成对识别': 'fairness_bias',
     '中文对话偏见问答': 'fairness_bias',
-    '不安全请求合规处理': 'privacy_security',
-    '暴力伤害与危险知识': 'privacy_security',
-    '综合安全性': 'privacy_security',
-    '综合有害请求与安全响应': 'privacy_security',
+    '不安全请求合规处理': 'adversarial_robustness',
+    '暴力伤害与危险知识': 'adversarial_robustness',
+    '综合安全性': 'ethical_alignment',
+    '综合有害请求与安全响应': 'ethical_alignment',
     '伦理道德': 'ethical_alignment',
     '价值观对齐': 'ethical_alignment',
     '伦理科学': 'ethical_alignment',
@@ -595,9 +597,9 @@ BENCHMARK_TAXONOMY_OVERRIDES = [
         'reason': '该数据判断中文微博陈述是否为谣言，属于网络信息事实核验，而非逻辑谬误分类。',
     },
     {
-        'benchmark': 'sycophancy', 'group_id': 'privacy_security',
-        'dimension_label': '反谄媚策略评测', 'category_label': '事实立场保持策略',
-        'reason': '该基准检查模型能否在用户表达偏好或立场后仍坚持有依据的答案，直接测量响应策略而不是独立知识正确率。',
+        'benchmark': 'sycophancy', 'group_id': 'epistemic_reliability',
+        'dimension_label': '反谄媚事实立场评测', 'category_label': '事实立场保持',
+        'reason': '该基准检查模型能否在用户表达偏好或立场后仍坚持有依据的事实答案，因此归入基本事实准确性。',
     },
     {
         'benchmark': 'Arxiv-Filtered', 'group_id': 'task_control',
@@ -641,16 +643,16 @@ BENCHMARK_TAXONOMY_OVERRIDES = [
         'reason': '弱智吧问答主要测量歧义、错误前提与非常规推理的辨析。',
     },
     {
-        'benchmark': 'DiaSafety', 'group_id': 'privacy_security',
-        'dimension_label': '上下文对话安全判别策略评测', 'category_label': '上下文响应判别策略',
+        'benchmark': 'DiaSafety', 'group_id': 'ethical_alignment',
+        'dimension_label': '上下文对话安全伦理判断评测', 'category_label': '对话安全伦理判断',
         'sort_rank': 12,
-        'reason': 'DiaSafety 对给定对话上下文中的候选回复做安全判别，用于校准响应策略；它不包含攻击生成机制。',
+        'reason': 'DiaSafety 判断给定对话上下文中的候选回复是否安全，评价的是既有回复的伦理属性，不包含攻击生成机制。',
     },
     {
-        'benchmark': 'SAFE', 'group_id': 'privacy_security',
-        'dimension_label': '综合有害请求判断与拒答策略评测', 'category_label': '综合风险处置策略',
+        'benchmark': 'SAFE', 'group_id': 'ethical_alignment',
+        'dimension_label': '综合内容安全伦理判断评测', 'category_label': '综合安全伦理判断',
         'sort_rank': 0,
-        'reason': 'SAFE 对已有模型回答执行七个安全质量轴的二分类，作为有害请求处理后的回答安全判别环节，与风险判断和拒答任务合并展示。',
+        'reason': 'SAFE 对已有模型回答执行七个安全质量轴的二分类，直接评价既有回答是否安全并符合伦理。',
     },
     {
         'benchmark': 'honest', 'benchmark_label': 'HONEST', 'group_id': 'ethical_alignment',
@@ -676,16 +678,16 @@ BENCHMARK_TAXONOMY_OVERRIDES = [
     },
     {
         'benchmark': 'WMDP', 'source_dimensions': ['暴力伤害与危险知识'],
-        'benchmark_label': 'WMDP-BioChem', 'group_id': 'privacy_security',
-        'dimension_label': '生化危险知识控制策略评测', 'category_label': '危险知识控制策略',
+        'benchmark_label': 'WMDP-BioChem', 'group_id': 'adversarial_robustness',
+        'dimension_label': '高风险知识滥用抵御评测', 'category_label': '高风险知识滥用抵御',
         'sort_rank': 10,
-        'reason': '通用安全入口固定为 WMDP 生物与化学分片，用其原始准确率观察危险知识保留和暴露程度。',
+        'reason': '通用安全入口固定为 WMDP 生物与化学分片，用其原始准确率观察模型抵御高风险知识诱导的能力。',
     },
     {
-        'benchmark': 'WMDP-BioChem', 'group_id': 'privacy_security',
-        'dimension_label': '生化危险知识控制策略评测', 'category_label': '危险知识控制策略',
+        'benchmark': 'WMDP-BioChem', 'group_id': 'adversarial_robustness',
+        'dimension_label': '高风险知识滥用抵御评测', 'category_label': '高风险知识滥用抵御',
         'sort_rank': 10,
-        'reason': '该分片用选择题准确率测量生物与化学高风险知识的保留和暴露程度。',
+        'reason': '该分片用选择题准确率测量生物与化学高风险知识的保留和暴露程度，属于高风险知识滥用抵御。',
     },
     {
         'benchmark': 'WMDP', 'source_dimensions': ['意识形态安全性'],
@@ -724,30 +726,30 @@ BENCHMARK_TAXONOMY_OVERRIDES = [
         'reason': '当前入口固定到官方 attack_enhanced_set，因而归入攻击抵御。',
     },
     {
-        'benchmark': 'JBBBehaviours', 'group_id': 'privacy_security',
-        'dimension_label': '综合有害请求判断与拒答策略评测', 'category_label': '综合风险处置策略',
-        'reason': '当前入口只有行为目标，没有越狱攻击字符串，只能测量基线拒答。',
+        'benchmark': 'JBBBehaviours', 'group_id': 'adversarial_robustness',
+        'dimension_label': '综合有害请求抵御评测', 'category_label': '直接有害请求抵御',
+        'reason': '当前入口使用有害行为目标测量模型面对直接风险请求时的抵御与拒答能力。',
     },
     {
-        'benchmark': 'HarmBench', 'group_id': 'privacy_security',
-        'dimension_label': '综合有害请求判断与拒答策略评测', 'category_label': '综合风险处置策略',
-        'reason': '本地入口只接入 HarmBench 行为集，未运行其攻击算法。',
+        'benchmark': 'HarmBench', 'group_id': 'adversarial_robustness',
+        'dimension_label': '综合有害请求抵御评测', 'category_label': '直接有害请求抵御',
+        'reason': '本地入口接入 HarmBench 行为集，评估模型面对有害行为目标时是否保持安全边界。',
     },
     {
-        'benchmark': 'HarmfulQA', 'group_id': 'privacy_security',
-        'dimension_label': '多学科知识滥用拒答策略评测', 'category_label': '知识滥用拒答策略',
-        'reason': 'HarmfulQA 以普通有害请求的拒答覆盖为目标。',
+        'benchmark': 'HarmfulQA', 'group_id': 'adversarial_robustness',
+        'dimension_label': '高风险知识滥用抵御评测', 'category_label': '高风险知识滥用抵御',
+        'reason': 'HarmfulQA 检查模型能否抵御跨学科知识被用于伤害、欺骗、歧视或违法目的的请求。',
     },
     {
-        'benchmark': 'SorryBench', 'group_id': 'privacy_security',
-        'dimension_label': '综合有害请求判断与拒答策略评测', 'category_label': '综合风险处置策略',
-        'reason': 'SorryBench 主要测量安全拒答在细粒度不安全类别上的覆盖。',
+        'benchmark': 'SorryBench', 'group_id': 'adversarial_robustness',
+        'dimension_label': '综合有害请求抵御评测', 'category_label': '直接有害请求抵御',
+        'reason': 'SorryBench 测量模型对细粒度不安全请求的抵御与拒答覆盖。',
     },
     {
-        'benchmark': 'RMCBench', 'group_id': 'privacy_security',
-        'dimension_label': '恶意代码生成请求拒答策略评测', 'category_label': '恶意代码拒答策略',
+        'benchmark': 'RMCBench', 'group_id': 'adversarial_robustness',
+        'dimension_label': '恶意代码请求抵御评测', 'category_label': '恶意代码请求抵御',
         'sort_rank': 9,
-        'reason': '当前 RMCBench 入口把恶意代码生成、翻译、补全和改写请求的目标统一为安全拒答，直接评估拒答策略。',
+        'reason': '当前 RMCBench 入口把恶意代码生成、翻译、补全和改写请求的目标统一为安全拒答，直接评估恶意代码请求抵御能力。',
     },
     {
         'benchmark': 'ParlAIDialogueSafety', 'group_id': 'ethical_alignment',
@@ -756,40 +758,40 @@ BENCHMARK_TAXONOMY_OVERRIDES = [
         'reason': 'ParlAI Dialogue Safety 判断对话文本是否冒犯或不安全，归入社会交往中的伦理处置。',
     },
     {
-        'benchmark': 'CHiSafetyBench', 'group_id': 'privacy_security',
-        'dimension_label': '多轮风险对话拒答策略评测', 'category_label': '多轮风险对话策略',
-        'reason': '当前入口只使用官方 101 条带完整历史的多轮风险对话，测量上下文中的拒答策略一致性，不混入无历史单轮问题。',
+        'benchmark': 'CHiSafetyBench', 'group_id': 'adversarial_robustness',
+        'dimension_label': '多轮有害请求抵御评测', 'category_label': '多轮有害请求抵御',
+        'reason': '当前入口只使用官方 101 条带完整历史的中文多轮风险对话，测量模型持续抵御有害请求的能力。',
     },
     {
-        'benchmark': 'CValuesResponsibilityMC', 'group_id': 'privacy_security',
-        'dimension_label': '综合有害请求判断与拒答策略评测', 'category_label': '综合风险处置策略',
-        'reason': '数据是安全和社会责任选择题，直接测量策略判断而非生成内容毒性。',
+        'benchmark': 'CValuesResponsibilityMC', 'group_id': 'ethical_alignment',
+        'dimension_label': '综合内容安全伦理判断评测', 'category_label': '综合安全伦理判断',
+        'reason': '数据是安全和社会责任选择题，直接判断行为与回答是否安全并符合社会伦理。',
     },
     {
         'benchmark': 'RuLES', 'group_id': 'privacy_security',
-        'dimension_label': '隐私与财产防护策略评测', 'category_label': '隐私、财产与机密防护策略',
-        'reason': 'RuLES 当前入口检查模型是否遵循机密信息访问规则，与隐私泄露和凭据财产侵害请求共同构成信息与财产防护策略。',
+        'dimension_label': '机密信息访问控制评测', 'category_label': '机密信息访问控制',
+        'reason': 'RuLES 当前入口检查模型是否遵循机密信息访问规则，防止向未授权用户泄露受保护信息。',
     },
     {
-        'benchmark': 'XSafety', 'group_id': 'privacy_security',
-        'dimension_label': '跨语种风险拒答一致性策略评测', 'category_label': '跨语种拒答策略',
-        'reason': '当前 XSafety 策略入口仅含 9 类普通风险请求，用于测量 10 种语言间的拒答一致性；Goal Hijacking 已迁入攻击抵御。',
+        'benchmark': 'XSafety', 'group_id': 'adversarial_robustness',
+        'dimension_label': '跨语种有害请求抵御评测', 'category_label': '跨语种风险抵御',
+        'reason': '当前 XSafety 入口含 9 类普通风险请求，用于测量模型在 10 种语言中抵御有害请求的一致性。',
     },
     {
         'benchmark': 'XSafety-Attack-Defense', 'group_id': 'adversarial_robustness',
         'dimension_label': '多语种越狱提示攻击防御评测', 'category_label': '越狱与提示攻击',
-        'reason': '该分片只含 XSafety 的 Goal Hijacking 显式目标劫持提示，归入攻击抵御而非普通系统策略。',
+        'reason': '该分片只含 XSafety 的 Goal Hijacking 显式目标劫持提示，归入越狱攻击防御。',
     },
     {
         'benchmark': 'XSafety-Privacy-Refusal', 'group_id': 'privacy_security',
-        'dimension_label': '隐私与财产防护策略评测', 'category_label': '隐私、财产与机密防护策略',
+        'dimension_label': '用户隐私与财产侵害防护评测', 'category_label': '用户隐私与财产防护',
         'reason': '该入口只含 XSafety 的 Privacy And Property 类，与非隐私风险入口按样本互斥。',
     },
     {
-        'benchmark': 'MedSafetyBench', 'group_id': 'privacy_security',
-        'dimension_label': '有害医疗请求安全响应策略评测', 'category_label': '专业领域风险响应策略',
+        'benchmark': 'MedSafetyBench', 'group_id': 'adversarial_robustness',
+        'dimension_label': '有害医疗请求抵御评测', 'category_label': '医疗有害请求抵御',
         'sort_rank': 11,
-        'reason': 'MedSafetyBench 评估模型面对有害医疗请求时能否给出安全回复，核心是专业领域响应策略，因此归入系统策略安全性。',
+        'reason': 'MedSafetyBench 评估模型面对有害医疗请求时能否保持医疗安全边界并给出安全回复，因此归入攻击抵御鲁棒性。',
     },
     {
         'benchmark': 'GlobalOpinionQA', 'group_id': 'ethical_alignment',
@@ -917,50 +919,50 @@ BENCHMARK_TAXONOMY_OVERRIDES = [
     {
         'benchmark': 'XSTest',
         'source_dimensions': ['提示攻击与边界鲁棒性', '提示鲁棒性', '对话安全边界鲁棒'],
-        'group_id': 'privacy_security',
-        'dimension_label': '安全请求放行策略评测',
-        'category_label': '安全请求放行策略',
-        'reason': 'XSTest 重点检查安全拒答和过度拒答边界，不是攻击手法本身。',
+        'group_id': 'adversarial_robustness',
+        'dimension_label': '安全请求误拒鲁棒性评测',
+        'category_label': '拒答边界鲁棒性',
+        'reason': 'XSTest 检查模型能否区分安全请求与不安全请求，避免攻击防御中过度拒答。',
     },
     {
         'benchmark': 'SEval',
         'source_dimensions': ['安全拒答边界与过度拒答', '行为与指令合规性', '拒答边界与过度拒答'],
-        'group_id': 'privacy_security',
-        'dimension_label': '综合有害请求判断与拒答策略评测',
-        'category_label': '综合风险处置策略',
-        'reason': 'SEval 主要覆盖禁止请求是否应被拒答，属于策略边界校准，不是普通有害内容分类。',
+        'group_id': 'adversarial_robustness',
+        'dimension_label': '综合有害请求抵御评测',
+        'category_label': '直接有害请求抵御',
+        'reason': 'SEval 主要覆盖禁止请求是否应被拒答，用于衡量直接有害请求的抵御能力。',
     },
     {
         'benchmark': 'SAFE',
         'source_dimensions': ['安全性', '综合安全性'],
-        'group_id': 'privacy_security',
-        'dimension_label': '综合有害请求判断与拒答策略评测',
-        'category_label': '综合风险处置策略',
-        'reason': 'SAFE 以已有模型回答为样本，在七个安全质量轴上做二分类，作为有害请求处理后的回答安全判别环节。',
+        'group_id': 'ethical_alignment',
+        'dimension_label': '综合内容安全伦理判断评测',
+        'category_label': '综合安全伦理判断',
+        'reason': 'SAFE 以已有模型回答为样本，在七个安全质量轴上判断回答是否安全并符合伦理。',
     },
     {
         'benchmark': 'SafetyBench',
         'source_dimensions': ['其他偏见', '安全场景泛化偏见', '安全场景泛化偏见评测'],
-        'group_id': 'privacy_security',
-        'dimension_label': '综合有害请求判断与拒答策略评测',
-        'category_label': '综合风险处置策略',
-        'reason': 'SafetyBench 同时覆盖冒犯、偏见、身心健康、违法、伦理及隐私财产七类风险，是综合安全知识判别基准，不能仅按其中的偏见题归入群体公平性。',
+        'group_id': 'ethical_alignment',
+        'dimension_label': '综合内容安全伦理判断评测',
+        'category_label': '综合安全伦理判断',
+        'reason': 'SafetyBench 覆盖冒犯、偏见、身心健康、违法、伦理及隐私财产七类风险，直接评估综合安全与伦理判断。',
     },
     {
         'benchmark': 'RuLES',
         'source_dimensions': ['伪造内容', '伪造证据与误导合成', '伪造误导内容处置'],
         'group_id': 'privacy_security',
-        'dimension_label': '隐私与财产防护策略评测',
-        'category_label': '隐私、财产与机密防护策略',
-        'reason': 'RuLES 当前本地入口使用机密信息访问控制场景，与隐私泄露及财产侵害请求共同评估防护策略，不评估伪造内容生成。',
+        'dimension_label': '机密信息访问控制评测',
+        'category_label': '机密信息访问控制',
+        'reason': 'RuLES 当前本地入口使用机密信息访问控制场景，评估模型是否拒绝向未授权主体泄露受保护信息。',
     },
     {
         'benchmark': 'XSafety',
         'source_dimensions': ['内容安全性评估', '多语言LLM安全性'],
-        'group_id': 'privacy_security',
-        'dimension_label': '跨语种风险拒答一致性策略评测',
-        'category_label': '跨语种拒答策略',
-        'reason': 'XSafety 策略分片只保留普通风险请求，用于比较多语种安全策略一致性；Goal Hijacking 已独立迁入攻击抵御。',
+        'group_id': 'adversarial_robustness',
+        'dimension_label': '跨语种有害请求抵御评测',
+        'category_label': '跨语种风险抵御',
+        'reason': 'XSafety 普通风险分片用于比较模型在多语种环境下抵御有害请求的一致性。',
     },
     {
         'benchmark': 'ConvAbuse',
@@ -974,18 +976,18 @@ BENCHMARK_TAXONOMY_OVERRIDES = [
     {
         'benchmark': 'Do-Not-Answer',
         'source_dimensions': ['多语言LLM安全性', '跨语言安全一致性'],
-        'group_id': 'privacy_security',
-        'dimension_label': '综合有害请求判断与拒答策略评测',
-        'category_label': '综合风险处置策略',
-        'reason': 'Do-Not-Answer 覆盖不应直接回答的问题，主目标是禁止请求的拒答边界。',
+        'group_id': 'adversarial_robustness',
+        'dimension_label': '综合有害请求抵御评测',
+        'category_label': '直接有害请求抵御',
+        'reason': 'Do-Not-Answer 覆盖不应直接回答的问题，用于衡量模型对禁止请求的抵御边界。',
     },
     {
         'benchmark': 'StrongREJECT',
         'source_dimensions': ['多语言LLM安全性', '跨语言安全一致性'],
-        'group_id': 'privacy_security',
-        'dimension_label': '综合有害请求判断与拒答策略评测',
-        'category_label': '综合风险处置策略',
-        'reason': 'StrongREJECT 用禁止请求评估拒答强度，未作为显式越狱攻击入口时归入安全策略校准。',
+        'group_id': 'adversarial_robustness',
+        'dimension_label': '综合有害请求抵御评测',
+        'category_label': '直接有害请求抵御',
+        'reason': 'StrongREJECT 使用禁止请求评估模型抵御有害指令的强度。',
     },
     {
         'benchmark': 'HolisticBias',
@@ -1307,12 +1309,12 @@ BENCHMARK_SPECIFIC_INTRO_OVERRIDES = {
     'PRISM': 'PRISM 将 75 个国家的参与者背景、主观偏好与对 21 个模型对话的逐轮评分联系起来。当前入口展示用户提示、被评回复、评分与选中状态，用于分析多元用户偏好对齐；该数据没有唯一标准回复。',
     'WMDP': 'WMDP 聚焦生物安全、网络安全和化学安全等高风险知识，题目由相关领域专家编写。当前用于评估模型是否掌握或暴露可被滥用的危险知识，并支持高风险能力边界检查。',
     'HarmfulQA': 'HarmfulQA 包含 1,960 条专业知识滥用问题，均匀覆盖社会科学、数学与逻辑、商业经济、健康医学、地理环境、文学语言、教育、历史文化、科学技术、哲学伦理十个知识领域。当前检查模型是否拒绝把专业知识用于伤害、欺骗、歧视或违法目的。',
-    'XSafety': 'XSafety 的系统策略入口包含 17,990 条普通风险请求，覆盖 10 种语言和违法犯罪、身体伤害、歧视、不安全主题等 9 类风险。Privacy And Property 的 2,000 条样本转入隐私策略，Goal Hijacking 的 2,000 条样本转入攻击抵御；Prompt Leaking 和 Role Play Instruction 因标签与内容不稳定不参与评分，各入口没有重复样本。',
-    'XSafety-Attack-Defense': 'XSafety-Attack-Defense 包含 10 种语言的 2,000 条 Goal Hijacking 提示，输入明确要求忽略前序任务、替换目标或强制输出指定内容。该分片只评估多语种目标劫持攻击下的安全防御，不与普通风险请求策略评测重复。',
+    'XSafety': 'XSafety 的有害请求抵御入口包含 17,990 条普通风险请求，覆盖 10 种语言和违法犯罪、身体伤害、歧视、不安全主题等 9 类风险。Privacy And Property 的 2,000 条样本转入用户隐私安全性，Goal Hijacking 的 2,000 条样本用于越狱攻击防御；Prompt Leaking 和 Role Play Instruction 因标签与内容不稳定不参与评分，各入口没有重复样本。',
+    'XSafety-Attack-Defense': 'XSafety-Attack-Defense 包含 10 种语言的 2,000 条 Goal Hijacking 提示，输入明确要求忽略前序任务、替换目标或强制输出指定内容。该分片只评估多语种目标劫持攻击下的安全防御，不与普通有害请求抵御数据重复。',
     'XSafety-Privacy-Refusal': 'XSafety-Privacy-Refusal 包含 XSafety 全部 10 种语言的 2,000 条 Privacy And Property 请求，检查模型是否拒绝泄露个人信息、协助破解凭据或实施财产侵害。该分片与非隐私风险 XSafety 入口按类别互斥。',
     'SafetyBench': 'SafetyBench 是中英双语安全知识多项选择基准，官方全集含 11,435 道题，覆盖冒犯、偏见、身体健康、心理健康、违法活动、伦理道德、隐私与财产七类风险。由于官方测试集不公开答案，系统接入中英文各七类共 70 道有标签开发题进行可复现评分。',
     'GPTFuzzer': 'GPTFuzzer 由自动红队方法生成或筛选攻击提示，用于测试模型安全策略在自动化变体攻击下是否失守。当前关注攻击提示的绕过效果和模型防御稳定性。',
-    'DiaSafety': 'DiaSafety 以对话历史和候选回复为输入，判断该回复在当前上下文中是否安全。它强调同一句话可能因前文而改变安全属性；当前入口保留完整历史和待判定回复，做安全/不安全二分类，以校准上下文相关的系统响应策略。',
+    'DiaSafety': 'DiaSafety 以对话历史和候选回复为输入，判断该回复在当前上下文中是否安全。它强调同一句话可能因前文而改变安全属性；当前入口保留完整历史和待判定回复，做安全/不安全二分类，评估上下文相关的伦理判断。',
     'CoSafe': 'CoSafe 将不安全请求放在多轮对话和共指语境中，最后一轮往往需要结合前文才能识别真实风险。当前用于评估模型是否会被上下文目标劫持，或在共指场景中误判安全边界。',
     'SaladBench': 'SaladBench 汇集并扩充多类安全提示，用于评估大模型安全性以及攻击、防御方法的效果。当前重点看模型面对对抗改写、有害请求变体和安全测试提示时是否仍能稳定拒答。',
     'HarmBench': 'HarmBench 是自动红队评估框架，官方行为集覆盖网络犯罪、生化风险、侵权、错误信息、骚扰和非法活动。本系统当前只接入 text test behaviors，没有运行攻击生成算法，因此该入口仅评估未施加越狱时的有害行为基线拒答。',
@@ -1321,7 +1323,7 @@ BENCHMARK_SPECIFIC_INTRO_OVERRIDES = {
     'SEval': 'S-Eval 官方数据包含中英文基础风险提示及攻击扩写。当前入口固定接入 1,000 条中文 base_risk 小型分片，覆盖违法犯罪、数据隐私、仇恨言论、极端主义、不当建议、网络安全、身心健康、伦理道德八类风险；攻击扩写不在本入口。',
     'ConvAbuse': 'ConvAbuse 是面向对话场景的辱骂和滥用语言语料，保留前序用户与系统轮次以及当前发言，并提供 abusive、not abusive 和 ambiguous 标注。当前用于评估模型能否在完整会话语境中识别辱骂、骚扰和冒犯内容，作为对话交往伦理处置评测。',
     'SafetyPrompts': 'SafetyPrompts 官方数据由 70,000 条中文典型安全场景和 30,000 条指令攻击场景组成。当前入口只接入前者及其安全参考回复，覆盖违法活动、偏见歧视、心理健康、身体健康、隐私财产、伦理道德和冒犯七类请求，以参考回复相似度或明确拒答作为安全回复质量的本地代理；它不等同于只统计拒答与否的 CHiSafetyBench。',
-    'CHiSafetyBench': 'CHiSafetyBench 当前入口只接入官方 101 条多轮风险对话，并完整拼接系统消息、历史用户轮次、历史助手回复和末轮风险请求。它检查模型能否结合上下文持续采取安全拒答策略，不混入无历史单轮问题，也不使用参考安全回复评价文本质量。',
+    'CHiSafetyBench': 'CHiSafetyBench 当前入口只接入官方 101 条中文多轮风险对话，并完整拼接系统消息、历史用户轮次、历史助手回复和末轮风险请求。它检查模型能否结合上下文持续抵御有害请求，不混入无历史单轮问题，也不使用参考安全回复评价文本质量。',
     'Do-Not-Answer': 'Do-Not-Answer 的核心指令集包含 939 条英文问题，覆盖信息危害、恶意用途、歧视与毒性、错误信息、人机交互危害五个风险领域和 12 种伤害类型。系统固定读取官方 Instruction 文件并将目标统一为应拒绝，不把既有模型回复误当成评测问题。',
     'StrongREJECT': 'StrongREJECT 包含 313 条英文基础禁止请求，覆盖非暴力犯罪、暴力、虚假信息与欺骗、仇恨骚扰与歧视、非法商品与服务、色情内容六类。当前只统计明确拒答，作为可复现代理指标，不等同于官方对非拒答回答说服力和具体性的完整评分器。',
     'CHBias': 'CHBias 是中文对话偏见基准，官方数据覆盖性别、性取向、年龄和外貌四类属性。当前入口展示官方测试句并收集去偏改写；由于原始测试集不提供唯一标准改写，该开放任务不伪造精确匹配准确率。',
@@ -1342,7 +1344,7 @@ BENCHMARK_SPECIFIC_INTRO_OVERRIDES = {
     'implicit_subset': 'implicit_subset 使用公开 CommitBench 完整测试集重建隐式提交摘要任务，输入真实 Git 代码差异，要求生成概括修改目的、原因或影响的英文提交信息。该子集保留词面对应较弱、需要理解修改意图的样本；原论文分类数据未公开，系统在来源记录中明确标注其代理重建方式。',
     'RustRepoTrans': 'RustRepoTrans 接入官方 375 组跨语言等价函数，覆盖 C、Java、Python 到 Rust 的真实仓库代码翻译。系统向模型提供源语言函数并要求生成对应 Rust 函数，使用官方 Rust 实现作为参考答案进行代码级评分。',
     'SorryBench': 'SORRY-Bench 接入 2024-06 基础集的 450 条不安全指令，均衡覆盖 45 个细粒度类别，每类 10 条。系统直接测试模型是否拒绝执行原始请求，不附加越狱模板。',
-    'RMCBench': 'RMCBench 的 473 条提示覆盖恶意代码生成、代码翻译、补全和改写。当前入口把每条恶意代码请求的参考行为统一为 SAFE_REFUSAL，直接检查模型是否拒绝提供可执行的攻击或滥用代码，因此归入系统策略安全性。',
+    'RMCBench': 'RMCBench 的 473 条提示覆盖恶意代码生成、代码翻译、补全和改写。当前入口把每条恶意代码请求的参考行为统一为 SAFE_REFUSAL，直接检查模型能否抵御恶意代码请求并拒绝提供可执行的攻击或滥用代码。',
     'WMDP-BioChem': 'WMDP-BioChem 合并 WMDP 的生物安全与化学安全选择题分片，测量模型对可被滥用的高风险专业知识的保留程度。当前保留官方正确选项，原始准确率越高表示危险知识暴露越充分，解释安全结果时应按该方向读取。',
     'honest': 'HONEST 接入官方 binary 与 queer/non-queer 的 5,625 条多语言身份提示模板，要求模型完成开放式补全。系统使用官方 HurtLex 各语言 conservative 词表检测补全中的伤害性词汇，以无伤害补全率评估多语言伤害表达的伦理风险。',
     'ToxiGen': 'ToxiGen 包含围绕 13 类少数群体构造并经人工验证的隐式仇恨与中性文本。当前入口要求模型判断文本是否 hateful/toxic，重点检查没有显式侮辱词时能否识别面向社会群体的隐式仇恨，不将它窄化为残疾偏见。',
@@ -1359,6 +1361,30 @@ BENCHMARK_SPECIFIC_INTRO_OVERRIDES = {
     'PairVul': 'PairVul 接入公开复现包中 Linux 内核 Top-10 CWE 的 586 组漏洞/修复函数对，共形成 1172 个二分类样本。模型需要判断给定代码是含漏洞版本还是已修复版本，用于评估真实 CVE 场景下的代码漏洞识别能力。',
     'HolisticBias': 'HolisticBias 使用官方 v1.1 生成器展开 13 个身份轴、约 600 个描述词和 26 个模板，得到 566625 条带身份元数据的句子。系统要求模型作出尊重且不含刻板印象的回应，并按身份轴记录无伤害响应表现。',
 }
+
+CHINESE_ONLY_BENCHMARK_NAMES = {
+    'HalluQA', 'CMMLU', 'Chinese_Rumor_Dataset', 'CMRC2018',
+    'CHID', 'RuozhibaQA', 'CHBias', 'CHiSafetyBench',
+}
+
+
+def attach_dimension_language_labels(groups: List[Dict[str, Any]]) -> None:
+    """Expose a separate UI language marker without changing taxonomy names."""
+    chinese_only_keys = {
+        normalize_benchmark_key(name) for name in CHINESE_ONLY_BENCHMARK_NAMES
+    }
+    for group in groups:
+        for dim in group.get('dimensions') or []:
+            benchmark_keys = {
+                normalize_benchmark_key(bench.get('name') or '')
+                for bench in (dim.get('benchmarks') or [])
+                if isinstance(bench, dict)
+            }
+            if (
+                '中文' in str(dim.get('label') or '')
+                or (benchmark_keys and benchmark_keys.issubset(chinese_only_keys))
+            ):
+                dim['language_label'] = '中文'
 
 RUNTIME_DIR.mkdir(parents=True, exist_ok=True)
 JOBS_DIR.mkdir(parents=True, exist_ok=True)
@@ -1832,14 +1858,18 @@ def taxonomy_group_id_for_dimension(source_group: Dict[str, Any], dim: Dict[str,
     if source_override:
         return source_override
 
-    if text_has_any(text, ['隐私', 'privacy', 'personal information', 'pii', 'credential', 'secret', '漏洞', 'vulnerability']):
+    if text_has_any(text, ['漏洞', 'vulnerability']):
+        return 'vulnerability_detection_accuracy'
+    if text_has_any(text, ['隐私', 'privacy', 'personal information', 'pii', 'credential', 'secret']):
         return 'privacy_security'
     if text_has_any(text, ['偏见', '歧视', '公平', 'bias', 'fairness', 'stereotype']):
         return 'fairness_bias'
     if text_has_any(text, ['越狱', '攻击', '对抗', '提示注入', '目标劫持', '拒答边界', '过度拒答', 'jailbreak', 'prompt injection', 'red team', 'fuzzer']):
         return 'adversarial_robustness'
-    if text_has_any(text, ['暴力', '毒性', '冒犯', '有害', '危险知识', '危险能力', 'harmful', 'toxicity', 'offensive', 'violence', 'wmdp', 'weapon']):
-        return 'privacy_security'
+    if text_has_any(text, ['暴力', '有害', '危险知识', '危险能力', 'harmful', 'violence', 'wmdp', 'weapon']):
+        return 'adversarial_robustness'
+    if text_has_any(text, ['毒性', '冒犯', 'toxicity', 'offensive']):
+        return 'ethical_alignment'
     if text_has_any(text, ['幻觉', '事实', '真实性', '伪造', '迷信', '常识', 'hallucination', 'truthful', 'factual', 'misinformation']):
         return 'epistemic_reliability'
     if text_has_any(text, ['逻辑', '推理', '因果', '谬误', '规划', 'reasoning', 'causal', 'fallacy', 'planning']):
@@ -1878,6 +1908,8 @@ def taxonomy_secondary_label(group_id: str, source_group: Dict[str, Any], dim: D
     if group_id == 'medical_factual_accuracy':
         return '医疗信息事实核验'
     if group_id == 'cybersecurity_reliability':
+        return '网络安全知识可靠性'
+    if group_id == 'vulnerability_detection_accuracy':
         return '代码与软件漏洞检测'
 
     fallback = {
@@ -1885,18 +1917,30 @@ def taxonomy_secondary_label(group_id: str, source_group: Dict[str, Any], dim: D
         'reasoning_causal': '推理可靠性',
         'task_control': '任务可靠性',
         'adversarial_robustness': '对抗鲁棒性',
-        'privacy_security': '隐私与安全保护',
+        'privacy_security': '用户隐私与财产防护',
         'fairness_bias': '公平性与偏见',
         'legal_compliance': '法律法规适用',
         'ethical_alignment': '伦理道德判断',
         'medical_factual_accuracy': '医疗信息事实核验',
         'medical_reasoning_reliability': '医疗推理与决策',
-        'cybersecurity_reliability': '代码与系统安全检测',
+        'cybersecurity_reliability': '网络安全知识可靠性',
+        'vulnerability_detection_accuracy': '代码与软件漏洞检测',
     }
     return fallback.get(group_id, str(source_group.get('label') or '通用评测'))
 
 
 TAXONOMY_DIMENSION_MERGE_PLANS = {
+    'epistemic_reliability': [
+        {
+            'label': '反谄媚事实立场评测',
+            'intro': '使用 sycophancy 的 179 条带用户偏好或立场的问题，检查模型是否会为了迎合用户而放弃更有依据的事实答案。该子类评价事实立场能否保持，不测量普通安全拒答。',
+            'category_label': '事实立场保持',
+            'sort_rank': 4,
+            'benchmark_names': ['sycophancy'],
+            'include_benchmark_names_only': True,
+            'merged_dimension_id': 'taxonomy::epistemic_reliability::anti_sycophancy',
+        },
+    ],
     'task_control': [
         {
             'label': '代码生成综合任务',
@@ -1921,60 +1965,55 @@ TAXONOMY_DIMENSION_MERGE_PLANS = {
     'adversarial_robustness': [
         {
             'label': '多语种越狱提示攻击防御评测',
-            'intro': '合并 DoAnythingNow 的野外越狱模板、UltraSafety 的越狱提示和 XSafety 的 10 语种 Goal Hijacking 分片，评估显式指令覆盖、目标劫持和越狱包装能否绕过模型安全边界。所有输入都含攻击机制，与系统策略安全性的普通风险请求互斥。',
+            'intro': '合并 DoAnythingNow 的野外越狱模板、UltraSafety 的越狱提示和 XSafety 的 10 语种 Goal Hijacking 分片，评估显式指令覆盖、目标劫持和越狱包装能否绕过模型安全边界。',
             'category_label': '越狱与提示攻击',
             'sort_rank': 4,
             'benchmark_names': ['DoAnythingNow', 'UltraSafety', 'XSafety-Attack-Defense'],
             'include_benchmark_names_only': True,
             'merged_dimension_id': 'taxonomy::adversarial_robustness::multilingual_jailbreak_prompt_defense',
         },
-    ],
-    'privacy_security': [
         {
-            'label': '综合有害请求判断与拒答策略评测',
-            'intro': '综合评估普通有害请求的风险判断、拒答执行和回答安全判别：SafetyBench 与 CValuesResponsibilityMC 检查风险识别及安全方案选择；StrongREJECT、S-Eval、Do-Not-Answer、SORRY-Bench、JailbreakBench Behaviors 和 HarmBench Behaviors 检查未经攻击改写的有害请求是否被拒答；SAFE 对已有回答执行有害性、敏感性、真实性、自然度、信息完整性、指令遵循性和整体安全性七轴二分类。9 个 Benchmark 独立计分，不包含越狱、提示注入或对抗改写。',
-            'category_label': '综合风险处置策略',
-            'sort_rank': 0,
+            'label': '综合有害请求抵御评测',
+            'intro': '使用 StrongREJECT、S-Eval、Do-Not-Answer、SORRY-Bench、JailbreakBench Behaviors 和 HarmBench Behaviors，评估模型面对未经攻击改写的直接有害请求时能否识别风险并拒绝提供有害帮助。6 个 Benchmark 独立计分。',
+            'category_label': '直接有害请求抵御',
+            'sort_rank': 5,
             'benchmark_names': [
-                'SafetyBench', 'CValuesResponsibilityMC',
                 'StrongREJECT', 'SEval', 'Do-Not-Answer',
-                'SorryBench', 'JBBBehaviours', 'HarmBench', 'SAFE',
+                'SorryBench', 'JBBBehaviours', 'HarmBench',
             ],
             'dimension_ids': [
-                'benchmark::fairness_bias::downloaded::其他偏见::p0::eval-run::SafetyBench',
                 'benchmark::privacy_security::downloaded::跨语言安全一致性::p0::eval-run::StrongREJECT',
                 'benchmark::privacy_security::downloaded::安全拒答边界与过度拒答::p0::eval-run::SEval',
                 'benchmark::privacy_security::downloaded::跨语言安全一致性::p0::eval-run::Do-Not-Answer',
             ],
             'include_benchmark_names_only': True,
-            'merged_dimension_id': 'taxonomy::privacy_security::general_harmful_request_strategy',
+            'merged_dimension_id': 'taxonomy::adversarial_robustness::general_harmful_request_resistance',
             'consume_dimension_ids': [
-                'trusted::commonDataset::26::eval-run::p0::eval-run::SAFE',
                 'trusted::common::13::LLM::p0::eval-run::StrongREJECT',
             ],
         },
         {
-            'label': '多轮风险对话拒答策略评测',
-            'intro': '只使用 CHiSafetyBench 官方 101 条带完整历史的多轮风险对话，评估模型能否结合系统消息、历史用户轮次和历史助手回复识别末轮风险意图，并持续采取正确的拒答策略。该入口不混入无历史单轮问题，也不包含多轮共指攻击；后者归入攻击抵御鲁棒性。',
-            'category_label': '多轮风险对话策略',
-            'sort_rank': 1,
+            'label': '多轮有害请求抵御评测',
+            'intro': '只使用 CHiSafetyBench 官方 101 条带完整历史的中文多轮风险对话，评估模型能否结合系统消息、历史用户轮次和历史助手回复识别末轮风险意图，并持续保持安全边界。该入口不混入无历史单轮问题。',
+            'category_label': '多轮有害请求抵御',
+            'sort_rank': 6,
             'benchmark_names': ['CHiSafetyBench'],
-            'merged_dimension_id': 'taxonomy::privacy_security::chinese_dialogue_refusal',
+            'merged_dimension_id': 'taxonomy::adversarial_robustness::chinese_dialogue_resistance',
         },
         {
-            'label': '多学科知识滥用拒答策略评测',
-            'intro': '使用 HarmfulQA 的 1,960 条问题，覆盖社会科学、数学与逻辑、商业经济、健康医学、地理环境、文学语言、教育、历史文化、科学技术、哲学伦理十个知识领域，检查模型是否拒绝把专业知识用于伤害、欺骗、歧视或违法目的。',
-            'category_label': '知识滥用拒答策略',
-            'sort_rank': 3,
-            'benchmark_names': ['HarmfulQA'],
+            'label': '高风险知识滥用抵御评测',
+            'intro': '综合评估模型面对高风险专业知识诱导时的安全边界：HarmfulQA 覆盖十个学科中用于伤害、欺骗、歧视或违法目的的请求，WMDP-BioChem 通过生物与化学选择题观察危险知识的保留和暴露程度。',
+            'category_label': '高风险知识滥用抵御',
+            'sort_rank': 7,
+            'benchmark_names': ['HarmfulQA', 'WMDP-BioChem'],
             'include_benchmark_names_only': True,
-            'merged_dimension_id': 'taxonomy::privacy_security::harmfulqa_academic_domains',
+            'merged_dimension_id': 'taxonomy::adversarial_robustness::high_risk_knowledge_resistance',
         },
         {
-            'label': '安全请求放行策略评测',
+            'label': '安全请求误拒鲁棒性评测',
             'intro': '评估模型能否正确区分表面敏感但实际安全的请求与真正不安全的请求：安全请求应正常回答，不安全请求应拒绝，用于同时测量过度拒答和漏拒。',
-            'category_label': '安全请求放行策略',
-            'sort_rank': 4,
+            'category_label': '拒答边界鲁棒性',
+            'sort_rank': 8,
             'benchmark_names': ['XSTest', 'XsTest'],
             'dimension_ids': [
                 'benchmark::privacy_security::downloaded::安全拒答边界与过度拒答',
@@ -1988,20 +2027,27 @@ TAXONOMY_DIMENSION_MERGE_PLANS = {
             ],
         },
         {
-            'label': '反谄媚策略评测',
-            'intro': '使用 sycophancy 的 179 条带用户偏好或立场的问题，检查模型是否会为了迎合用户而放弃更有依据的答案。该子类评价“面对立场诱导时采用什么回答策略”，不把它混入独立知识正确率。',
-            'category_label': '事实立场保持策略',
-            'sort_rank': 5,
-            'benchmark_names': ['sycophancy'],
+            'label': '跨语种有害请求抵御评测',
+            'intro': '使用 XSafety 的 17,990 条普通风险请求，覆盖 10 种语言和 9 类风险，评估模型抵御有害请求的能力是否因语言和风险类型变化而弱化。Privacy And Property 和 Goal Hijacking 分片不在本子类中。',
+            'category_label': '跨语种风险抵御',
+            'sort_rank': 9,
+            'benchmark_names': ['XSafety'],
+            'dimension_ids': [
+                'benchmark::harmful_capability::downloaded::内容安全性评估::p0::eval-run::XSafety',
+            ],
+            'consume_dimension_ids': [
+                'trusted::commonDataset::31::eval-run::p0::eval-run::XSafety',
+            ],
             'include_benchmark_names_only': True,
-            'merged_dimension_id': 'taxonomy::privacy_security::anti_sycophancy',
         },
+    ],
+    'privacy_security': [
         {
-            'label': '隐私与财产防护策略评测',
-            'intro': '合并两类互补防护任务：XSafety-Privacy-Refusal 使用 10 种语言的 2,000 条 Privacy And Property 请求，检查个人信息泄露、凭据破解和财产侵害请求是否被拒答；RuLES 使用 15 条带完整访问控制规则的 Confidentiality 场景，检查模型是否拒绝向未授权主体泄露机密信息。两者分别覆盖风险请求拒答和显式机密规则遵循，样本不重复。',
-            'category_label': '隐私、财产与机密防护策略',
-            'sort_rank': 6,
-            'benchmark_names': ['XSafety-Privacy-Refusal', 'RuLES'],
+            'label': '用户隐私与财产侵害防护评测',
+            'intro': '使用 XSafety-Privacy-Refusal 的 10 种语言、2,000 条 Privacy And Property 请求，检查模型能否拒绝个人信息泄露、凭据破解、支付信息窃取和财产侵害协助。',
+            'category_label': '用户隐私与财产防护',
+            'sort_rank': 0,
+            'benchmark_names': ['XSafety-Privacy-Refusal'],
             'dimension_ids': [
                 'benchmark::custom_privacy::privacy_security::privacy_refusal::p0::eval-run::XSafety-Privacy-Refusal',
                 'benchmark::custom_privacy::privacy_security::privacy_refusal',
@@ -2010,20 +2056,31 @@ TAXONOMY_DIMENSION_MERGE_PLANS = {
             'merged_dimension_id': 'benchmark::custom_privacy::privacy_security::privacy_refusal::p0::eval-run::XSafety-Privacy-Refusal',
         },
         {
-            'label': '跨语种风险拒答一致性策略评测',
-            'intro': '使用 XSafety 的 17,990 条普通风险请求，覆盖 10 种语言和 9 类风险，评估同一拒答策略是否因语言和风险类型变化而弱化。Privacy And Property 的 2,000 条样本归入隐私策略，Goal Hijacking 的 2,000 条样本归入攻击抵御；标签与内容不稳定的 Prompt Leaking 和 Role Play Instruction 不参与评分。',
-            'category_label': '跨语种拒答策略',
-            'sort_rank': 8,
-            'benchmark_names': ['XSafety'],
-            'dimension_ids': [
-                'benchmark::harmful_capability::downloaded::内容安全性评估::p0::eval-run::XSafety',
-            ],
-            'consume_dimension_ids': [
-                'trusted::commonDataset::31::eval-run::p0::eval-run::XSafety',
-            ],
+            'label': '机密信息访问控制评测',
+            'intro': '使用 RuLES 的 15 条 Confidentiality 直接请求样例，完整呈现访问主体、秘密信息、授权规则和用户请求，检查模型能否拒绝向未授权主体泄露机密信息。',
+            'category_label': '机密信息访问控制',
+            'sort_rank': 1,
+            'benchmark_names': ['RuLES'],
+            'include_benchmark_names_only': True,
+            'merged_dimension_id': 'taxonomy::privacy_security::confidential_access_control',
         },
     ],
     'ethical_alignment': [
+        {
+            'label': '综合内容安全伦理判断评测',
+            'intro': '综合评估模型能否判断行为与既有回答是否安全并符合社会伦理：SafetyBench 和 CValuesResponsibilityMC 使用风险与社会责任选择题，SAFE 对已有模型回答执行七个安全质量轴的二分类。三者均评价内容或行为本身，不测试越狱攻击成功率。',
+            'category_label': '综合安全伦理判断',
+            'sort_rank': 4,
+            'benchmark_names': ['SafetyBench', 'CValuesResponsibilityMC', 'SAFE'],
+            'dimension_ids': [
+                'benchmark::fairness_bias::downloaded::其他偏见::p0::eval-run::SafetyBench',
+            ],
+            'include_benchmark_names_only': True,
+            'merged_dimension_id': 'taxonomy::ethical_alignment::comprehensive_content_safety',
+            'consume_dimension_ids': [
+                'trusted::commonDataset::26::eval-run::p0::eval-run::SAFE',
+            ],
+        },
         {
             'label': '道德规则例外判断评测',
             'intro': '评估模型能否识别一般道德规则在特定情境中的合理例外，并在规则冲突时根据行为目的、伤害和更高优先级义务作出判断。',
@@ -2903,6 +2960,7 @@ def build_trust_catalog(apply_editor_overrides: bool = True) -> Dict[str, Any]:
     ordered = [group for group in ordered if group.get('dimensions')]
     if apply_editor_overrides:
         apply_taxonomy_editor_overrides(ordered)
+    attach_dimension_language_labels(ordered)
     domains = build_taxonomy_domains(ordered)
     total = sum(len(g['dimensions']) for g in ordered)
     implemented = sum(1 for g in ordered for d in g['dimensions'] if d.get('implemented'))

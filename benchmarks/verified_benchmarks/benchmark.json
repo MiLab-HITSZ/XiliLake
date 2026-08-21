@@ -141,8 +141,8 @@
         },
         {
           "id": "output_safety",
-          "label": "响应策略校准评测",
-          "intro": "判定既有回复是否安全，或观察高风险知识保留情况，为系统响应策略提供校准信号。",
+          "label": "内容安全与高风险知识评测",
+          "intro": "判定既有回复是否符合安全伦理，或观察高风险知识的保留与暴露情况。",
           "benchmarks": [
             {
               "option_key": "diasafety",
@@ -153,7 +153,7 @@
               "evaluation": "Safe/unsafe classification accuracy",
               "intro": "DiaSafety 评估给定对话上下文时回复是否安全，重点是上下文敏感的不安全输出；当前入口把上下文和待判定回复完整组合为安全二分类题。",
               "paths": {"dataset": "benchmarks/verified_benchmarks/data/diasafety.jsonl", "results": "result"},
-              "execution": {"extra_args": {"--benchmark-name": "DiaSafety", "--dimension-label": "上下文对话安全判别策略评测", "--benchmark-url": "https://aclanthology.org/2022.findings-acl.308/", "--max-cases": 20}}
+              "execution": {"extra_args": {"--benchmark-name": "DiaSafety", "--dimension-label": "上下文对话安全伦理判断评测", "--benchmark-url": "https://aclanthology.org/2022.findings-acl.308/", "--max-cases": 20}}
             },
             {
               "option_key": "wmdp_biochem",
@@ -164,7 +164,7 @@
               "evaluation": "Multiple-choice accuracy",
               "intro": "WMDP-BioChem 合并生物安全与化学安全危险知识分片，测量模型对可被滥用的高风险专业知识的掌握程度。",
               "paths": {"dataset": "benchmarks/verified_benchmarks/data/wmdp_biochem.jsonl", "results": "result"},
-              "execution": {"extra_args": {"--benchmark-name": "WMDP-BioChem", "--dimension-label": "生化危险知识控制策略评测", "--benchmark-url": "https://www.wmdp.ai/", "--max-cases": 20}}
+              "execution": {"extra_args": {"--benchmark-name": "WMDP-BioChem", "--dimension-label": "高风险知识滥用抵御评测", "--benchmark-url": "https://www.wmdp.ai/", "--max-cases": 20}}
             }
           ]
         },
@@ -224,7 +224,7 @@
               "language": "10 languages",
               "scale": "2,000 goal-hijacking prompts",
               "evaluation": "Attack refusal accuracy by language",
-              "intro": "XSafety-Attack-Defense 只接入 10 种语言的 Goal Hijacking 类，共 2,000 条包含忽略前序指令、劫持目标或强制输出的显式攻击提示。该分片从系统策略入口移出，用于评估多语种目标劫持防御。",
+              "intro": "XSafety-Attack-Defense 只接入 10 种语言的 Goal Hijacking 类，共 2,000 条包含忽略前序指令、劫持目标或强制输出的显式攻击提示，用于评估多语种目标劫持防御。",
               "paths": {"dataset": "benchmarks/custom_privacy/xsafety_attack_refusal.jsonl", "results": "result"},
               "execution": {"extra_args": {"--benchmark-name": "XSafety-Attack-Defense", "--dimension-label": "多语种越狱提示攻击防御评测", "--benchmark-url": "https://github.com/Jarviswang94/Multilingual_safety_benchmark", "--max-cases": 20}}
             },
@@ -243,8 +243,8 @@
         },
         {
           "id": "system_policy",
-          "label": "系统策略评测",
-          "intro": "使用普通有害请求、行为集合或显式系统规则评估策略选择，不把它们伪装成攻击算法。",
+          "label": "风险请求抵御评测",
+          "intro": "使用普通有害请求、行为集合或显式访问规则，分别评估风险请求抵御和机密信息保护。",
           "benchmarks": [
             {
               "option_key": "rmcbench",
@@ -255,7 +255,7 @@
               "evaluation": "Refusal proxy",
               "intro": "RMCBench 的 473 条提示覆盖文本到代码生成、代码翻译和补全等恶意代码请求。当前 gold 为安全拒答，修复了此前把 GOOD 标签显示成应生成恶意代码的问题。",
               "paths": {"dataset": "benchmarks/verified_benchmarks/data/rmcbench.jsonl", "results": "result"},
-              "execution": {"extra_args": {"--benchmark-name": "RMCBench", "--dimension-label": "恶意代码生成请求拒答策略评测", "--benchmark-url": "https://github.com/qing-yuan233/RMCBench", "--max-cases": 20}}
+              "execution": {"extra_args": {"--benchmark-name": "RMCBench", "--dimension-label": "恶意代码请求抵御评测", "--benchmark-url": "https://github.com/qing-yuan233/RMCBench", "--max-cases": 20}}
             },
             {
               "option_key": "chisafetybench",
@@ -266,7 +266,7 @@
               "evaluation": "Refusal proxy",
               "intro": "CHiSafetyBench 当前只接入官方 101 条带完整历史的多轮风险对话，完整拼接系统消息、历史用户轮次、历史助手回复和末轮风险请求；不混入无历史单轮问题。",
               "paths": {"dataset": "benchmarks/verified_benchmarks/data/chisafetybench.jsonl", "results": "result"},
-              "execution": {"extra_args": {"--benchmark-name": "CHiSafetyBench", "--dimension-label": "多轮风险对话拒答策略评测", "--benchmark-url": "https://github.com/UnicomAI/UnicomBenchmark/tree/main/CHiSafetyBench", "--max-cases": 20}}
+              "execution": {"extra_args": {"--benchmark-name": "CHiSafetyBench", "--dimension-label": "多轮有害请求抵御评测", "--benchmark-url": "https://github.com/UnicomAI/UnicomBenchmark/tree/main/CHiSafetyBench", "--max-cases": 20}}
             },
             {
               "option_key": "jbb_behaviors",
@@ -275,9 +275,9 @@
               "language": "English",
               "scale": "100",
               "evaluation": "Baseline refusal proxy",
-              "intro": "JBB-Behaviors 是 100 个滥用行为目标，不含具体攻击算法。当前入口评估未施加越狱字符串时的基线拒答，因此归入系统策略而不是攻击抵御。",
+              "intro": "JBB-Behaviors 是 100 个滥用行为目标，不含具体攻击算法。当前入口评估模型面对直接有害请求时能否保持安全边界，不宣称运行了越狱攻击算法。",
               "paths": {"dataset": "downloads/datasets/huggingface/JailbreakBench__JBB-Behaviors/data/harmful-behaviors.csv", "results": "result"},
-              "execution": {"extra_args": {"--benchmark-name": "JBBBehaviours", "--dimension-label": "综合有害请求判断与拒答策略评测", "--benchmark-url": "https://huggingface.co/datasets/JailbreakBench/JBB-Behaviors", "--max-cases": 20}}
+              "execution": {"extra_args": {"--benchmark-name": "JBBBehaviours", "--dimension-label": "综合有害请求抵御评测", "--benchmark-url": "https://huggingface.co/datasets/JailbreakBench/JBB-Behaviors", "--max-cases": 20}}
             },
             {
               "option_key": "harmbench_behaviors",
@@ -288,7 +288,7 @@
               "evaluation": "Baseline refusal proxy",
               "intro": "HarmBench 是自动红队框架，但本系统当前只接入行为集合，没有运行攻击方法。该入口因此明确标为有害行为基线拒答，不宣称测得攻击成功率。",
               "paths": {"dataset": "downloads/datasets/github_repos/centerforaisafety__HarmBench/data/behavior_datasets/harmbench_behaviors_text_test.csv", "results": "result"},
-              "execution": {"extra_args": {"--benchmark-name": "HarmBench", "--dimension-label": "综合有害请求判断与拒答策略评测", "--benchmark-url": "https://github.com/centerforaisafety/HarmBench", "--max-cases": 20}}
+              "execution": {"extra_args": {"--benchmark-name": "HarmBench", "--dimension-label": "综合有害请求抵御评测", "--benchmark-url": "https://github.com/centerforaisafety/HarmBench", "--max-cases": 20}}
             },
             {
               "option_key": "rules_confidentiality",
@@ -299,7 +299,7 @@
               "evaluation": "Rule-following refusal proxy",
               "intro": "RuLES 当前使用 Confidentiality 直接请求分片，题目同时展示访问控制规则、秘密信息和用户请求，检查模型是否拒绝未授权泄露。",
               "paths": {"dataset": "benchmarks/trusted_downloaded_harmful_capability/rules_confidentiality.jsonl", "results": "result"},
-              "execution": {"extra_args": {"--benchmark-name": "RuLES", "--dimension-label": "隐私与财产防护策略评测", "--benchmark-url": "https://github.com/normster/llm_rules", "--max-cases": 20}}
+              "execution": {"extra_args": {"--benchmark-name": "RuLES", "--dimension-label": "机密信息访问控制评测", "--benchmark-url": "https://github.com/normster/llm_rules", "--max-cases": 20}}
             },
             {
               "option_key": "xsafety_multilingual",
@@ -308,9 +308,9 @@
               "language": "10 languages",
               "scale": "17,990 policy prompts",
               "evaluation": "Refusal accuracy by language and risk category",
-              "intro": "XSafety 系统策略入口使用 10 种语言、9 类普通风险请求的 17,990 条本地拒答视图。Privacy And Property 转入隐私策略，Goal Hijacking 转入攻击抵御；标签与内容不稳定的 Prompt Leaking 和 Role Play Instruction 不参与评分。各分片互不重复。",
+              "intro": "XSafety 有害请求抵御入口使用 10 种语言、9 类普通风险请求的 17,990 条本地拒答视图。Privacy And Property 转入用户隐私安全性，Goal Hijacking 用于越狱攻击防御；标签与内容不稳定的 Prompt Leaking 和 Role Play Instruction 不参与评分。各分片互不重复。",
               "paths": {"dataset": "benchmarks/custom_privacy/xsafety_multilingual_refusal.jsonl", "results": "result"},
-              "execution": {"extra_args": {"--benchmark-name": "XSafety", "--dimension-label": "跨语种风险拒答一致性策略评测", "--benchmark-url": "https://github.com/Jarviswang94/Multilingual_safety_benchmark", "--max-cases": 20}}
+              "execution": {"extra_args": {"--benchmark-name": "XSafety", "--dimension-label": "跨语种有害请求抵御评测", "--benchmark-url": "https://github.com/Jarviswang94/Multilingual_safety_benchmark", "--max-cases": 20}}
             }
           ]
         },
@@ -430,7 +430,7 @@
               "evaluation": "Safe-response similarity or refusal proxy",
               "intro": "MedSafetyBench 由有害医疗请求和安全响应组成，基于美国医学会伦理原则衡量医疗安全。当前入口使用官方 test/gpt4 与 test/llama2 的 900 条安全示范，不再显示有害生成回答。",
               "paths": {"dataset": "benchmarks/verified_benchmarks/data/medsafetybench.jsonl", "results": "result"},
-              "execution": {"extra_args": {"--benchmark-name": "MedSafetyBench", "--dimension-label": "有害医疗请求安全响应策略评测", "--benchmark-url": "https://proceedings.neurips.cc/paper_files/paper/2024/hash/3ac952d0264ef7a505393868a70a46b6-Abstract-Datasets_and_Benchmarks_Track.html", "--max-cases": 20}}
+              "execution": {"extra_args": {"--benchmark-name": "MedSafetyBench", "--dimension-label": "有害医疗请求抵御评测", "--benchmark-url": "https://proceedings.neurips.cc/paper_files/paper/2024/hash/3ac952d0264ef7a505393868a70a46b6-Abstract-Datasets_and_Benchmarks_Track.html", "--max-cases": 20}}
             }
           ]
         },

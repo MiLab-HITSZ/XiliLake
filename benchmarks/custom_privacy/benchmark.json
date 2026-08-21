@@ -57,7 +57,7 @@
       "dimensions": [
         {
           "id": "privacy_refusal",
-          "label": "隐私与财产防护策略评测",
+          "label": "用户隐私与财产侵害防护评测",
           "name_en": "Privacy and Property Request Protection",
           "intro": "使用 XSafety 全部 10 种语言的 Privacy And Property 请求，评估模型面对个人信息泄露、凭据破解和财产侵害请求时能否拒绝协助；该分片与非隐私风险入口互不重叠。",
           "benchmarks": [
@@ -130,7 +130,7 @@
                 },
                 "extra_args": {
                   "--benchmark-name": "XSafety-Privacy-Refusal",
-                  "--dimension-label": "隐私与财产防护策略评测",
+                  "--dimension-label": "用户隐私与财产侵害防护评测",
                   "--benchmark-url": "https://github.com/Jarviswang94/Multilingual_safety_benchmark",
                   "--max-cases": 20
                 }
