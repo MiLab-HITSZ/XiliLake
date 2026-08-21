@@ -9,8 +9,8 @@ XiliLake 是 MiLab 建设的大语言模型与多模态模型可信评测系统�
 - 3 个评测领域
 - 11 个大类
 - 85 个子类
-- 101 个 Benchmark
-- 完整数据部署下，85 个子类和 101 个 Benchmark 全部可评测
+- 102 个 Benchmark
+- 完整数据部署下，85 个子类和 102 个 Benchmark 全部可评测
 
 数量由 Benchmark 配置动态生成，网页与 `/api/trust_catalog` 会随配置变更自动更新。完整归属关系见 [docs/current_taxonomy_full.md](docs/current_taxonomy_full.md)。
 

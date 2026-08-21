@@ -1,0 +1,79 @@
+{
+  "id": "contextual_privacy",
+  "label": "情境隐私评测",
+  "benchmark_name": "ConfAIde-Tier2",
+  "description": "基于 ConfAIde Tier 2 评估模型能否结合信息类型、接收或收集主体和使用目的判断信息流是否符合情境隐私规范。",
+  "source_type": "downloaded",
+  "enabled": true,
+  "paths": {
+    "results": "result"
+  },
+  "execution": {
+    "adapter": "python_cli",
+    "script": "evaluate_generic_benchmark.py",
+    "default_tasks": ["qa"],
+    "supported_tasks": ["qa"],
+    "supports_real_eval": true,
+    "args": {
+      "dataset": "--dataset",
+      "output_dir": "--output-dir",
+      "models": "--models",
+      "tasks": "--tasks",
+      "parallel": "--parallel",
+      "retry": "--retry",
+      "timeout_s": "--timeout-s",
+      "progress_file": "--progress-file",
+      "categories": "--categories",
+      "dimensions": "--dimensions"
+    }
+  },
+  "display": {
+    "mode": "generic_text_qa",
+    "sections": ["selection_detail", "progress", "summary", "metrics"]
+  },
+  "metrics": [
+    {"key": "accuracy", "label": "隐私规范离散一致率", "format": "percent"},
+    {"key": "privacy_rating_mae", "label": "隐私评分平均绝对误差", "format": "number"},
+    {"key": "privacy_rating_pearson", "label": "隐私评分相关系数", "format": "number"},
+    {"key": "response_rate", "label": "响应率", "format": "percent"},
+    {"key": "avg_latency_ms", "label": "平均延迟 ms", "format": "number"},
+    {"key": "n_total", "label": "样本数", "format": "number"}
+  ],
+  "categories": [
+    {
+      "id": "privacy_security",
+      "label": "用户隐私安全性",
+      "dimensions": [
+        {
+          "id": "contextual_privacy_norms",
+          "label": "情境隐私规范判断评测",
+          "name_en": "Contextual Privacy Norm Judgment",
+          "intro": "使用 ConfAIde Tier 2 的 98 个信息流场景及其模板化、自然叙事两种表达，共 196 条样本，评估模型能否结合信息类型、收集主体和使用目的判断场景是否符合隐私期望。",
+          "benchmarks": [
+            {
+              "option_key": "confaide_tier2",
+              "name": "ConfAIde-Tier2",
+              "intro": "ConfAIde 是 ICLR 2024 Spotlight 的情境隐私基准。当前入口使用 Tier 2a 和 Tier 2b：同一组 98 个场景分别以结构化模板和自然叙事呈现，模型在 -100 至 100 的五档量表上判断其是否符合隐私期望。系统报告模型评分与人类平均分的误差和相关性，并把人类平均分映射到最近量表档位计算可复现的离散一致率；该代理不等同于论文的多次随机采样设置。",
+              "url": "https://github.com/skywalker023/confaide",
+              "language": "English",
+              "scale": "196 cases (98 Tier 2a + 98 Tier 2b)",
+              "evaluation": "Rating MAE, Pearson correlation, and discretized agreement proxy",
+              "paths": {
+                "dataset": "benchmarks/contextual_privacy/confaide_tier2.jsonl",
+                "results": "result"
+              },
+              "execution": {
+                "extra_args": {
+                  "--benchmark-name": "ConfAIde-Tier2",
+                  "--dimension-label": "情境隐私规范判断评测",
+                  "--benchmark-url": "https://github.com/skywalker023/confaide",
+                  "--max-cases": 20
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

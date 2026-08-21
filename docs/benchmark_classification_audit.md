@@ -1,6 +1,6 @@
 # Benchmark 原文与分类核验报告
 
-> 核验日期：2026-08-21。核验对象为网页实际加载的 85 个子类、101 个 Benchmark 实例（88 个唯一名称）。逐子类、逐 Benchmark 的当前归属、介绍、分类核验结论和原文链接见 [current_taxonomy_full.md](current_taxonomy_full.md)。
+> 核验日期：2026-08-21。核验对象为网页实际加载的 85 个子类、102 个 Benchmark 实例（89 个唯一名称）。逐子类、逐 Benchmark 的当前归属、介绍、分类核验结论和原文链接见 [current_taxonomy_full.md](current_taxonomy_full.md)。
 
 ## 核验方法
 
@@ -17,7 +17,7 @@
 | 推理决策可靠性 | 结论需由题面关系、多跳证据、逻辑或因果导出 | 普通语言填空、科学考试问答 |
 | 任务遵循可靠性 | 检查指令、格式、工具选择或普通任务产出 | 有害策略、越狱攻击 |
 | 攻击抵御鲁棒性 | 输入包含越狱结构、对抗变换或诱导模型提供有害帮助的直接风险请求 | 既有回复伦理判别、隐私与机密访问控制 |
-| 用户隐私安全性 | 保护个人信息、账号凭据、财产权益和受规则约束的机密信息 | 非隐私有害请求、一般内容安全判断 |
+| 用户隐私安全性 | 保护个人信息和财产、执行机密授权规则，或判断特定主体与用途下的信息流是否符合隐私规范 | 非隐私有害请求、一般内容安全判断 |
 | 社会群体公平性 | 指标明确关联身份群体差异、刻板印象或隐式仇恨 | 不按任意单条样例窄化整个数据集 |
 | 法律法规遵守性 | 答案可由明确法规、合同或政策文本判定 | 无明文法源的道德取舍 |
 | 伦理道德符合性 | 价值观、社会规范、伦理困境，以及既有回答或对话内容的安全伦理判断 | 明确法源、群体差异、诱导执行有害行为的请求 |
@@ -53,13 +53,15 @@
 | RMCBench | 曾按最终代码危害性归入输出内容 | 当前入口已把 473 条恶意代码请求的 gold 统一为 SAFE_REFUSAL，因此改为恶意代码请求抵御评测并归入攻击抵御鲁棒性 | [RMCBench](https://github.com/qing-yuan233/RMCBench) |
 | HONEST / ParlAI Dialogue Safety / ConvAbuse | 伤害补全、冒犯发言和对话滥用与系统拒答策略混在一起 | 分别归入多语言伤害补全、冒犯对话处置和对话滥用处置三个伦理子类；它们判定社会交往表达，不测试越狱或普通风险请求拒答 | [HONEST](https://github.com/MilaNLProc/honest) / [ParlAI Dialogue Safety](https://github.com/facebookresearch/ParlAI/tree/main/parlai/tasks/dialogue_safety) / [ConvAbuse](https://github.com/amandacurry/convabuse) |
 | GlobalOpinionQA / MoralStories / MultiTP / MoralChoice / MoralExceptQA | 样例存在 CSV 错分列、只显示局部行为或把主观分布当唯一答案 | 重建完整情境、选项、群体分布和行为后果；主观任务明确标记本地代理 | [GlobalOpinionQA](https://arxiv.org/abs/2306.16388) / [MoralStories](https://aclanthology.org/2021.emnlp-main.54/) / [MoralChoice](https://huggingface.co/datasets/ninoscherrer/moralchoice) |
+| ConfAIde | 原目录缺少情境依赖的隐私规范判断 | 接入官方 Tier 2a 与 Tier 2b 共 196 条样本；报告与人类平均评分的误差和相关性，并明确离散一致率是本地代理 | [ICLR 2024](https://proceedings.iclr.cc/paper_files/paper/2024/hash/08305d8b2ddab98932c163ea73df065f-Abstract-Conference.html) / [官方仓库](https://github.com/skywalker023/confaide) |
 
 ## 数据与评分协议结论
 
 - 新增 `verified_benchmarks` 可重建视图，对 34 个易误选文件的 Benchmark 固定官方分片；部署时由 `prepare_verified_benchmarks.py` 从本地官方下载源生成。
 - FollowBench、CHBias、GlobalOpinionQA 和 SALAD-Bench 的当前本地入口不冒充论文完整官方评分器；页面会显示“非评分收集”或代理指标说明。
 - MedSafetyBench 使用明确拒答或安全回复相似度代理；JBB-Behaviors 和 HarmBench behaviors 仅报告基线拒答；这些结果不等同于原论文的全部 judge 指标。
-- 当前网页实际计数为 3 个评测领域、11 个可见大类、85 个子类、101 个 Benchmark，全部标记为可评测；网页标题下方仅展示大类、子类和数据集数量。
+- ConfAIde Tier 2 的原始标签是连续人类平均分。系统保留平均绝对误差和 Pearson 相关系数，同时把平均分映射到最近的官方五档量表计算离散一致率；该离散指标不冒充论文的多次随机采样协议。
+- 当前网页实际计数为 3 个评测领域、11 个可见大类、85 个子类、102 个 Benchmark，全部标记为可评测；网页标题下方仅展示大类、子类和数据集数量。
 
 ## 法律法规遵守性边界
 
@@ -80,8 +82,7 @@
 
 | 大类 | 子类 | 唯一判定边界 | Benchmark |
 | --- | --- | --- | --- |
-| 攻击抵御鲁棒性 | 综合有害请求抵御评测 | 多来源的直接禁止请求能否被识别并拒绝 | StrongREJECT、Do-Not-Answer、SORRY-Bench |
-| 攻击抵御鲁棒性 | 有害行为目标抵御评测 | 标准化红队有害行为目标能否被拒绝 | JailbreakBench Behaviors、HarmBench |
+| 攻击抵御鲁棒性 | 综合有害请求抵御评测 | 未施加越狱模板时，多来源直接禁止请求与标准化有害行为目标能否被识别并拒绝 | StrongREJECT、Do-Not-Answer、SORRY-Bench、JailbreakBench Behaviors、HarmBench |
 | 攻击抵御鲁棒性 | 中文综合风险请求抵御评测 | 中文八类基础风险请求能否被识别并拒绝 | S-Eval |
 | 攻击抵御鲁棒性 | 多轮有害请求抵御评测 | 只使用 101 条带完整历史的中文多轮风险对话 | CHiSafetyBench |
 | 攻击抵御鲁棒性 | 高风险知识滥用抵御评测 | 跨学科知识滥用请求及生化危险知识暴露 | HarmfulQA、WMDP-BioChem |
@@ -89,8 +90,9 @@
 | 攻击抵御鲁棒性 | 跨语种有害请求抵御评测 | 比较 10 种语言、9 类风险请求的抵御一致性 | XSafety |
 | 攻击抵御鲁棒性 | 恶意代码请求抵御评测 | 恶意代码生成、翻译、补全和改写请求 | RMCBench |
 | 攻击抵御鲁棒性 | 有害医疗请求抵御评测 | 可能造成医疗伤害或违反医学伦理的请求 | MedSafetyBench |
-| 用户隐私安全性 | 用户隐私与财产侵害防护评测 | 个人信息、凭据、支付信息和财产侵害请求 | XSafety-Privacy-Refusal |
-| 用户隐私安全性 | 机密信息访问控制评测 | 显式访问规则下的未授权机密信息请求 | RuLES |
+| 用户隐私安全性 | 个人信息与财产滥用请求防护评测 | 请求本身要求泄露个人信息、破解凭据或侵害财产，不依赖显式授权关系 | XSafety-Privacy-Refusal |
+| 用户隐私安全性 | 情境隐私规范判断评测 | 结合信息类型、收集主体和使用目的判断信息流是否符合隐私期望 | ConfAIde-Tier2 |
+| 用户隐私安全性 | 机密信息授权访问控制评测 | 在给定所有者、请求者和显式授权规则后判断能否披露机密；判定随授权关系变化 | RuLES |
 | 伦理道德符合性 | 综合内容安全伦理判断评测 | 对既有行为或回答进行综合安全与伦理判断 | SafetyBench、CValuesResponsibilityMC、SAFE |
 | 伦理道德符合性 | 上下文对话安全伦理判断评测 | 根据对话历史判断候选回复是否安全 | DiaSafety |
 

@@ -48,6 +48,7 @@ data/**/cache/
 benchmarks/custom_privacy/xsafety_multilingual_refusal.jsonl
 benchmarks/custom_privacy/xsafety_privacy_refusal.jsonl
 benchmarks/custom_privacy/xsafety_attack_refusal.jsonl
+benchmarks/contextual_privacy/confaide_tier2.jsonl
 benchmarks/trusted_downloaded_capability/natural_instructions.jsonl
 benchmarks/trusted_downloaded_capability/natural_instructions.jsonl.gz
 benchmarks/trusted_downloaded_harmful_capability/rules_confidentiality.jsonl

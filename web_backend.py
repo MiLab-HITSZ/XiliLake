@@ -38,6 +38,7 @@ from benchmarks.adapters import build_eval_command, resolve_real_benchmark_run
 from evaluate_generic_benchmark import (
     ANSWER_KEYS as GENERIC_ANSWER_KEYS,
     QUESTION_KEYS as GENERIC_QUESTION_KEYS,
+    aggregate as generic_aggregate_metrics,
     answer_from_numeric_label as generic_answer_from_numeric_label,
     build_case as generic_build_case,
     extract_model_answer as generic_extract_model_answer,
@@ -238,7 +239,7 @@ SCIENTIFIC_TAXONOMY_GROUPS = [
     {
         'id': 'privacy_security',
         'label': '用户隐私安全性',
-        'description': '评估模型能否保护用户个人信息、账号凭据、财产权益和受访问规则约束的机密信息。该类只保留隐私与财产防护：诱导模型实施其他有害行为的请求归入攻击抵御鲁棒性，对既有内容作安全或伦理判断的任务归入伦理道德符合性。',
+        'description': '评估模型能否保护个人信息、账号凭据、财产权益和受授权规则约束的机密信息，并理解信息流在特定主体与用途下是否符合隐私规范。个人信息与财产滥用防护关注请求本身是否要求泄露或侵害，不以显式授权关系为前提；机密信息访问控制则必须结合信息所有者、请求者和授权规则判断能否披露；情境隐私规范判断关注信息类型、接收主体和使用目的是否匹配。',
     },
     {
         'id': 'fairness_bias',
@@ -306,6 +307,7 @@ SOURCE_GROUP_TAXONOMY_OVERRIDES = {
     'adversarial_robustness': 'adversarial_robustness',
     'privacy_security': 'privacy_security',
     'custom_privacy': 'privacy_security',
+    'contextual_privacy': 'privacy_security',
     'fairness': 'fairness_bias',
     'fairness_bias': 'fairness_bias',
     'custom_fairness': 'fairness_bias',
@@ -768,8 +770,8 @@ BENCHMARK_TAXONOMY_OVERRIDES = [
     },
     {
         'benchmark': 'RuLES', 'group_id': 'privacy_security',
-        'dimension_label': '机密信息访问控制评测', 'category_label': '机密信息访问控制',
-        'reason': 'RuLES 当前入口检查模型是否遵循机密信息访问规则，防止向未授权用户泄露受保护信息。',
+        'dimension_label': '机密信息授权访问控制评测', 'category_label': '授权访问控制',
+        'reason': 'RuLES 当前入口要求模型结合秘密所有者、请求者和显式授权规则作决定，检查其是否拒绝向未授权主体泄露受保护信息。',
     },
     {
         'benchmark': 'XSafety', 'group_id': 'adversarial_robustness',
@@ -783,8 +785,14 @@ BENCHMARK_TAXONOMY_OVERRIDES = [
     },
     {
         'benchmark': 'XSafety-Privacy-Refusal', 'group_id': 'privacy_security',
-        'dimension_label': '用户隐私与财产侵害防护评测', 'category_label': '用户隐私与财产防护',
-        'reason': '该入口只含 XSafety 的 Privacy And Property 类，与非隐私风险入口按样本互斥。',
+        'dimension_label': '个人信息与财产滥用请求防护评测', 'category_label': '隐私与财产滥用防护',
+        'reason': '该入口只含 XSafety 的 Privacy And Property 类，判断模型能否拒绝个人信息泄露、凭据破解和财产侵害请求，不要求题目给出授权关系。',
+    },
+    {
+        'benchmark': 'ConfAIde-Tier2', 'group_id': 'privacy_security',
+        'dimension_label': '情境隐私规范判断评测', 'category_label': '情境信息流规范',
+        'sort_rank': 1,
+        'reason': 'ConfAIde Tier 2 直接要求模型结合信息类型、收集主体和使用目的判断信息流是否符合情境隐私期望。',
     },
     {
         'benchmark': 'MedSafetyBench', 'group_id': 'adversarial_robustness',
@@ -951,9 +959,9 @@ BENCHMARK_TAXONOMY_OVERRIDES = [
         'benchmark': 'RuLES',
         'source_dimensions': ['伪造内容', '伪造证据与误导合成', '伪造误导内容处置'],
         'group_id': 'privacy_security',
-        'dimension_label': '机密信息访问控制评测',
-        'category_label': '机密信息访问控制',
-        'reason': 'RuLES 当前本地入口使用机密信息访问控制场景，评估模型是否拒绝向未授权主体泄露受保护信息。',
+        'dimension_label': '机密信息授权访问控制评测',
+        'category_label': '授权访问控制',
+        'reason': 'RuLES 当前本地入口使用带秘密所有者、请求者和显式授权规则的访问控制场景，评估模型是否拒绝向未授权主体泄露受保护信息。',
     },
     {
         'benchmark': 'XSafety',
@@ -1311,6 +1319,7 @@ BENCHMARK_SPECIFIC_INTRO_OVERRIDES = {
     'XSafety': 'XSafety 的有害请求抵御入口包含 17,990 条普通风险请求，覆盖 10 种语言和违法犯罪、身体伤害、歧视、不安全主题等 9 类风险。Privacy And Property 的 2,000 条样本转入用户隐私安全性，Goal Hijacking 的 2,000 条样本用于越狱攻击防御；Prompt Leaking 和 Role Play Instruction 因标签与内容不稳定不参与评分，各入口没有重复样本。',
     'XSafety-Attack-Defense': 'XSafety-Attack-Defense 包含 10 种语言的 2,000 条 Goal Hijacking 提示，输入明确要求忽略前序任务、替换目标或强制输出指定内容。该分片只评估多语种目标劫持攻击下的安全防御，不与普通有害请求抵御数据重复。',
     'XSafety-Privacy-Refusal': 'XSafety-Privacy-Refusal 包含 XSafety 全部 10 种语言的 2,000 条 Privacy And Property 请求，检查模型是否拒绝泄露个人信息、协助破解凭据或实施财产侵害。该分片与非隐私风险 XSafety 入口按类别互斥。',
+    'ConfAIde-Tier2': 'ConfAIde 是 ICLR 2024 Spotlight 的情境隐私基准。当前入口接入 Tier 2a 和 Tier 2b：98 个信息流场景分别以结构化模板和自然叙事呈现，共 196 条样本；模型结合信息类型、收集主体和使用目的，在 -100、-50、0、50、100 五档上判断是否符合隐私期望。系统报告与人类平均分的平均绝对误差、Pearson 相关系数，并以最近量表档位计算离散一致率；该代理不等同于论文的多次随机采样设置。',
     'SafetyBench': 'SafetyBench 是中英双语安全知识多项选择基准，官方全集含 11,435 道题，覆盖冒犯、偏见、身体健康、心理健康、违法活动、伦理道德、隐私与财产七类风险。由于官方测试集不公开答案，系统接入中英文各七类共 70 道有标签开发题进行可复现评分。',
     'GPTFuzzer': 'GPTFuzzer 由自动红队方法生成或筛选攻击提示，用于测试模型安全策略在自动化变体攻击下是否失守。当前关注攻击提示的绕过效果和模型防御稳定性。',
     'DiaSafety': 'DiaSafety 以对话历史和候选回复为输入，判断该回复在当前上下文中是否安全。它强调同一句话可能因前文而改变安全属性；当前入口保留完整历史和待判定回复，做安全/不安全二分类，评估上下文相关的伦理判断。',
@@ -1327,7 +1336,7 @@ BENCHMARK_SPECIFIC_INTRO_OVERRIDES = {
     'StrongREJECT': 'StrongREJECT 包含 313 条英文基础禁止请求，覆盖非暴力犯罪、暴力、虚假信息与欺骗、仇恨骚扰与歧视、非法商品与服务、色情内容六类。当前只统计明确拒答，作为可复现代理指标，不等同于官方对非拒答回答说服力和具体性的完整评分器。',
     'CHBias': 'CHBias 是中文对话偏见基准，官方数据覆盖性别、性取向、年龄和外貌四类属性。当前入口展示官方测试句并收集去偏改写；由于原始测试集不提供唯一标准改写，该开放任务不伪造精确匹配准确率。',
     'MoralExceptQA': 'MoralExceptQA 包含 148 个来自道德心理学研究的规则破例情境，每条数据给出美国受访者认为破例行为可被允许的比例。系统将比例不低于 0.5 的情境标为多数人认为可以允许，否则标为不可以允许，用于检查模型能否理解胁迫、伤害和规则例外。',
-    'RuLES': 'RuLES 原始框架由 14 类带明确规则的文本交互场景和场景专用程序化判定器组成。当前本地入口接入 15 条 Confidentiality 直接请求样例，完整展示访问主体、秘密信息、授权规则和用户请求，检查模型是否拒绝向未授权用户泄露秘密。',
+    'RuLES': 'RuLES 原始框架由 14 类带明确规则的文本交互场景和场景专用程序化判定器组成。当前本地入口接入 15 条 Confidentiality 直接请求样例，完整展示秘密所有者、请求者、受保护信息和授权规则，检查模型是否拒绝向未授权主体泄露秘密。',
     'GlobalOpinionQA': 'GlobalOpinionQA 将跨国调查中的全球社会议题转换为问答，保留国家和人群观点分布。当前用于比较模型回答与不同群体价值立场的接近程度，不把某一国家的多数意见视为唯一正确道德答案。',
     'MoralStories': 'MoralStories 以社会情境、人物意图、道德规范、具体行为和行为后果组成结构化故事，要求模型识别行为是否符合日常道德规范，用于检查情境化道德理解。',
     'moralchoice': 'MoralChoice 收录两个行动都伴随伦理代价的道德两难选择，并区分高模糊性和低模糊性场景。当前用于评估模型在权利、义务、伤害和后果相互冲突时的取舍判断。',
@@ -2027,10 +2036,13 @@ TAXONOMY_DIMENSION_MERGE_PLANS = {
         },
         {
             'label': '综合有害请求抵御评测',
-            'intro': '使用 StrongREJECT、Do-Not-Answer 和 SORRY-Bench 的直接禁止请求，覆盖违法、暴力、仇恨、欺骗和其他不应提供帮助的内容，评估模型能否识别风险并拒绝执行。',
+            'intro': '使用 StrongREJECT、Do-Not-Answer、SORRY-Bench、HarmBench Behaviors 和 JailbreakBench Behaviors，覆盖违法、暴力、仇恨、欺骗和其他不应提供帮助的直接有害请求或行为目标，评估模型能否识别风险并拒绝执行。当前入口不施加越狱模板，五个 Benchmark 均按基线请求抵御能力独立计分。',
             'category_label': '综合有害请求抵御',
             'sort_rank': 5,
-            'benchmark_names': ['StrongREJECT', 'Do-Not-Answer', 'SorryBench'],
+            'benchmark_names': [
+                'StrongREJECT', 'Do-Not-Answer', 'SorryBench',
+                'HarmBench', 'JBBBehaviours',
+            ],
             'dimension_ids': [
                 'benchmark::privacy_security::downloaded::跨语言安全一致性::p0::eval-run::StrongREJECT',
                 'benchmark::privacy_security::downloaded::跨语言安全一致性::p0::eval-run::Do-Not-Answer',
@@ -2040,15 +2052,6 @@ TAXONOMY_DIMENSION_MERGE_PLANS = {
             'consume_dimension_ids': [
                 'trusted::common::13::LLM::p0::eval-run::StrongREJECT',
             ],
-        },
-        {
-            'label': '有害行为目标抵御评测',
-            'intro': '使用 HarmBench Behaviors 和 JailbreakBench Behaviors 的标准化有害行为目标，评估模型面对可直接用于红队攻击的恶意行为描述时，是否拒绝生成实现该目标的具体内容。',
-            'category_label': '标准化有害行为目标抵御',
-            'sort_rank': 5,
-            'benchmark_names': ['HarmBench', 'JBBBehaviours'],
-            'include_benchmark_names_only': True,
-            'merged_dimension_id': 'taxonomy::adversarial_robustness::harmful_behavior_target_resistance',
         },
         {
             'label': '中文综合风险请求抵御评测',
@@ -2113,9 +2116,9 @@ TAXONOMY_DIMENSION_MERGE_PLANS = {
     ],
     'privacy_security': [
         {
-            'label': '用户隐私与财产侵害防护评测',
-            'intro': '使用 XSafety-Privacy-Refusal 的 10 种语言、2,000 条 Privacy And Property 请求，检查模型能否拒绝个人信息泄露、凭据破解、支付信息窃取和财产侵害协助。',
-            'category_label': '用户隐私与财产防护',
+            'label': '个人信息与财产滥用请求防护评测',
+            'intro': '使用 XSafety-Privacy-Refusal 的 10 种语言、2,000 条 Privacy And Property 请求，检查模型能否拒绝个人信息泄露、凭据破解、支付信息窃取和财产侵害协助。该任务根据请求内容判定风险，不依赖显式授权关系。',
+            'category_label': '隐私与财产滥用防护',
             'sort_rank': 0,
             'benchmark_names': ['XSafety-Privacy-Refusal'],
             'dimension_ids': [
@@ -2126,10 +2129,10 @@ TAXONOMY_DIMENSION_MERGE_PLANS = {
             'merged_dimension_id': 'benchmark::custom_privacy::privacy_security::privacy_refusal::p0::eval-run::XSafety-Privacy-Refusal',
         },
         {
-            'label': '机密信息访问控制评测',
-            'intro': '使用 RuLES 的 15 条 Confidentiality 直接请求样例，完整呈现访问主体、秘密信息、授权规则和用户请求，检查模型能否拒绝向未授权主体泄露机密信息。',
-            'category_label': '机密信息访问控制',
-            'sort_rank': 1,
+            'label': '机密信息授权访问控制评测',
+            'intro': '使用 RuLES 的 15 条 Confidentiality 直接请求样例，完整呈现秘密所有者、请求者、受保护信息和授权规则，检查模型能否拒绝向未授权主体披露机密信息。这里的判定随授权关系改变，不是对所有秘密一律拒答。',
+            'category_label': '授权访问控制',
+            'sort_rank': 2,
             'benchmark_names': ['RuLES'],
             'include_benchmark_names_only': True,
             'merged_dimension_id': 'taxonomy::privacy_security::confidential_access_control',
@@ -4222,7 +4225,7 @@ def group_results_by_pair(records: List[Dict[str, Any]]) -> List[Dict[str, Any]]
 def build_metrics_csv(summary: Dict[str, Any]) -> str:
     buf = StringIO()
     writer = csv.writer(buf)
-    metric_keys = ['n_total', 'n_ok', 'n_scored', 'accuracy', 'response_rate', 'avg_latency_ms', 'n_cf', 'n_cs', 'CF_Acc', 'CS_Acc', 'Gap', 'CCR', 'RPD']
+    metric_keys = ['n_total', 'n_ok', 'n_scored', 'accuracy', 'privacy_rating_mae', 'privacy_rating_pearson', 'response_rate', 'avg_latency_ms', 'n_cf', 'n_cs', 'CF_Acc', 'CS_Acc', 'Gap', 'CCR', 'RPD']
     writer.writerow(['scope', 'task', 'name', *metric_keys])
     overall = (summary or {}).get('overall') or {}
     for task, stats in overall.items():
@@ -4405,7 +4408,7 @@ def aggregate_metrics(records: List[Dict[str, Any]]) -> Dict[str, Any]:
                 continue
         return (sum(values) / len(values)) if values else None
 
-    return {
+    summary = {
         'n_total': total,
         'n_ok': ok_total,
         'n_scored': scored_total,
@@ -4430,6 +4433,11 @@ def aggregate_metrics(records: List[Dict[str, Any]]) -> Dict[str, Any]:
         'overall_success_rate': optional_rate('overall_success'),
         'relaxed_success_rate': optional_rate('relaxed_success'),
     }
+    generic_summary = generic_aggregate_metrics(records)
+    for key in ['privacy_rating_mae', 'privacy_rating_pearson']:
+        if key in generic_summary:
+            summary[key] = generic_summary[key]
+    return summary
 
 
 def build_summary_from_records(records: List[Dict[str, Any]]) -> Dict[str, Any]:

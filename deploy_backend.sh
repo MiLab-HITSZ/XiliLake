@@ -43,6 +43,9 @@ fi
 if [[ -f "$BASE_DIR/benchmarks/trusted_downloaded_harmful_capability/prepare_rules_confidentiality.py" ]]; then
   "$PYTHON_BIN" "$BASE_DIR/benchmarks/trusted_downloaded_harmful_capability/prepare_rules_confidentiality.py"
 fi
+if [[ -f "$BASE_DIR/benchmarks/contextual_privacy/prepare_confaide.py" ]]; then
+  "$PYTHON_BIN" "$BASE_DIR/benchmarks/contextual_privacy/prepare_confaide.py"
+fi
 
 if [[ -f "$PID_FILE" ]]; then
   OLD_PID="$(cat "$PID_FILE" 2>/dev/null || true)"
