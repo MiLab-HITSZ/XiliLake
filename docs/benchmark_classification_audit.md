@@ -1,6 +1,6 @@
 # Benchmark 原文与分类核验报告
 
-> 核验日期：2026-08-21。核验对象为网页实际加载的 81 个子类、101 个 Benchmark 实例（88 个唯一名称）。逐子类、逐 Benchmark 的当前归属、介绍、分类核验结论和原文链接见 [current_taxonomy_full.md](current_taxonomy_full.md)。
+> 核验日期：2026-08-21。核验对象为网页实际加载的 85 个子类、101 个 Benchmark 实例（88 个唯一名称）。逐子类、逐 Benchmark 的当前归属、介绍、分类核验结论和原文链接见 [current_taxonomy_full.md](current_taxonomy_full.md)。
 
 ## 核验方法
 
@@ -45,7 +45,7 @@
 | BBQ / CALM / CHBias | 整套数据被窄化为单一身份属性 | 按原文保留多属性歧义问答、性别种族多任务和中文四属性偏见任务；CHBias 统一命名为中文综合偏见评测 | [BBQ](https://aclanthology.org/2022.findings-acl.165/) / [CALM](https://arxiv.org/abs/2308.12539) / [CHBias](https://aclanthology.org/2023.acl-long.757/) |
 | CrowS-Pairs | 两个入口重复读全量数据 | 当前目录仅保留 Religion 分片，General 分片已移除 | [官方仓库](https://github.com/nyu-mll/crows-pairs) |
 | APPS | 两个入口会扫描同一全量目录 | 固定为 Introductory-Interview 和 Competition 两个难度互斥分片 | [APPS 官方仓库](https://github.com/hendrycks/apps) |
-| HumanEval+ / MBPP / MathQA-Python / ClassEval / CoderEval / DS-1000 / HumanEval / APPS 两个难度入口 | 同一代码生成构念按基础、复杂、入门面试和竞赛重复分成四个子类 | 合并为代码生成综合任务，九个 Benchmark 继续独立计分 | 各 Benchmark 官方仓库 |
+| HumanEval+ / MBPP / MathQA-Python / ClassEval / CoderEval / DS-1000 / HumanEval / APPS 两个难度入口 | 代码生成的作用域、依赖上下文和验收方式不同 | 按函数级、数学程序、类级、项目级、数据科学、常规编程问题和竞赛编程问题划分七个互斥子类 | 各 Benchmark 官方仓库 |
 | HarmfulQ | 与多个风险请求拒答数据重复，且自身没有稳定细粒度类别 | 从当前评测目录移除，保留本地原始数据以便追溯 | [数据来源](https://github.com/SALT-NLP/chain-of-thought-bias) |
 | PRISM / CDialBias-QA / CrowS-Pairs-General-MC / FrenchCrowPairs / Regard | 与当前精简后的伦理或公平性目录范围重复 | 从当前评测目录移除，保留本地原始数据以便追溯 | 各 Benchmark 原始论文或仓库 |
 | HolisticBias | 原目录名为多身份交叉偏见评测 | 按当前目录命名改为职业偏见评测；介绍仍注明官方数据实际覆盖多个身份轴 | [HolisticBias](https://github.com/facebookresearch/ResponsibleNLP/tree/main/holistic_bias) |
@@ -59,16 +59,15 @@
 - 新增 `verified_benchmarks` 可重建视图，对 34 个易误选文件的 Benchmark 固定官方分片；部署时由 `prepare_verified_benchmarks.py` 从本地官方下载源生成。
 - FollowBench、CHBias、GlobalOpinionQA 和 SALAD-Bench 的当前本地入口不冒充论文完整官方评分器；页面会显示“非评分收集”或代理指标说明。
 - MedSafetyBench 使用明确拒答或安全回复相似度代理；JBB-Behaviors 和 HarmBench behaviors 仅报告基线拒答；这些结果不等同于原论文的全部 judge 指标。
-- 当前网页实际计数为 3 个评测领域、11 个可见大类、81 个子类、101 个 Benchmark，全部标记为可评测；网页标题下方仅展示大类、子类和数据集数量。
+- 当前网页实际计数为 3 个评测领域、11 个可见大类、85 个子类、101 个 Benchmark，全部标记为可评测；网页标题下方仅展示大类、子类和数据集数量。
 
 ## 法律法规遵守性边界
 
-法律法规遵守性接入 LegalBench 中与法规遵守直接相关的 30 个官方任务，并按直接判定对象划分为五个无任务重叠的可评测子类，共接入 40,761 条有 gold 的测试样本。
+法律法规遵守性接入 LegalBench 中与法规遵守直接相关的 30 个官方任务。系统保留原有三个独立入口，并把其余 27 个任务汇总为四个无任务重叠的可评测套件，共接入 40,761 条有 gold 的测试样本。
 
 | 子类 | 唯一判定边界 | LegalBench 任务数 | 有标签测试样本数 |
 | --- | --- | ---: | ---: |
-| 隐私政策证据问答准确性评测 | 给定隐私问题时，政策条款是否包含足以回答问题的证据 | 1 | 10,923 |
-| 隐私政策数据处理规则识别评测 | 隐私政策蕴含及九类 OPP-115 数据处理规则识别 | 10 | 13,593 |
+| 隐私政策法规遵守性评测 | 隐私政策是否蕴含、披露或支持数据处理规则 | 11 | 24,516 |
 | 消费者权益法规遵守性评测 | 消费合同权利、不公平条款及电话营销规则 | 3 | 4,256 |
 | 法律规则知识准确性评测 | 回忆或识别规则、司法行为规范及判例法源 | 5 | 9,809 |
 | 法律规则适用结论准确性评测 | 在规则领域已知时把规则应用到事实并得出结论 | 11 | 2,180 |
@@ -81,10 +80,11 @@
 
 | 大类 | 子类 | 唯一判定边界 | Benchmark |
 | --- | --- | --- | --- |
-| 攻击抵御鲁棒性 | 综合有害请求抵御评测 | 未经攻击改写的直接有害请求能否被抵御 | StrongREJECT、S-Eval、Do-Not-Answer、SORRY-Bench、JailbreakBench Behaviors、HarmBench |
+| 攻击抵御鲁棒性 | 综合有害请求抵御评测 | 多来源的直接禁止请求能否被识别并拒绝 | StrongREJECT、Do-Not-Answer、SORRY-Bench |
+| 攻击抵御鲁棒性 | 有害行为目标抵御评测 | 标准化红队有害行为目标能否被拒绝 | JailbreakBench Behaviors、HarmBench |
+| 攻击抵御鲁棒性 | 中文综合风险请求抵御评测 | 中文八类基础风险请求能否被识别并拒绝 | S-Eval |
 | 攻击抵御鲁棒性 | 多轮有害请求抵御评测 | 只使用 101 条带完整历史的中文多轮风险对话 | CHiSafetyBench |
-| 攻击抵御鲁棒性 | 多学科知识滥用请求抵御评测 | 面对十个学科的明确知识滥用请求时是否拒绝提供有害帮助 | HarmfulQA |
-| 攻击抵御鲁棒性 | 生化高风险知识暴露评测 | 生物与化学危险知识的选择题作答暴露程度，原始准确率越高表示暴露越充分 | WMDP-BioChem |
+| 攻击抵御鲁棒性 | 高风险知识滥用抵御评测 | 跨学科知识滥用请求及生化危险知识暴露 | HarmfulQA、WMDP-BioChem |
 | 攻击抵御鲁棒性 | 安全请求误拒鲁棒性评测 | 区分表面敏感的安全请求与真实不安全请求 | XSTest |
 | 攻击抵御鲁棒性 | 跨语种有害请求抵御评测 | 比较 10 种语言、9 类风险请求的抵御一致性 | XSafety |
 | 攻击抵御鲁棒性 | 恶意代码请求抵御评测 | 恶意代码生成、翻译、补全和改写请求 | RMCBench |

@@ -492,7 +492,6 @@ DIMENSION_SPECIFIC_INTROS = {
     '逻辑谬误辨析推理': '使用 FLUB 和 MAFALDA 检查模型能否在具体论证中定位并辨别谬误类型，而不只是判断结论的表面真伪。',
     '代码提交摘要生成任务': '输入真实 Git 代码差异，要求生成准确概括修改内容或修改意图的提交信息，并分开统计显式与隐式代理分片。',
     '代码注释生成任务': '使用 ByteCue 的真实代码与参考注释，检查生成注释是否正确描述程序行为并保留必要的实现细节。',
-    '代码生成综合任务': '统一评估函数级、类级、仓库级、数据科学和竞赛编程场景下从自然语言规格生成可执行代码的可靠性，各 Benchmark 仍分别记录结果。',
     '高难科学知识准确性评测': '使用 ARC-Challenge 的高难度科学考试选择题，直接统计模型对科学知识问题的答案准确率。',
     '基础科学知识准确性评测': '使用 ARC-Easy 的基础科学考试选择题，直接统计模型对科学知识问题的答案准确率。',
     '篇章证据问答准确性评测': '使用 CMRC2018 的篇章、问题与抽取式答案，检查模型回答是否能由给定材料直接支持。',
@@ -633,18 +632,6 @@ BENCHMARK_TAXONOMY_OVERRIDES = [
         'reason': 'ToolE/MetaTool 数据检查模型是否知道何时需要工具以及应选择何种工具，不直接测量完整工具执行链。',
     },
     {
-        'benchmark': 'FLUB', 'group_id': 'reasoning_causal',
-        'dimension_label': '语言陷阱辨析推理', 'category_label': '语言陷阱与非常规推理',
-        'dimension_intro': '使用 FLUB 的文字游戏、错误前提和非常规设问，评估模型能否理解文本中的语言陷阱，并从候选解释中选出真正化解陷阱的答案。该子类不要求为论证标注形式谬误类型。',
-        'reason': 'FLUB 主要测量文字游戏、错误前提和非常规问题的辨析，与 MAFALDA 的论证谬误类型标注任务不同。',
-    },
-    {
-        'benchmark': 'MAFALDA', 'group_id': 'reasoning_causal',
-        'dimension_label': '论证谬误类型识别推理', 'category_label': '论证谬误识别',
-        'dimension_intro': '使用 MAFALDA 的人工标注论证片段，评估模型能否识别滑坡、诉诸权威等具体谬误类型，并正确处理没有谬误的文本。该子类关注论证结构，不评测文字游戏式问题。',
-        'reason': 'MAFALDA 直接要求识别论证中的具体谬误类型，与 FLUB 的语言陷阱选择题任务不同。',
-    },
-    {
         'benchmark': 'FLUE', 'benchmark_label': 'RuozhibaQA', 'group_id': 'reasoning_causal',
         'dimension_label': '错误前提辨析推理', 'category_label': '逻辑谬误识别',
         'reason': '实际数据来自 ruozhiba 问答，检查歧义、错误前提和偷换概念；FLUE 不是该数据的正式名称。',
@@ -691,15 +678,15 @@ BENCHMARK_TAXONOMY_OVERRIDES = [
     {
         'benchmark': 'WMDP', 'source_dimensions': ['暴力伤害与危险知识'],
         'benchmark_label': 'WMDP-BioChem', 'group_id': 'adversarial_robustness',
-        'dimension_label': '生化高风险知识暴露评测', 'category_label': '生化危险知识暴露',
+        'dimension_label': '高风险知识滥用抵御评测', 'category_label': '高风险知识滥用抵御',
         'sort_rank': 10,
-        'reason': '通用安全入口固定为 WMDP 生物与化学分片，用选择题准确率观察模型对危险知识的保留和暴露程度。',
+        'reason': '通用安全入口固定为 WMDP 生物与化学分片，用其原始准确率观察模型抵御高风险知识诱导的能力。',
     },
     {
         'benchmark': 'WMDP-BioChem', 'group_id': 'adversarial_robustness',
-        'dimension_label': '生化高风险知识暴露评测', 'category_label': '生化危险知识暴露',
+        'dimension_label': '高风险知识滥用抵御评测', 'category_label': '高风险知识滥用抵御',
         'sort_rank': 10,
-        'reason': '该分片用选择题准确率测量生物与化学高风险知识的保留和暴露程度，不把知识题作答与有害请求拒答混为同一任务。',
+        'reason': '该分片用选择题准确率测量生物与化学高风险知识的保留和暴露程度，属于高风险知识滥用抵御。',
     },
     {
         'benchmark': 'WMDP', 'source_dimensions': ['意识形态安全性'],
@@ -749,7 +736,7 @@ BENCHMARK_TAXONOMY_OVERRIDES = [
     },
     {
         'benchmark': 'HarmfulQA', 'group_id': 'adversarial_robustness',
-        'dimension_label': '多学科知识滥用请求抵御评测', 'category_label': '多学科知识滥用抵御',
+        'dimension_label': '高风险知识滥用抵御评测', 'category_label': '高风险知识滥用抵御',
         'reason': 'HarmfulQA 检查模型能否抵御跨学科知识被用于伤害、欺骗、歧视或违法目的的请求。',
     },
     {
@@ -816,18 +803,6 @@ BENCHMARK_TAXONOMY_OVERRIDES = [
         'reason': 'MoralExceptQA 测量人类对道德规则破例情境的可允许性判断。',
     },
     {
-        'benchmark': 'LegalBench-PrivacyPolicyQA', 'group_id': 'legal_compliance',
-        'dimension_label': '隐私政策证据问答准确性评测', 'category_label': '隐私政策证据定位',
-        'dimension_intro': '给出用户的隐私问题和一段真实隐私政策条款，评估模型能否准确判断该条款是否包含足以回答问题的证据。该子类只测量问题与政策证据的相关性，不承担数据处理行为类型识别。',
-        'reason': 'PrivacyPolicyQA 是隐私问题与政策条款的证据相关性判断，应与多任务隐私规则分类套件分开统计。',
-    },
-    {
-        'benchmark': 'LegalBench-PrivacyRulesSuite', 'group_id': 'legal_compliance',
-        'dimension_label': '隐私政策数据处理规则识别评测', 'category_label': '隐私数据处理规则',
-        'dimension_intro': '汇总 LegalBench 的隐私政策蕴含任务和 OPP-115 九类数据处理任务，评估模型能否识别数据保存、安全、追踪、收集使用、特定人群、政策变更、第三方共享、访问删除和用户选择控制等规则。',
-        'reason': 'PrivacyRulesSuite 直接识别隐私政策中的数据处理规则，与 PrivacyPolicyQA 的问题证据相关性判断不同。',
-    },
-    {
         'benchmark': 'MoralStories', 'group_id': 'ethical_alignment',
         'dimension_label': '日常行为道德判断评测', 'category_label': '日常道德规范',
         'reason': 'MoralStories 以情境、意图、规范和结果测量行为的道德符合性。',
@@ -892,29 +867,29 @@ BENCHMARK_TAXONOMY_OVERRIDES = [
     {
         'benchmark': 'APPS', 'source_groups': ['custom_apps'],
         'benchmark_label': 'APPS-Introductory-Interview', 'group_id': 'task_control',
-        'dimension_label': '代码生成综合任务', 'category_label': '代码任务可靠性',
-        'reason': '第一个 APPS 入口固定为 introductory/interview 分片，并入代码生成综合任务。',
+        'dimension_label': '常规编程问题代码生成任务', 'category_label': '常规编程问题代码生成',
+        'reason': '第一个 APPS 入口固定为 introductory/interview 互斥分片，用于常规编程问题代码生成。',
     },
     {
         'benchmark': 'APPS', 'source_groups': ['capability'],
         'benchmark_label': 'APPS-Competition', 'group_id': 'task_control',
-        'dimension_label': '代码生成综合任务', 'category_label': '代码任务可靠性',
-        'reason': '第二个 APPS 入口固定为 competition 分片，并入代码生成综合任务。',
+        'dimension_label': '竞赛编程问题代码生成任务', 'category_label': '竞赛编程代码生成',
+        'reason': '第二个 APPS 入口固定为 competition 互斥分片，用于竞赛编程问题代码生成。',
     },
     {
         'benchmark': 'APPS', 'benchmark_label': 'APPS-Competition', 'group_id': 'task_control',
-        'dimension_label': '代码生成综合任务', 'category_label': '代码任务可靠性',
-        'reason': '合并后的旧 APPS 镜像统一为 competition 分片，并入代码生成综合任务。',
+        'dimension_label': '竞赛编程问题代码生成任务', 'category_label': '竞赛编程代码生成',
+        'reason': '旧 APPS 镜像统一固定为 competition 互斥分片，用于竞赛编程问题代码生成。',
     },
     {
         'benchmark': 'APPS-Introductory-Interview', 'group_id': 'task_control',
-        'dimension_label': '代码生成综合任务', 'category_label': '代码任务可靠性',
-        'reason': 'APPS 的入门与面试难度互斥分片，并入代码生成综合任务。',
+        'dimension_label': '常规编程问题代码生成任务', 'category_label': '常规编程问题代码生成',
+        'reason': 'APPS 的入门与面试难度互斥分片用于常规编程问题代码生成。',
     },
     {
         'benchmark': 'APPS-Competition', 'group_id': 'task_control',
-        'dimension_label': '代码生成综合任务', 'category_label': '代码任务可靠性',
-        'reason': 'APPS 的竞赛难度互斥分片，并入代码生成综合任务。',
+        'dimension_label': '竞赛编程问题代码生成任务', 'category_label': '竞赛编程代码生成',
+        'reason': 'APPS 的竞赛难度互斥分片用于复杂算法与数据结构代码生成。',
     },
     {
         'benchmark': 'CMRC2018',
@@ -1388,7 +1363,7 @@ BENCHMARK_SPECIFIC_INTRO_OVERRIDES = {
 
 CHINESE_ONLY_BENCHMARK_NAMES = {
     'HalluQA', 'CMMLU', 'Chinese_Rumor_Dataset', 'CMRC2018',
-    'CHID', 'RuozhibaQA', 'FLUB', 'CHBias', 'CHiSafetyBench',
+    'CHID', 'RuozhibaQA', 'SEval', 'CHBias', 'CHiSafetyBench',
 }
 
 
@@ -1967,23 +1942,77 @@ TAXONOMY_DIMENSION_MERGE_PLANS = {
     ],
     'task_control': [
         {
-            'label': '代码生成综合任务',
-            'intro': '统一评估从自然语言规格生成可执行代码的可靠性，覆盖 HumanEval+/HumanEval 与 MBPP 的函数级题目、MathQA-Python 的数学程序生成、ClassEval 的类级实现、CoderEval 的仓库上下文、DS-1000 的数据科学代码，以及 APPS 的入门、面试与竞赛题。各 Benchmark 保留独立结果，不再按难度或代码范围设置近义子类。',
-            'category_label': '代码任务可靠性',
+            'label': '函数级代码生成任务',
+            'intro': '使用 HumanEval、HumanEval+ 和 MBPP，评估模型能否根据函数签名、文档说明和输入输出要求生成可通过单元测试的函数实现。该子类只覆盖相对独立的函数级问题。',
+            'category_label': '函数级代码生成',
             'sort_rank': 2,
-            'benchmark_names': [
-                'Humaneval+', 'MBPP', 'MathQA-Python', 'Classeval',
-                'CoderEval', 'DS-1000', 'humaneval',
-                'APPS-Introductory-Interview', 'APPS-Competition',
-            ],
+            'benchmark_names': ['Humaneval+', 'MBPP', 'humaneval'],
             'dimension_ids': [
                 'benchmark::capability::downloaded::代码生成能力',
                 'benchmark::capability::downloaded::代码综合能力',
+            ],
+            'include_benchmark_names_only': True,
+            'merged_dimension_id': 'taxonomy::task_control::function_level_code_generation',
+        },
+        {
+            'label': '数学问题代码生成任务',
+            'intro': '使用 MathQA-Python，把数学应用题中的数量关系和求解步骤转换为可执行 Python 程序，评估模型联合完成数学建模与代码生成的能力。',
+            'category_label': '数学程序生成',
+            'sort_rank': 3,
+            'benchmark_names': ['MathQA-Python'],
+            'include_benchmark_names_only': True,
+            'merged_dimension_id': 'taxonomy::task_control::mathematical_code_generation',
+        },
+        {
+            'label': '类级代码生成任务',
+            'intro': '使用 ClassEval 的 Python 类级任务，评估模型能否根据类骨架实现多个相互依赖的方法，并正确处理字段、方法调用和外部库依赖。',
+            'category_label': '类级代码生成',
+            'sort_rank': 4,
+            'benchmark_names': ['Classeval'],
+            'include_benchmark_names_only': True,
+            'merged_dimension_id': 'taxonomy::task_control::class_level_code_generation',
+        },
+        {
+            'label': '项目级代码生成任务',
+            'intro': '使用 CoderEval 的真实开源项目任务，评估模型能否结合仓库上下文、跨文件依赖和已有接口完成项目内代码实现。',
+            'category_label': '项目级代码生成',
+            'sort_rank': 5,
+            'benchmark_names': ['CoderEval'],
+            'include_benchmark_names_only': True,
+            'merged_dimension_id': 'taxonomy::task_control::project_level_code_generation',
+        },
+        {
+            'label': '数据科学代码生成任务',
+            'intro': '使用 DS-1000 的数据科学代码问题，覆盖 NumPy、Pandas、SciPy、Matplotlib、Scikit-learn、PyTorch 和 TensorFlow，评估模型能否正确调用专业库完成数据处理与建模代码。',
+            'category_label': '数据科学代码生成',
+            'sort_rank': 6,
+            'benchmark_names': ['DS-1000'],
+            'include_benchmark_names_only': True,
+            'merged_dimension_id': 'taxonomy::task_control::data_science_code_generation',
+        },
+        {
+            'label': '常规编程问题代码生成任务',
+            'intro': '使用 APPS 的 introductory 与 interview 难度互斥分片，评估模型根据完整题面、输入输出格式和示例生成可执行程序的能力。',
+            'category_label': '常规编程问题代码生成',
+            'sort_rank': 7,
+            'benchmark_names': ['APPS-Introductory-Interview'],
+            'dimension_ids': [
                 'benchmark::verified_benchmarks::verified::task_following::p0::eval-run::APPS-Introductory-Interview',
+            ],
+            'include_benchmark_names_only': True,
+            'merged_dimension_id': 'taxonomy::task_control::regular_programming_problem_generation',
+        },
+        {
+            'label': '竞赛编程问题代码生成任务',
+            'intro': '使用 APPS 的 competition 难度互斥分片，评估模型在复杂算法、数据结构和边界条件要求下生成完整竞赛程序的能力。',
+            'category_label': '竞赛编程代码生成',
+            'sort_rank': 8,
+            'benchmark_names': ['APPS-Competition'],
+            'dimension_ids': [
                 'benchmark::verified_benchmarks::verified::task_following::p0::eval-run::APPS-Competition',
             ],
             'include_benchmark_names_only': True,
-            'merged_dimension_id': 'taxonomy::task_control::code_generation_comprehensive',
+            'merged_dimension_id': 'taxonomy::task_control::competition_programming_generation',
         },
     ],
     'adversarial_robustness': [
@@ -1998,16 +2027,12 @@ TAXONOMY_DIMENSION_MERGE_PLANS = {
         },
         {
             'label': '综合有害请求抵御评测',
-            'intro': '使用 StrongREJECT、S-Eval、Do-Not-Answer、SORRY-Bench、JailbreakBench Behaviors 和 HarmBench Behaviors，评估模型面对未经攻击改写的直接有害请求时能否识别风险并拒绝提供有害帮助。6 个 Benchmark 独立计分。',
-            'category_label': '直接有害请求抵御',
+            'intro': '使用 StrongREJECT、Do-Not-Answer 和 SORRY-Bench 的直接禁止请求，覆盖违法、暴力、仇恨、欺骗和其他不应提供帮助的内容，评估模型能否识别风险并拒绝执行。',
+            'category_label': '综合有害请求抵御',
             'sort_rank': 5,
-            'benchmark_names': [
-                'StrongREJECT', 'SEval', 'Do-Not-Answer',
-                'SorryBench', 'JBBBehaviours', 'HarmBench',
-            ],
+            'benchmark_names': ['StrongREJECT', 'Do-Not-Answer', 'SorryBench'],
             'dimension_ids': [
                 'benchmark::privacy_security::downloaded::跨语言安全一致性::p0::eval-run::StrongREJECT',
-                'benchmark::privacy_security::downloaded::安全拒答边界与过度拒答::p0::eval-run::SEval',
                 'benchmark::privacy_security::downloaded::跨语言安全一致性::p0::eval-run::Do-Not-Answer',
             ],
             'include_benchmark_names_only': True,
@@ -2015,6 +2040,27 @@ TAXONOMY_DIMENSION_MERGE_PLANS = {
             'consume_dimension_ids': [
                 'trusted::common::13::LLM::p0::eval-run::StrongREJECT',
             ],
+        },
+        {
+            'label': '有害行为目标抵御评测',
+            'intro': '使用 HarmBench Behaviors 和 JailbreakBench Behaviors 的标准化有害行为目标，评估模型面对可直接用于红队攻击的恶意行为描述时，是否拒绝生成实现该目标的具体内容。',
+            'category_label': '标准化有害行为目标抵御',
+            'sort_rank': 5,
+            'benchmark_names': ['HarmBench', 'JBBBehaviours'],
+            'include_benchmark_names_only': True,
+            'merged_dimension_id': 'taxonomy::adversarial_robustness::harmful_behavior_target_resistance',
+        },
+        {
+            'label': '中文综合风险请求抵御评测',
+            'intro': '使用 S-Eval 的 1,000 条中文基础风险请求，覆盖违法犯罪、数据隐私、仇恨言论、极端主义、不当建议、网络安全、身心健康和伦理道德八类风险，评估中文语境下的风险识别与拒答能力。',
+            'category_label': '中文综合风险请求抵御',
+            'sort_rank': 5,
+            'benchmark_names': ['SEval'],
+            'dimension_ids': [
+                'benchmark::privacy_security::downloaded::安全拒答边界与过度拒答::p0::eval-run::SEval',
+            ],
+            'include_benchmark_names_only': True,
+            'merged_dimension_id': 'taxonomy::adversarial_robustness::chinese_comprehensive_risk_resistance',
         },
         {
             'label': '多轮有害请求抵御评测',
@@ -2025,22 +2071,13 @@ TAXONOMY_DIMENSION_MERGE_PLANS = {
             'merged_dimension_id': 'taxonomy::adversarial_robustness::chinese_dialogue_resistance',
         },
         {
-            'label': '多学科知识滥用请求抵御评测',
-            'intro': '使用 HarmfulQA 的 1,960 条问题，覆盖社会科学、数学逻辑、商业经济、健康医学等十个学科，评估模型能否拒绝把专业知识用于伤害、欺骗、歧视或违法目的。',
-            'category_label': '多学科知识滥用抵御',
+            'label': '高风险知识滥用抵御评测',
+            'intro': '综合评估模型面对高风险专业知识诱导时的安全边界：HarmfulQA 覆盖十个学科中用于伤害、欺骗、歧视或违法目的的请求，WMDP-BioChem 通过生物与化学选择题观察危险知识的保留和暴露程度。',
+            'category_label': '高风险知识滥用抵御',
             'sort_rank': 7,
-            'benchmark_names': ['HarmfulQA'],
+            'benchmark_names': ['HarmfulQA', 'WMDP-BioChem'],
             'include_benchmark_names_only': True,
-            'merged_dimension_id': 'taxonomy::adversarial_robustness::multidisciplinary_knowledge_misuse_resistance',
-        },
-        {
-            'label': '生化高风险知识暴露评测',
-            'intro': '使用 WMDP 生物安全与化学安全选择题，测量模型对可被滥用的危险知识的保留和暴露程度。该任务按官方正确选项计分，原始准确率越高表示危险知识暴露越充分，不等同于有害请求拒答率。',
-            'category_label': '生化危险知识暴露',
-            'sort_rank': 7,
-            'benchmark_names': ['WMDP-BioChem'],
-            'include_benchmark_names_only': True,
-            'merged_dimension_id': 'taxonomy::adversarial_robustness::biochemical_hazardous_knowledge_exposure',
+            'merged_dimension_id': 'taxonomy::adversarial_robustness::high_risk_knowledge_resistance',
         },
         {
             'label': '安全请求误拒鲁棒性评测',
@@ -2142,22 +2179,13 @@ TAXONOMY_DIMENSION_MERGE_PLANS = {
             'merged_dimension_id': 'taxonomy::ethical_alignment::moral_stories',
         },
         {
-            'label': '情境道德两难行动取舍评测',
-            'intro': '使用 MoralChoice 中两个行动都伴随伦理代价的情境，评估模型在权利、义务、伤害和后果相互冲突时如何取舍，并区分高模糊性与低模糊性场景。',
-            'category_label': '道德两难行动取舍',
+            'label': '道德困境决策评测',
+            'intro': '评估模型在无法同时满足所有伦理目标的两难情境中如何取舍，覆盖自动驾驶事故选择、个体权益、总体伤害和跨语言决策稳定性。',
+            'category_label': '伦理困境与取舍',
             'sort_rank': 3,
-            'benchmark_names': ['moralchoice'],
+            'benchmark_names': ['moralchoice', 'MultiTP'],
             'include_benchmark_names_only': True,
-            'merged_dimension_id': 'taxonomy::ethical_alignment::situational_moral_dilemmas',
-        },
-        {
-            'label': '跨语言自动驾驶伦理取舍评测',
-            'intro': '使用 MultiTP 的 107 种语言自动驾驶两难场景，评估模型在物种、人数、年龄、社会角色和守法状态等取舍因素上的选择，并比较跨语言稳定性与全球人类参考偏好。',
-            'category_label': '自动驾驶伦理取舍',
-            'sort_rank': 3,
-            'benchmark_names': ['MultiTP'],
-            'include_benchmark_names_only': True,
-            'merged_dimension_id': 'taxonomy::ethical_alignment::multilingual_autonomous_driving_ethics',
+            'merged_dimension_id': 'taxonomy::ethical_alignment::moral_dilemmas',
         },
     ],
 }
@@ -2359,11 +2387,10 @@ def dimension_evaluable_sort_key(dim: Dict[str, Any]) -> tuple[int, int, int, st
             taxonomy_rank = 1
     elif str(dim.get('taxonomy_group_id') or '') == 'legal_compliance':
         legal_order = {
-            '隐私政策证据问答准确性评测': 0,
-            '隐私政策数据处理规则识别评测': 1,
-            '消费者权益法规遵守性评测': 2,
-            '法律规则知识准确性评测': 3,
-            '法律规则适用结论准确性评测': 4,
+            '隐私政策法规遵守性评测': 0,
+            '消费者权益法规遵守性评测': 1,
+            '法律规则知识准确性评测': 2,
+            '法律规则适用结论准确性评测': 3,
         }
         taxonomy_rank = legal_order.get(label, taxonomy_rank)
     return (
