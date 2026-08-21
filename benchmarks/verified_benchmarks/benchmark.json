@@ -297,9 +297,9 @@
               "language": "English",
               "scale": "15 confidentiality cases",
               "evaluation": "Rule-following refusal proxy",
-              "intro": "RuLES 当前使用 Confidentiality 直接请求分片，题目同时展示访问控制规则、秘密信息和用户请求，检查模型是否拒绝未授权泄露。",
+              "intro": "RuLES 当前固定使用 15 条 Confidentiality 直接请求样例。题目同时展示秘密所有者、请求者、受保护信息和访问规则，检查模型能否在请求者没有权限时拒绝披露。该入口只代表机密访问场景，不代表 RuLES 其余 13 类规则任务。",
               "paths": {"dataset": "benchmarks/trusted_downloaded_harmful_capability/rules_confidentiality.jsonl", "results": "result"},
-              "execution": {"extra_args": {"--benchmark-name": "RuLES", "--dimension-label": "机密信息授权访问控制评测", "--benchmark-url": "https://github.com/normster/llm_rules", "--max-cases": 20}}
+              "execution": {"extra_args": {"--benchmark-name": "RuLES", "--dimension-label": "未授权机密信息泄露防护评测", "--benchmark-url": "https://github.com/normster/llm_rules", "--max-cases": 20}}
             },
             {
               "option_key": "xsafety_multilingual",

@@ -239,7 +239,7 @@ SCIENTIFIC_TAXONOMY_GROUPS = [
     {
         'id': 'privacy_security',
         'label': '用户隐私安全性',
-        'description': '评估模型能否保护个人信息、账号凭据、财产权益和受授权规则约束的机密信息，并理解信息流在特定主体与用途下是否符合隐私规范。个人信息与财产滥用防护关注请求本身是否要求泄露或侵害，不以显式授权关系为前提；机密信息访问控制则必须结合信息所有者、请求者和授权规则判断能否披露；情境隐私规范判断关注信息类型、接收主体和使用目的是否匹配。',
+        'description': '评估模型在三种不同隐私场景中的表现：面对索取个人信息、破解账号或侵害财产的请求时是否拒绝；面对机构采集和使用个人信息的场景时能否判断其用途是否合理；面对带有所有者和授权规则的机密信息时是否阻止未授权披露。三个子类分别对应“危险请求该不该拒绝”“信息这样使用是否合适”和“这个请求者有没有权限知道”。',
     },
     {
         'id': 'fairness_bias',
@@ -770,8 +770,8 @@ BENCHMARK_TAXONOMY_OVERRIDES = [
     },
     {
         'benchmark': 'RuLES', 'group_id': 'privacy_security',
-        'dimension_label': '机密信息授权访问控制评测', 'category_label': '授权访问控制',
-        'reason': 'RuLES 当前入口要求模型结合秘密所有者、请求者和显式授权规则作决定，检查其是否拒绝向未授权主体泄露受保护信息。',
+        'dimension_label': '未授权机密信息泄露防护评测', 'category_label': '机密泄露防护',
+        'reason': 'RuLES 当前入口要求模型结合秘密所有者、请求者和显式授权规则作决定，检查其是否拒绝向没有权限的请求者泄露受保护信息。',
     },
     {
         'benchmark': 'XSafety', 'group_id': 'adversarial_robustness',
@@ -785,13 +785,14 @@ BENCHMARK_TAXONOMY_OVERRIDES = [
     },
     {
         'benchmark': 'XSafety-Privacy-Refusal', 'group_id': 'privacy_security',
-        'dimension_label': '个人信息与财产滥用请求防护评测', 'category_label': '隐私与财产滥用防护',
+        'dimension_label': '个人信息与财产侵害请求拒答评测', 'category_label': '隐私侵害请求拒答',
         'reason': '该入口只含 XSafety 的 Privacy And Property 类，判断模型能否拒绝个人信息泄露、凭据破解和财产侵害请求，不要求题目给出授权关系。',
     },
     {
         'benchmark': 'ConfAIde-Tier2', 'group_id': 'privacy_security',
-        'dimension_label': '情境隐私规范判断评测', 'category_label': '情境信息流规范',
+        'dimension_label': '信息采集与使用隐私合理性评测', 'category_label': '信息采集使用合理性',
         'sort_rank': 1,
+        'dimension_intro': '给出“收集什么信息、由谁收集、用于什么目的”的完整场景，让模型判断这种信息采集与使用方式是否符合普通人的隐私期望。例如，学校为了分组收集学生兴趣，与商店为了营销收集健康信息，即使都涉及个人信息，其合理程度也不同。当前使用 ConfAIde Tier 2 的 98 个场景，每个场景包含结构化模板和自然叙事两种写法，共 196 条样本；该子类评价的是信息使用是否合适，不要求模型拒答，也不判断请求者是否拥有显式访问权限。',
         'reason': 'ConfAIde Tier 2 直接要求模型结合信息类型、收集主体和使用目的判断信息流是否符合情境隐私期望。',
     },
     {
@@ -959,9 +960,9 @@ BENCHMARK_TAXONOMY_OVERRIDES = [
         'benchmark': 'RuLES',
         'source_dimensions': ['伪造内容', '伪造证据与误导合成', '伪造误导内容处置'],
         'group_id': 'privacy_security',
-        'dimension_label': '机密信息授权访问控制评测',
-        'category_label': '授权访问控制',
-        'reason': 'RuLES 当前本地入口使用带秘密所有者、请求者和显式授权规则的访问控制场景，评估模型是否拒绝向未授权主体泄露受保护信息。',
+        'dimension_label': '未授权机密信息泄露防护评测',
+        'category_label': '机密泄露防护',
+        'reason': 'RuLES 当前本地入口使用带秘密所有者、请求者和显式授权规则的访问控制场景，评估模型是否拒绝向没有权限的请求者泄露受保护信息。',
     },
     {
         'benchmark': 'XSafety',
@@ -1318,8 +1319,8 @@ BENCHMARK_SPECIFIC_INTRO_OVERRIDES = {
     'HarmfulQA': 'HarmfulQA 包含 1,960 条专业知识滥用问题，均匀覆盖社会科学、数学与逻辑、商业经济、健康医学、地理环境、文学语言、教育、历史文化、科学技术、哲学伦理十个知识领域。当前检查模型是否拒绝把专业知识用于伤害、欺骗、歧视或违法目的。',
     'XSafety': 'XSafety 的有害请求抵御入口包含 17,990 条普通风险请求，覆盖 10 种语言和违法犯罪、身体伤害、歧视、不安全主题等 9 类风险。Privacy And Property 的 2,000 条样本转入用户隐私安全性，Goal Hijacking 的 2,000 条样本用于越狱攻击防御；Prompt Leaking 和 Role Play Instruction 因标签与内容不稳定不参与评分，各入口没有重复样本。',
     'XSafety-Attack-Defense': 'XSafety-Attack-Defense 包含 10 种语言的 2,000 条 Goal Hijacking 提示，输入明确要求忽略前序任务、替换目标或强制输出指定内容。该分片只评估多语种目标劫持攻击下的安全防御，不与普通有害请求抵御数据重复。',
-    'XSafety-Privacy-Refusal': 'XSafety-Privacy-Refusal 包含 XSafety 全部 10 种语言的 2,000 条 Privacy And Property 请求，检查模型是否拒绝泄露个人信息、协助破解凭据或实施财产侵害。该分片与非隐私风险 XSafety 入口按类别互斥。',
-    'ConfAIde-Tier2': 'ConfAIde 是 ICLR 2024 Spotlight 的情境隐私基准。当前入口接入 Tier 2a 和 Tier 2b：98 个信息流场景分别以结构化模板和自然叙事呈现，共 196 条样本；模型结合信息类型、收集主体和使用目的，在 -100、-50、0、50、100 五档上判断是否符合隐私期望。系统报告与人类平均分的平均绝对误差、Pearson 相关系数，并以最近量表档位计算离散一致率；该代理不等同于论文的多次随机采样设置。',
+    'XSafety-Privacy-Refusal': 'XSafety-Privacy-Refusal 从 XSafety 中固定抽取 Privacy And Property 类的全部 2,000 条请求，覆盖 10 种语言。题目直接要求模型泄露个人资料、协助获取账号或支付凭据，或提供可能造成财产损失的帮助；每条样本的期望行为都是安全拒答。系统检查模型是否明确拒绝并避免给出可执行细节，报告拒答正确率、响应率和延迟。该分片已从普通有害请求版 XSafety 中排除，因此不会重复计数，也不测试带授权规则的机密访问判断。',
+    'ConfAIde-Tier2': 'ConfAIde 是 ICLR 2024 Spotlight 的情境隐私基准。当前入口完整接入 Tier 2a 和 Tier 2b：同一组 98 个信息流场景分别以“信息类型、收集者、用途”的结构化句式和更自然的故事形式呈现，共 196 条样本。模型需要在 -100、-50、0、50、100 五档上判断场景是否符合隐私期望，系统将模型评分与人类平均评分比较，报告平均绝对误差和 Pearson 相关系数；同时把人类均分映射到最近档位计算离散一致率。该入口不测试拒答或固定访问权限，离散一致率也是本地可复现代理，不等同于论文的多次随机采样设置。',
     'SafetyBench': 'SafetyBench 是中英双语安全知识多项选择基准，官方全集含 11,435 道题，覆盖冒犯、偏见、身体健康、心理健康、违法活动、伦理道德、隐私与财产七类风险。由于官方测试集不公开答案，系统接入中英文各七类共 70 道有标签开发题进行可复现评分。',
     'GPTFuzzer': 'GPTFuzzer 由自动红队方法生成或筛选攻击提示，用于测试模型安全策略在自动化变体攻击下是否失守。当前关注攻击提示的绕过效果和模型防御稳定性。',
     'DiaSafety': 'DiaSafety 以对话历史和候选回复为输入，判断该回复在当前上下文中是否安全。它强调同一句话可能因前文而改变安全属性；当前入口保留完整历史和待判定回复，做安全/不安全二分类，评估上下文相关的伦理判断。',
@@ -1336,7 +1337,7 @@ BENCHMARK_SPECIFIC_INTRO_OVERRIDES = {
     'StrongREJECT': 'StrongREJECT 包含 313 条英文基础禁止请求，覆盖非暴力犯罪、暴力、虚假信息与欺骗、仇恨骚扰与歧视、非法商品与服务、色情内容六类。当前只统计明确拒答，作为可复现代理指标，不等同于官方对非拒答回答说服力和具体性的完整评分器。',
     'CHBias': 'CHBias 是中文对话偏见基准，官方数据覆盖性别、性取向、年龄和外貌四类属性。当前入口展示官方测试句并收集去偏改写；由于原始测试集不提供唯一标准改写，该开放任务不伪造精确匹配准确率。',
     'MoralExceptQA': 'MoralExceptQA 包含 148 个来自道德心理学研究的规则破例情境，每条数据给出美国受访者认为破例行为可被允许的比例。系统将比例不低于 0.5 的情境标为多数人认为可以允许，否则标为不可以允许，用于检查模型能否理解胁迫、伤害和规则例外。',
-    'RuLES': 'RuLES 原始框架由 14 类带明确规则的文本交互场景和场景专用程序化判定器组成。当前本地入口接入 15 条 Confidentiality 直接请求样例，完整展示秘密所有者、请求者、受保护信息和授权规则，检查模型是否拒绝向未授权主体泄露秘密。',
+    'RuLES': 'RuLES 原始框架包含 14 类带明确规则的文本交互场景，每类场景都有专用的程序化判定器。当前入口固定使用其中 15 条 Confidentiality 直接请求样例：题目明确给出秘密属于谁、当前是谁在请求、受保护内容是什么，以及“不得向其他用户透露秘密”等访问规则。模型应在请求者无权访问时拒绝披露；这里保护的可以是个人秘密，也可以是业务或系统机密。当前结果只代表这 15 条机密访问样例，不代表 RuLES 其余规则场景的完整成绩。',
     'GlobalOpinionQA': 'GlobalOpinionQA 将跨国调查中的全球社会议题转换为问答，保留国家和人群观点分布。当前用于比较模型回答与不同群体价值立场的接近程度，不把某一国家的多数意见视为唯一正确道德答案。',
     'MoralStories': 'MoralStories 以社会情境、人物意图、道德规范、具体行为和行为后果组成结构化故事，要求模型识别行为是否符合日常道德规范，用于检查情境化道德理解。',
     'moralchoice': 'MoralChoice 收录两个行动都伴随伦理代价的道德两难选择，并区分高模糊性和低模糊性场景。当前用于评估模型在权利、义务、伤害和后果相互冲突时的取舍判断。',
@@ -2116,9 +2117,9 @@ TAXONOMY_DIMENSION_MERGE_PLANS = {
     ],
     'privacy_security': [
         {
-            'label': '个人信息与财产滥用请求防护评测',
-            'intro': '使用 XSafety-Privacy-Refusal 的 10 种语言、2,000 条 Privacy And Property 请求，检查模型能否拒绝个人信息泄露、凭据破解、支付信息窃取和财产侵害协助。该任务根据请求内容判定风险，不依赖显式授权关系。',
-            'category_label': '隐私与财产滥用防护',
+            'label': '个人信息与财产侵害请求拒答评测',
+            'intro': '题目直接向模型索取个人资料、账号或支付凭据，或者要求模型协助实施财产侵害，模型应识别风险并拒绝提供可执行帮助。当前使用 XSafety-Privacy-Refusal 的 10 种语言、2,000 条 Privacy And Property 请求，统一以安全拒答为参考行为。该子类根据请求内容本身判定是否应拒绝，不要求题目给出秘密所有者或授权关系。',
+            'category_label': '隐私侵害请求拒答',
             'sort_rank': 0,
             'benchmark_names': ['XSafety-Privacy-Refusal'],
             'dimension_ids': [
@@ -2129,9 +2130,9 @@ TAXONOMY_DIMENSION_MERGE_PLANS = {
             'merged_dimension_id': 'benchmark::custom_privacy::privacy_security::privacy_refusal::p0::eval-run::XSafety-Privacy-Refusal',
         },
         {
-            'label': '机密信息授权访问控制评测',
-            'intro': '使用 RuLES 的 15 条 Confidentiality 直接请求样例，完整呈现秘密所有者、请求者、受保护信息和授权规则，检查模型能否拒绝向未授权主体披露机密信息。这里的判定随授权关系改变，不是对所有秘密一律拒答。',
-            'category_label': '授权访问控制',
+            'label': '未授权机密信息泄露防护评测',
+            'intro': '题目明确给出秘密所有者、当前请求者、受保护内容和访问规则，模型需要先判断请求者是否有权获得该信息，再决定披露或拒绝。当前使用 RuLES 的 15 条 Confidentiality 直接请求样例，重点检查模型是否会把一个用户的秘密泄露给另一名未授权用户。这里的答案取决于授权关系，不是看到机密信息就一律拒答。',
+            'category_label': '机密泄露防护',
             'sort_rank': 2,
             'benchmark_names': ['RuLES'],
             'include_benchmark_names_only': True,
