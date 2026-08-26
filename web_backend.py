@@ -1305,7 +1305,7 @@ BENCHMARK_SPECIFIC_INTRO_OVERRIDES = {
     'TruthfulQA': 'TruthfulQA 由容易诱发常见误解或虚假前提的问题组成，目标是评估模型是否会复述流行谬误、迷信说法或不真实常识。它不仅看回答是否正确，也关注模型在不知道或问题带有误导时是否能保持诚实。',
     'Chinese_Rumor_Dataset': 'Chinese_Rumor_Dataset 收集新浪微博不实信息举报平台中的中文帖子及真假标签。当前入口将微博原文完整呈现为“谣言/非谣言”二分类题，用于检查模型能否辨别中文网络信息的事实性；它不评估论证中的逻辑谬误类型。',
     'CMRC2018': 'CMRC2018 是面向阅读理解的跨度抽取问答数据集，问题答案通常需要从给定篇章中定位证据片段。当前用于评估模型能否基于文本证据回答，而不是脱离材料生成看似合理的答案。',
-    'LogiQA': 'LogiQA 包含 8,678 道来自中国国家公务员考试的中英双语逻辑阅读理解题，每题由一段论证材料、一个问题和四个候选答案组成。当前入口保留完整材料与选项，检查模型能否综合约束和人物关系完成多步演绎。',
+    'LogiQA': 'LogiQA 官方数据包含来自中国国家公务员考试的中英双语逻辑阅读理解题。当前入口明确使用 zh_eval.txt 中文评估分片，保留完整论证材料、问题和四个选项，检查模型能否综合约束和人物关系完成多步演绎。',
     'HotpotQA': 'HotpotQA 原始基准包含约 11.3 万道基于维基百科的多跳问答，并标注支持事实。当前入口固定使用 7,405 条验证样本，完整展示问题、跨文档上下文、支持句和参考答案，评估跨证据联合推理。',
     'FLUB': 'FLUB 面向容易诱导模型误判的 cunning texts，提供文本类型、是否为问题、解释、选择题选项和正确答案，并设置类型分类、谬误解释与答案选择任务。当前入口使用官方 FLUB.jsonl，检查模型能否识别文本陷阱并作出正确选择。',
     'MAFALDA': 'MAFALDA 统一多种谬误分类体系，并为文本片段提供人工谬误标签和解释。当前入口固定使用 200 条 gold_standard_dataset 样本，要求模型识别文本中的具体谬误类型；没有谬误的样本以 nothing 作为参考。',
@@ -1314,17 +1314,17 @@ BENCHMARK_SPECIFIC_INTRO_OVERRIDES = {
     'sycophancy': 'sycophancy 包含 179 条带用户自述偏好或立场的问题，并提供谄媚与不谄媚回答对。当前使用不谄媚回答作为参考，检查模型是否会为了迎合用户而改变更有依据的回答。',
     'HarmfulQ': 'HarmfulQ 使用 dangerous-q/toxic_outs.json 中的 200 条无攻击包装危险问题。原数据没有稳定的细粒度类别标签；当前统一检查模型是否拒绝提供可执行的危险帮助，不伪造领域划分。',
     'SAFE': 'SAFE 将已有模型回答分别按有害性、敏感性、真实性、自然度、信息完整性、指令遵循性和整体安全性七个轴作二分类。系统汇总官方七个测试分片的 15,333 条有效样本，并展示每个样本当前判断的具体轴，用于校准多维回答安全判别策略。',
-    'CValuesResponsibilityMC': 'CValuesResponsibilityMC 以选择题形式考察模型对责任、公共安全、社会价值和风险场景的判断。当前与 SafetyBench 同归安全知识判断子类，用于观察模型能否识别风险并选择稳妥、合规的答案；它不直接测试面对有害请求时是否拒答。',
+    'CValuesResponsibilityMC': 'CValuesResponsibilityMC 使用中文社会责任和风险场景选择题，考察模型对公共安全、社会价值和稳妥行为的判断。它评价内容和行为的安全性，不直接测试面对有害请求时是否拒答。',
     'PRISM': 'PRISM 将 75 个国家的参与者背景、主观偏好与对 21 个模型对话的逐轮评分联系起来。当前入口展示用户提示、被评回复、评分与选中状态，用于分析多元用户偏好对齐；该数据没有唯一标准回复。',
     'WMDP': 'WMDP 聚焦生物安全、网络安全和化学安全等高风险知识，题目由相关领域专家编写。当前用于评估模型是否掌握或暴露可被滥用的危险知识，并支持高风险能力边界检查。',
     'HarmfulQA': 'HarmfulQA 包含 1,960 条专业知识滥用问题，均匀覆盖社会科学、数学与逻辑、商业经济、健康医学、地理环境、文学语言、教育、历史文化、科学技术、哲学伦理十个知识领域。当前检查模型是否拒绝把专业知识用于伤害、欺骗、歧视或违法目的。',
     'XSafety': 'XSafety 的有害请求抵御入口包含 17,990 条普通风险请求，覆盖 10 种语言和违法犯罪、身体伤害、歧视、不安全主题等 9 类风险。Privacy And Property 的 2,000 条样本归入隐私信息安全性，Goal Hijacking 的 2,000 条样本用于越狱攻击防御；Prompt Leaking 和 Role Play Instruction 因标签与内容不稳定不参与评分，各入口没有重复样本。',
     'XSafety-Attack-Defense': 'XSafety-Attack-Defense 包含 10 种语言的 2,000 条 Goal Hijacking 提示，输入明确要求忽略前序任务、替换目标或强制输出指定内容。该分片只评估多语种目标劫持攻击下的安全防御，不与普通有害请求抵御数据重复。',
     'XSafety-Privacy-Refusal': 'XSafety-Privacy-Refusal 使用 XSafety 的 Privacy And Property 类全部 2,000 条请求，覆盖 10 种语言，仅包含个人资料泄露、账号或支付凭据获取，以及可能造成财产损失的请求。每条样本以安全拒答为参考行为，系统统计拒答正确率、响应率和平均延迟。',
-    'ConfAIde-Tier2': 'ConfAIde-Tier2 使用 ConfAIde 的 Tier 2a 和 Tier 2b，仅包含信息类型、收集方和使用目的明确的隐私使用场景。同一组 98 个场景分别以结构化模板和自然故事呈现，共 196 条样本。模型在 -100、-50、0、50、100 五档上判断场景是否符合隐私期望，系统报告与人类平均评分的平均绝对误差、Pearson 相关系数和离散一致率。',
-    'SafetyBench': 'SafetyBench 是中英双语安全知识多项选择基准，官方全集含 11,435 道题，覆盖冒犯、偏见、身体健康、心理健康、违法活动、伦理道德、隐私与财产七类风险。由于官方测试集不公开答案，系统接入中英文各七类共 70 道有标签开发题进行可复现评分。',
+    'ConfAIde-Tier2': 'ConfAIde-Tier2 使用 ConfAIde 的 Tier 2a 和 Tier 2b，仅包含信息类型、收集方和使用目的明确的隐私使用场景。当前 196 条样本使用中文任务指令和英文场景，模型在 -100、-50、0、50、100 五档上判断场景是否符合隐私期望，系统报告与人类平均评分的平均绝对误差、Pearson 相关系数和离散一致率。',
+    'SafetyBench': 'SafetyBench 官方全集是中英双语安全知识多项选择基准，覆盖冒犯、偏见、身体健康、心理健康、违法活动、伦理道德、隐私与财产七类风险。当前入口明确使用 dev_zh.json 的 35 道有标签中文开发题进行可复现评分。',
     'GPTFuzzer': 'GPTFuzzer 由自动红队方法生成或筛选攻击提示，用于测试模型安全策略在自动化变体攻击下是否失守。当前关注攻击提示的绕过效果和模型防御稳定性。',
-    'DiaSafety': 'DiaSafety 以对话历史和候选回复为输入，判断该回复在当前上下文中是否安全。它强调同一句话可能因前文而改变安全属性；当前入口保留完整历史和待判定回复，做安全/不安全二分类，评估上下文相关的伦理判断。',
+    'DiaSafety': 'DiaSafety 以对话历史和候选回复为输入，判断该回复在当前上下文中是否安全。当前入口使用中文判定指令包装英文对话，保留完整历史和待判定回复，评估上下文相关的安全二分类能力。',
     'CoSafe': 'CoSafe 将不安全请求放在多轮对话和共指语境中，最后一轮往往需要结合前文才能识别真实风险。当前用于评估模型是否会被上下文目标劫持，或在共指场景中误判安全边界。',
     'SaladBench': 'SaladBench 汇集并扩充多类安全提示，用于评估大模型安全性以及攻击、防御方法的效果。当前重点看模型面对对抗改写、有害请求变体和安全测试提示时是否仍能稳定拒答。',
     'HarmBench': 'HarmBench 是自动红队评估框架，官方行为集覆盖网络犯罪、生化风险、侵权、错误信息、骚扰和非法活动。本系统当前只接入 text test behaviors，没有运行攻击生成算法，因此该入口仅评估未施加越狱时的有害行为基线拒答。',
@@ -1337,26 +1337,27 @@ BENCHMARK_SPECIFIC_INTRO_OVERRIDES = {
     'Do-Not-Answer': 'Do-Not-Answer 的核心指令集包含 939 条英文问题，覆盖信息危害、恶意用途、歧视与毒性、错误信息、人机交互危害五个风险领域和 12 种伤害类型。系统固定读取官方 Instruction 文件并将目标统一为应拒绝，不把既有模型回复误当成评测问题。',
     'StrongREJECT': 'StrongREJECT 包含 313 条英文基础禁止请求，覆盖非暴力犯罪、暴力、虚假信息与欺骗、仇恨骚扰与歧视、非法商品与服务、色情内容六类。当前只统计明确拒答，作为可复现代理指标，不等同于官方对非拒答回答说服力和具体性的完整评分器。',
     'CHBias': 'CHBias 是中文对话偏见基准，官方数据覆盖性别、性取向、年龄和外貌四类属性。当前入口展示官方测试句并收集去偏改写；由于原始测试集不提供唯一标准改写，该开放任务不伪造精确匹配准确率。',
-    'MoralExceptQA': 'MoralExceptQA 包含 148 个来自道德心理学研究的规则破例情境，每条数据给出美国受访者认为破例行为可被允许的比例。系统将比例不低于 0.5 的情境标为多数人认为可以允许，否则标为不可以允许，用于检查模型能否理解胁迫、伤害和规则例外。',
+    'MoralExceptQA': 'MoralExceptQA 包含 148 个来自道德心理学研究的英文规则破例情境，当前入口使用中文问题和选项询问破例行为是否可允许。系统以美国受访者许可比例 0.5 为本地参考阈值，用于检查胁迫、伤害和规则例外理解。',
     'RuLES': 'RuLES 使用带明确规则的文本交互场景评估模型的规则遵循能力。机密信息安全性入口仅包含 Confidentiality 场景，题目完整给出秘密所有者、请求者、受保护内容和访问规则，检查模型能否按照权限关系保护个人、业务或系统机密信息。',
     'GlobalOpinionQA': 'GlobalOpinionQA 将跨国调查中的全球社会议题转换为问答，保留国家和人群观点分布。当前用于比较模型回答与不同群体价值立场的接近程度，不把某一国家的多数意见视为唯一正确道德答案。',
-    'MoralStories': 'MoralStories 以社会情境、人物意图、道德规范、具体行为和行为后果组成结构化故事，要求模型识别行为是否符合日常道德规范，用于检查情境化道德理解。',
+    'MoralStories': 'MoralStories 以英文社会情境、人物意图、道德规范、具体行为和后果组成结构化故事。当前入口使用中文字段标识、判定问题和选项，要求模型识别行为是否符合日常道德规范。',
     'moralchoice': 'MoralChoice 收录两个行动都伴随伦理代价的道德两难选择，并区分高模糊性和低模糊性场景。当前用于评估模型在权利、义务、伤害和后果相互冲突时的取舍判断。',
-    'MultiTP': 'MultiTP 将 Moral Machine 自动驾驶事故两难场景扩展到 107 种语言，变量覆盖物种、人数、年龄、性别、社会角色、健康状况和是否守法。当前以全球人类参考偏好方向统计模型选择的一致性与跨语言稳定性，不把伦理取舍解释为存在唯一客观正确答案。',
-    'LegalBench-PrivacyPolicyQA': 'LegalBench PrivacyPolicyQA 给出用户的隐私问题和一段真实隐私政策条款，要求判断条款是否包含足以回答问题的信息，用于评估隐私规则理解和证据定位能力。',
+    'MultiTP': 'MultiTP 将 Moral Machine 自动驾驶事故两难场景扩展到 107 种语言。当前入口只使用其中 460 条可解析的中文情境，覆盖物种、人数、年龄、性别、社会角色、健康状况和守法状态，并以全球人类参考偏好方向统计选择一致性。',
+    'LegalBench-PrivacyPolicyQA': 'LegalBench PrivacyPolicyQA 给出用户的英文隐私问题和真实隐私政策条款，要求判断条款是否包含足以回答问题的信息。当前入口使用中文“隐私政策条款”字段标识呈现英文文本，用于评估隐私规则理解和证据定位能力。',
     'LegalBench-UnfairToS': 'LegalBench UnfairToS 要求将在线服务条款分为仲裁、单方变更、内容删除、管辖、法律选择、责任限制、单方终止、使用即合同或其他类别，用于识别潜在不公平的消费者合同条款。',
     'LegalBench-TelemarketingSalesRule': 'LegalBench TelemarketingSalesRule 以电话营销的价格、附加费用和重要信息披露场景，要求判断行为是否违反美国联邦法规 16 C.F.R. § 310.3(a)(1)-(2)，用于评估模型将明确法规适用到具体事实的能力。',
     'LegalBench-PrivacyRulesSuite': 'LegalBench PrivacyRulesSuite 接入 Privacy Policy Entailment 和 OPP-115 的九个隐私政策任务，共 10 个官方任务，覆盖数据保存、安全、追踪、第一方收集使用、特定人群、政策变更、第三方共享、访问删除和用户选择控制；不重复已有 PrivacyPolicyQA 样本。',
     'LegalBench-ConsumerContractsQA': 'LegalBench ConsumerContractsQA 给出完整消费者合同和具体权利义务问题，要求依据合同文本回答 Yes 或 No。它补充合同问答能力，不重复 UnfairToS 的条款类型分类或 TelemarketingSalesRule 的法规适用样本。',
     'LegalBench-RuleRecallSuite': 'LegalBench RuleRecallSuite 汇总官方 5 个 Rule 任务，包括 RuleQA、国际公民身份规则、纽约州司法行为规范以及判例引用分类和开放生成，用于评估法律规则与法源知识。',
     'LegalBench-RuleConclusionSuite': 'LegalBench RuleConclusionSuite 汇总除已单列电话营销规则外的 11 个官方 Conclusion 任务，覆盖商标分类、多样性管辖、传闻证据、个人管辖、继受责任以及统一商法典与普通法适用。',
-    'explicit_subset': 'explicit_subset 使用公开 CommitBench 完整测试集重建显式提交摘要任务，输入真实 Git 代码差异，要求生成直接描述新增、删除、修复或修改内容的英文提交信息。原论文分类数据未提供公开下载地址，因此系统按提交信息与差异标识符的显式对应程度进行可复现划分，并在本地来源记录中保留这一差异。',
-    'implicit_subset': 'implicit_subset 使用公开 CommitBench 完整测试集重建隐式提交摘要任务，输入真实 Git 代码差异，要求生成概括修改目的、原因或影响的英文提交信息。该子集保留词面对应较弱、需要理解修改意图的样本；原论文分类数据未公开，系统在来源记录中明确标注其代理重建方式。',
-    'RustRepoTrans': 'RustRepoTrans 接入官方 375 组跨语言等价函数，覆盖 C、Java、Python 到 Rust 的真实仓库代码翻译。系统向模型提供源语言函数并要求生成对应 Rust 函数，使用官方 Rust 实现作为参考答案进行代码级评分。',
+    'explicit_subset': 'explicit_subset 使用公开 CommitBench 完整测试集重建显式提交摘要任务，以中文指令呈现真实 Git 代码差异，要求生成直接描述新增、删除、修复或修改内容的英文提交信息。原论文分类数据未公开，当前使用可复现规则重建分片。',
+    'implicit_subset': 'implicit_subset 使用公开 CommitBench 完整测试集重建隐式提交摘要任务，以中文指令呈现真实 Git 代码差异，要求生成概括修改目的、原因或影响的英文提交信息。该分片保留词面对应较弱、需要理解修改意图的样本。',
+    'RustRepoTrans': 'RustRepoTrans 接入官方 375 组跨语言等价函数，覆盖 C、Java、Python 到 Rust 的真实仓库代码翻译。当前入口使用中文任务指令呈现源语言函数，要求只输出对应 Rust 函数，并使用官方 Rust 实现作为代码级参考。',
+    'Bytecue_dataset': 'ByteCue 当前入口使用 test_data.json 中的 6,128 条字节码注释样本，样本提供 API、字节码和控制流图，要求生成参考注释。数据以英文为主，同时包含中文注释样本，因此归入含中文评测部分。',
     'SorryBench': 'SORRY-Bench 接入 2024-06 基础集的 450 条不安全指令，均衡覆盖 45 个细粒度类别，每类 10 条。系统直接测试模型是否拒绝执行原始请求，不附加越狱模板。',
     'RMCBench': 'RMCBench 的 473 条提示覆盖恶意代码生成、代码翻译、补全和改写。当前入口把每条恶意代码请求的参考行为统一为 SAFE_REFUSAL，直接检查模型能否抵御恶意代码请求并拒绝提供可执行的攻击或滥用代码。',
     'WMDP-BioChem': 'WMDP-BioChem 合并 WMDP 的生物安全与化学安全选择题分片，测量模型对可被滥用的高风险专业知识的保留程度。当前保留官方正确选项，原始准确率越高表示危险知识暴露越充分，解释安全结果时应按该方向读取。',
-    'honest': 'HONEST 接入官方 binary 与 queer/non-queer 的 5,625 条多语言身份提示模板，要求模型完成开放式补全。系统使用官方 HurtLex 各语言 conservative 词表检测补全中的伤害性词汇，以无伤害补全率评估多语言伤害表达的伦理风险。',
+    'honest': 'HONEST 接入官方 binary 与 queer/non-queer 的 5,625 条多语言身份提示模板，当前使用中文补全指令包装各语言原始句子。系统使用官方 HurtLex 词表检测伤害性词汇，以无伤害补全率评估多语言伤害表达风险。',
     'ToxiGen': 'ToxiGen 包含围绕 13 类少数群体构造并经人工验证的隐式仇恨与中性文本。当前入口要求模型判断文本是否 hateful/toxic，重点检查没有显式侮辱词时能否识别面向社会群体的隐式仇恨，不将它窄化为残疾偏见。',
     'ParlAIDialogueSafety': 'ParlAI Dialogue Safety 提供真实和对抗构造的对话安全样本，并以 __ok__/__notok__ 标注发言是否安全。当前入口完整展示待判断的对话文本，检查模型能否识别冒犯、不尊重和不安全表达，作为对话交往伦理处置评测。',
     'BBQ': 'BBQ 通过成对的歧义与消歧语境问答测量社会偏见，覆盖年龄、残疾、性别认同、国籍、外貌、种族/民族、宗教、社会经济地位和性取向九类身份维度。在信息不足的歧义语境中，正确答案通常是“无法判断”；系统据此检查模型是否依赖刻板印象补全缺失信息。',
@@ -1368,33 +1369,93 @@ BENCHMARK_SPECIFIC_INTRO_OVERRIDES = {
     'ToolE': 'ToolE 当前接入 MetaTool 的 241 条用户查询，检查模型能否判断任务是否需要外部工具，并在需要时识别合适的工具类型。它测量工具需求意识与选择，不把 API 调用的实际执行成功率作为当前指标。',
     'CHID': 'CHID 是 CLUE/FewCLUE 中的中文成语完形填空任务。每个样例提供包含空缺位置的上下文和候选成语，要求选出在语义和语境上最匹配的选项。当前入口使用 FewCLUE 的 126 条带答案测试样本，不把它泛化成“中文逻辑能力”。',
     'MedSafetyBench': 'MedSafetyBench 由有害医疗请求和安全回复示范构成，依据美国医学会伦理原则衡量医疗安全。当前入口使用官方 test/gpt4 与 test/llama2 的 900 条安全示范，以明确拒答或安全回复相似度作为本地代理评分，不将它宣称为医学事实问答。',
-    'PairVul': 'PairVul 接入公开复现包中 Linux 内核 Top-10 CWE 的 586 组漏洞/修复函数对，共形成 1172 个二分类样本。模型需要判断给定代码是含漏洞版本还是已修复版本，用于评估真实 CVE 场景下的代码漏洞识别能力。',
-    'HolisticBias': 'HolisticBias 使用官方 v1.1 生成器展开 13 个身份轴、约 600 个描述词和 26 个模板，得到 566625 条带身份元数据的句子。系统要求模型作出尊重且不含刻板印象的回应，并按身份轴记录无伤害响应表现。',
+    'PairVul': 'PairVul 接入公开复现包中 Linux 内核 Top-10 CWE 的 586 组漏洞/修复函数对，共形成 1,172 个二分类样本。当前入口使用中文任务指令和中文选项包装原始源代码，要求判断代码是含漏洞版本还是已修复版本。',
+    'HolisticBias': 'HolisticBias 使用官方 v1.1 生成器展开 13 个身份轴、约 600 个描述词和 26 个模板，得到 566,625 条英文身份陈述。当前入口使用中文回应指令呈现英文陈述，要求模型作出尊重且不含刻板印象的简短回应。',
+    'CrowS-Pairs-Religion-MC': 'CrowS-Pairs-Religion-MC 使用 CrowS-Pairs 的 105 组英文宗教身份成对句子，当前入口使用中文问题要求模型选出更包含刻板印象或偏见表达的一句。',
 }
 
-CHINESE_ONLY_BENCHMARK_NAMES = {
-    'HalluQA', 'CMMLU', 'Chinese_Rumor_Dataset', 'CMRC2018',
-    'CHID', 'RuozhibaQA', 'SEval', 'CHBias', 'CHiSafetyBench',
+BENCHMARK_EFFECTIVE_LANGUAGE_OVERRIDES = {
+    'HalluQA': 'Chinese',
+    'CMMLU': 'Chinese',
+    'Chinese_Rumor_Dataset': 'Chinese',
+    'CMRC2018': 'Chinese',
+    'LogiQA': 'Chinese (current zh_eval split)',
+    'FLUB': 'Chinese',
+    'RuozhibaQA': 'Chinese',
+    'natural-instructions': 'Multilingual, including Chinese',
+    'FollowBench': 'English, Chinese',
+    'RustRepoTrans': 'Chinese instructions, multilingual code',
+    'CHID': 'Chinese',
+    'Bytecue_dataset': 'English, Chinese',
+    'explicit_subset': 'Chinese instructions, English code',
+    'implicit_subset': 'Chinese instructions, English code',
+    'XSafety-Attack-Defense': '10 languages, including Chinese',
+    'SEval': 'Chinese',
+    'CHiSafetyBench': 'Chinese',
+    'XSafety': '10 languages, including Chinese',
+    'XSafety-Privacy-Refusal': '10 languages, including Chinese',
+    'ConfAIde-Tier2': 'Chinese instructions, English scenarios',
+    'LegalBench-PrivacyPolicyQA': 'Chinese context labels, English policy text',
+    'HolisticBias': 'Chinese instructions, English statements',
+    'CHBias': 'Chinese',
+    'CrowS-Pairs-Religion-MC': 'Chinese instructions, English statements',
+    'MoralStories': 'Chinese instructions, English scenarios',
+    'MoralExceptQA': 'Chinese instructions, English scenarios',
+    'MultiTP': 'Chinese',
+    'HONEST': 'Chinese instructions, multilingual statements',
+    'SafetyBench': 'Chinese (current dev_zh split)',
+    'CValuesResponsibilityMC': 'Chinese',
+    'DiaSafety': 'Chinese instructions, English dialogue',
+    'PairVul': 'Chinese instructions, source code',
 }
+BENCHMARK_EFFECTIVE_LANGUAGE_BY_CASEFOLD = {
+    name.strip().casefold(): language
+    for name, language in BENCHMARK_EFFECTIVE_LANGUAGE_OVERRIDES.items()
+}
+
+
+def attach_benchmark_effective_languages(groups: List[Dict[str, Any]]) -> None:
+    """Describe the language actually presented by the local evaluation entry."""
+    for group in groups:
+        for dim in group.get('dimensions') or []:
+            for bench in dim.get('benchmarks') or []:
+                key = str(bench.get('name') or '').strip().casefold()
+                language = BENCHMARK_EFFECTIVE_LANGUAGE_BY_CASEFOLD.get(key)
+                if language:
+                    bench['language'] = language
+
+
+def benchmark_includes_chinese(bench: Dict[str, Any]) -> bool:
+    key = str(bench.get('name') or '').strip().casefold()
+    if key in BENCHMARK_EFFECTIVE_LANGUAGE_BY_CASEFOLD:
+        return True
+    language = str(bench.get('language') or '').casefold()
+    return 'chinese' in language or '中文' in language
 
 
 def attach_dimension_language_labels(groups: List[Dict[str, Any]]) -> None:
-    """Expose a separate UI language marker without changing taxonomy names."""
-    chinese_only_keys = {
-        normalize_benchmark_key(name) for name in CHINESE_ONLY_BENCHMARK_NAMES
-    }
+    """Expose a UI marker when any benchmark in a dimension includes Chinese."""
     for group in groups:
         for dim in group.get('dimensions') or []:
-            benchmark_keys = {
-                normalize_benchmark_key(bench.get('name') or '')
-                for bench in (dim.get('benchmarks') or [])
+            benchmarks = [
+                bench for bench in (dim.get('benchmarks') or [])
                 if isinstance(bench, dict)
-            }
-            if (
-                '中文' in str(dim.get('label') or '')
-                or (benchmark_keys and benchmark_keys.issubset(chinese_only_keys))
+            ]
+            if '中文' in str(dim.get('label') or '') or any(
+                benchmark_includes_chinese(bench) for bench in benchmarks
             ):
                 dim['language_label'] = '中文'
+
+
+def group_chinese_dimensions_last(groups: List[Dict[str, Any]]) -> None:
+    """Keep Chinese-related dimensions together after the general-language rows."""
+    for group in groups:
+        dimensions = list(group.get('dimensions') or [])
+        group['dimensions'] = [
+            dim for dim in dimensions if dim.get('language_label') != '中文'
+        ] + [
+            dim for dim in dimensions if dim.get('language_label') == '中文'
+        ]
 
 RUNTIME_DIR.mkdir(parents=True, exist_ok=True)
 JOBS_DIR.mkdir(parents=True, exist_ok=True)
@@ -1951,6 +2012,26 @@ TAXONOMY_DIMENSION_MERGE_PLANS = {
             'merged_dimension_id': 'taxonomy::epistemic_reliability::anti_sycophancy',
         },
     ],
+    'reasoning_causal': [
+        {
+            'label': '逻辑谬误辨析推理',
+            'intro': '使用 MAFALDA 的英文人工标注论证片段，评估模型能否定位并分类具体逻辑谬误；无谬误样本以 nothing 作为参考。',
+            'category_label': '逻辑谬误辨析',
+            'sort_rank': 8,
+            'benchmark_names': ['MAFALDA'],
+            'include_benchmark_names_only': True,
+            'merged_dimension_id': 'taxonomy::reasoning_causal::fallacy_classification',
+        },
+        {
+            'label': '中文文本陷阱辨析推理',
+            'intro': '使用 FLUB 的 834 条中文 cunning texts，覆盖文字游戏、错误类比和推理错误等类型，评估模型能否识别题设陷阱并选出有据的纠偏解释。',
+            'category_label': '中文文本陷阱辨析',
+            'sort_rank': 9,
+            'benchmark_names': ['FLUB'],
+            'include_benchmark_names_only': True,
+            'merged_dimension_id': 'taxonomy::reasoning_causal::chinese_text_trap_reasoning',
+        },
+    ],
     'task_control': [
         {
             'label': '函数级代码生成任务',
@@ -2028,13 +2109,22 @@ TAXONOMY_DIMENSION_MERGE_PLANS = {
     ],
     'adversarial_robustness': [
         {
-            'label': '多语种越狱提示攻击防御评测',
-            'intro': '合并 DoAnythingNow 的野外越狱模板、UltraSafety 的越狱提示和 XSafety 的 10 语种 Goal Hijacking 分片，评估显式指令覆盖、目标劫持和越狱包装能否绕过模型安全边界。',
+            'label': '越狱提示攻击防御评测',
+            'intro': '使用 DoAnythingNow 的野外越狱模板和 UltraSafety 的英文越狱提示，评估角色包装、显式指令覆盖和其他越狱表述能否绕过模型安全边界。',
             'category_label': '越狱与提示攻击',
             'sort_rank': 4,
-            'benchmark_names': ['DoAnythingNow', 'UltraSafety', 'XSafety-Attack-Defense'],
+            'benchmark_names': ['DoAnythingNow', 'UltraSafety'],
             'include_benchmark_names_only': True,
             'merged_dimension_id': 'taxonomy::adversarial_robustness::multilingual_jailbreak_prompt_defense',
+        },
+        {
+            'label': '多语种目标劫持攻击防御评测',
+            'intro': '使用 XSafety-Attack-Defense 的 2,000 条 Goal Hijacking 提示，覆盖含中文在内的 10 种语言，专门评估模型能否抵御忽略前序指令、替换任务目标和强制输出等显式目标劫持攻击。',
+            'category_label': '多语种目标劫持',
+            'sort_rank': 5,
+            'benchmark_names': ['XSafety-Attack-Defense'],
+            'include_benchmark_names_only': True,
+            'merged_dimension_id': 'taxonomy::adversarial_robustness::multilingual_goal_hijacking_defense',
         },
         {
             'label': '综合有害请求抵御评测',
@@ -2140,18 +2230,47 @@ TAXONOMY_DIMENSION_MERGE_PLANS = {
             'merged_dimension_id': 'taxonomy::privacy_security::confidential_access_control',
         },
     ],
+    'legal_compliance': [
+        {
+            'label': '中文标识隐私政策证据定位评测',
+            'intro': '使用 LegalBench PrivacyPolicyQA，以中文字段标识呈现英文隐私问题和政策条款，评估模型能否判断条款是否包含回答用户问题所需的证据。',
+            'category_label': '隐私政策证据定位',
+            'sort_rank': 0,
+            'benchmark_names': ['LegalBench-PrivacyPolicyQA'],
+            'include_benchmark_names_only': True,
+            'merged_dimension_id': 'taxonomy::legal_compliance::privacy_policy_relevance_bilingual',
+        },
+        {
+            'label': '隐私政策规则识别评测',
+            'intro': '使用 LegalBench PrivacyRulesSuite 的 10 个英文官方任务，覆盖数据保存、安全、追踪、第一方收集使用、特定人群、政策变更、第三方共享、访问删除和用户选择控制。',
+            'category_label': '隐私政策规则识别',
+            'sort_rank': 1,
+            'benchmark_names': ['LegalBench-PrivacyRulesSuite'],
+            'include_benchmark_names_only': True,
+            'merged_dimension_id': 'taxonomy::legal_compliance::privacy_rules_english',
+        },
+    ],
     'ethical_alignment': [
         {
-            'label': '综合内容安全伦理判断评测',
-            'intro': '综合评估模型能否判断行为与既有回答是否安全并符合社会伦理：SafetyBench 和 CValuesResponsibilityMC 使用风险与社会责任选择题，SAFE 对已有模型回答执行七个安全质量轴的二分类。三者均评价内容或行为本身，不测试越狱攻击成功率。',
+            'label': '中文综合安全伦理判断评测',
+            'intro': '使用 SafetyBench 当前接入的 35 条中文开发题和 CValuesResponsibilityMC 中文社会责任数据，评估模型能否识别安全风险、社会责任和合规行为。',
             'category_label': '综合安全伦理判断',
             'sort_rank': 4,
-            'benchmark_names': ['SafetyBench', 'CValuesResponsibilityMC', 'SAFE'],
+            'benchmark_names': ['SafetyBench', 'CValuesResponsibilityMC'],
             'dimension_ids': [
                 'benchmark::fairness_bias::downloaded::其他偏见::p0::eval-run::SafetyBench',
             ],
             'include_benchmark_names_only': True,
             'merged_dimension_id': 'taxonomy::ethical_alignment::comprehensive_content_safety',
+        },
+        {
+            'label': '多维回答安全伦理判别评测',
+            'intro': '使用 SAFE 的 15,333 条英文样本，分别在有害性、敏感性、真实性、自然度、信息完整性、指令遵循性和整体安全性七个轴上判断已有模型回答。',
+            'category_label': '回答安全伦理判别',
+            'sort_rank': 5,
+            'benchmark_names': ['SAFE'],
+            'include_benchmark_names_only': True,
+            'merged_dimension_id': 'taxonomy::ethical_alignment::multidimensional_response_safety',
             'consume_dimension_ids': [
                 'trusted::commonDataset::26::eval-run::p0::eval-run::SAFE',
             ],
@@ -2185,12 +2304,21 @@ TAXONOMY_DIMENSION_MERGE_PLANS = {
         },
         {
             'label': '道德困境决策评测',
-            'intro': '评估模型在无法同时满足所有伦理目标的两难情境中如何取舍，覆盖自动驾驶事故选择、个体权益、总体伤害和跨语言决策稳定性。',
+            'intro': '使用 MoralChoice 的英文高模糊与低模糊道德情境，评估模型在个体权益、义务、伤害和后果无法同时满足时的取舍判断。',
             'category_label': '伦理困境与取舍',
             'sort_rank': 3,
-            'benchmark_names': ['moralchoice', 'MultiTP'],
+            'benchmark_names': ['moralchoice'],
             'include_benchmark_names_only': True,
             'merged_dimension_id': 'taxonomy::ethical_alignment::moral_dilemmas',
+        },
+        {
+            'label': '中文自动驾驶道德困境决策评测',
+            'intro': '使用 MultiTP 当前接入的 460 条中文 Moral Machine 情境，评估模型在物种、人数、年龄、性别、社会角色、健康状况和守法状态等自动驾驶事故取舍中的决策表现。',
+            'category_label': '中文自动驾驶伦理取舍',
+            'sort_rank': 4,
+            'benchmark_names': ['MultiTP'],
+            'include_benchmark_names_only': True,
+            'merged_dimension_id': 'taxonomy::ethical_alignment::chinese_autonomous_driving_dilemmas',
         },
     ],
 }
@@ -3040,7 +3168,9 @@ def build_trust_catalog(apply_editor_overrides: bool = True) -> Dict[str, Any]:
     ordered = [group for group in ordered if group.get('dimensions')]
     if apply_editor_overrides:
         apply_taxonomy_editor_overrides(ordered)
+    attach_benchmark_effective_languages(ordered)
     attach_dimension_language_labels(ordered)
+    group_chinese_dimensions_last(ordered)
     domains = build_taxonomy_domains(ordered)
     total = sum(len(g['dimensions']) for g in ordered)
     implemented = sum(1 for g in ordered for d in g['dimensions'] if d.get('implemented'))

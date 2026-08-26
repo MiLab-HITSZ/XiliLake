@@ -101,12 +101,22 @@ def main() -> None:
                 f"**规模：** {len(dimensions)} 个子类，{benchmark_count} 个 Benchmark。",
                 '',
             ])
+            entered_chinese_section = False
             for dimension_index, dim in enumerate(dimensions, 1):
+                if dim.get('language_label') == '中文' and not entered_chinese_section:
+                    lines.extend([
+                        '---',
+                        '',
+                        '**中文评测**',
+                        '',
+                    ])
+                    entered_chinese_section = True
                 benchmarks = dim.get('benchmarks') or []
                 evaluable_count = sum(bool(bench.get('implemented')) for bench in benchmarks)
                 lines.extend([
                     f"#### {domain_index}.{group_index}.{dimension_index} {dim.get('label')}",
                     '',
+                    f"- 语言分区：{dim.get('language_label') or '通用'}",
                     f"- 分类小标题：{dim.get('category_label') or group.get('label') or ''}",
                     f"- 子类介绍：{dim.get('intro') or ''}",
                     f"- Benchmark 数量：{len(benchmarks)}（可评测 {evaluable_count}）",

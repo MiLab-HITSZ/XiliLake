@@ -37,9 +37,6 @@
     "cdh::Relational Anomalies::Spatial": {
       "label": "空间位置关系推理"
     },
-    "benchmark::reasoning::downloaded::谬误理解能力": {
-      "intro": "使用 FLUB 和 MAFALDA 检查模型能否在具体论证中推理并定位谬误类型，而不仅判断结论的表面真伪。"
-    },
     "benchmark::harmful_capability::downloaded::迷信伪科学内容处置::p0::eval-run::FLUE": {
       "intro": "实际数据来自 ruozhiba 问答，检查歧义、错误前提和偷换概念下模型能否进行正常推理。"
     },
@@ -131,7 +128,8 @@
       "cdh::Relational Anomalies::Animal Behavior",
       "cdh::Relational Anomalies::Size Scale",
       "cdh::Relational Anomalies::Object Function",
-      "benchmark::reasoning::downloaded::谬误理解能力",
+      "taxonomy::reasoning_causal::fallacy_classification",
+      "taxonomy::reasoning_causal::chinese_text_trap_reasoning",
       "benchmark::harmful_capability::downloaded::迷信伪科学内容处置::p0::eval-run::FLUE"
     ],
     "task_control": [
@@ -171,10 +169,12 @@
       "taxonomy::ethical_alignment::moral_stories",
       "taxonomy::ethical_alignment::moral_exceptions",
       "taxonomy::ethical_alignment::moral_dilemmas",
+      "taxonomy::ethical_alignment::multidimensional_response_safety",
       "benchmark::harmful_capability::downloaded::毒性仇恨内容处置::p0::eval-run::honest",
       "benchmark::harmful_capability::downloaded::冒犯言论检测::p0::eval-run::ParlAIDialogueSafety",
       "benchmark::privacy_security::downloaded::综合有害请求与安全响应::p0::eval-run::ConvAbuse",
       "taxonomy::ethical_alignment::comprehensive_content_safety",
+      "taxonomy::ethical_alignment::chinese_autonomous_driving_dilemmas",
       "benchmark::verified_benchmarks::verified::output_safety::p0::eval-run::DiaSafety"
     ]
   }
