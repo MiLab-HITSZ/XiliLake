@@ -145,7 +145,7 @@
                 "benchmark": "LegalBench-UnfairToS",
                 "dimension": "消费者权益法规遵守性评测",
                 "task": "qa",
-                "question": "we reserve the right to make changes to our site, policies, service terms, and these conditions of use at any time.\n请判断该服务条款所属的消费者权益风险类别。",
+                "question": "we reserve the right to make changes to our site, policies, service terms, and these conditions of use at any time.\nClassify the consumer-contract risk category of this term.",
                 "answer": "Unilateral change",
                 "options": [
                   "A. Arbitration",

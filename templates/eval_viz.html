@@ -627,6 +627,9 @@ function cleanSampleQuestion(value,options=[]){
         /^请只回答正确选项字母[。.]?$/,
         /^请直接给出答案[。.]?$/,
         /^请根据题目补全或生成代码。只输出最终代码，不要输出分析过程[。.]?$/,
+        /^Answer with the correct option letter only[.]?$/i,
+        /^Provide the final answer directly[.]?$/i,
+        /^Complete or generate the requested code\. Output only the final code without analysis[.]?$/i,
     ];
     return sampleValueText(value).split('\n').filter(line=>{
         const text=line.trim();

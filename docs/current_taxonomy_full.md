@@ -364,7 +364,18 @@
 
 **规模：** 16 个子类，19 个 Benchmark。
 
-#### 1.3.1 工具需求识别与选择评测
+#### 1.3.1 跨语言代码翻译任务
+
+- 语言分区：通用
+- 分类小标题：代码任务可靠性
+- 子类介绍：使用 RustRepoTrans 的真实仓库函数对，评估从 C、Java 或 Python 向 Rust 翻译时的语义等价性与代码完整性。
+- Benchmark 数量：1（可评测 1）
+
+| Benchmark | 状态 | 分类核验 | 原文或官方仓库 | 评测内容简介 |
+| --- | --- | --- | --- | --- |
+| RustRepoTrans | 可评测 | 符合 | [原文/仓库](https://github.com/SYSUSELab/RustRepoTrans) | RustRepoTrans 接入官方 375 组跨语言等价函数，原始样本由源文件路径、源语言函数、Rust 文件路径和参考 Rust 函数组成。当前使用英文翻译指令呈现 C、Java 或 Python 函数，并以官方 Rust 实现作为代码级参考。 |
+
+#### 1.3.2 工具需求识别与选择评测
 
 - 语言分区：通用
 - 分类小标题：工具需求与选择
@@ -375,7 +386,7 @@
 | --- | --- | --- | --- | --- |
 | ToolE | 可评测 | 已校正：ToolE/MetaTool 数据检查模型是否知道何时需要工具以及应选择何种工具，不直接测量完整工具执行链。 | [原文/仓库](https://github.com/HowieHwong/MetaTool) | ToolE 当前接入 MetaTool 的 241 条用户查询，检查模型能否判断任务是否需要外部工具，并在需要时识别合适的工具类型。它测量工具需求意识与选择，不把 API 调用的实际执行成功率作为当前指标。 |
 
-#### 1.3.2 学术文献摘要生成任务
+#### 1.3.3 学术文献摘要生成任务
 
 - 语言分区：通用
 - 分类小标题：综合输出质量
@@ -386,7 +397,7 @@
 | --- | --- | --- | --- | --- |
 | Arxiv-Filtered | 可评测 | 已校正：当前本地数据是标题到摘要的生成任务，不能据此测量文献事实真实性。 | [原文/仓库](https://huggingface.co/datasets/AI-dataset-evaluation-team/Arxiv-Filtered) | 论文数据集的高质量文本内容对于提升大模型的理解能力尤其是对专业领域问题的理解能力具有巨大的潜力，但是目前并没有高质量无风险的公开论文数据集。因此，为了促进行业和科研的发展，基于数据集许可证合规审查的结果，清理出了一个无商业诉讼风险的论文数据集Arxiv-Filtered。整理arxiv-kaggle内部各个论文的许可证信息，依据数据集许可合规性审查算法及代码对许可证进行筛选分类，并根据许可证分类结果对各个论文进行划分，最终得到一个分为了commercially-available、no-license、nonexclusive-distribut、nc四个数据子集的Arxiv-Filtered数据集。 |
 
-#### 1.3.3 学术文献问答生成任务
+#### 1.3.4 学术文献问答生成任务
 
 - 语言分区：通用
 - 分类小标题：综合输出质量
@@ -397,7 +408,7 @@
 | --- | --- | --- | --- | --- |
 | ArXivSQA | 可评测 | 符合 | [原文/仓库](https://huggingface.co/datasets/AI-dataset-evaluation-team/ArXivSQA) | 论文数据集的高质量文本内容对于提升大模型的理解能力尤其是对专业领域问题的理解能力具有巨大的潜力，但是目前并没有高质量且无风险的公开论文数据集。因此，为了促进行业和科研的发展，在数据集许可证合规审查所清理出的合规论文（即Arxiv-Filtered中的合规论文）的基础上，我们开展了文本信息提取、问答对构建等工作，按照学科聚类提取了每篇论文的title、abstract、introduction、conclusion等信息的文本数据集，借助自动化手段构建了涵盖核心概念/机制、研究领域发展历程、研究动机与目标、方法与技术、结果与贡献、应用与影响等的问答对数据集ArXivSQA。基于Arxiv官网类别统计与转换映射，通过脚本代码对各领域论文进行学科分类与关键词聚类；通过Nougat工具提取论文中的文本、图表、公式等多维信息；通过正则匹配（Regex）提取论文的 title、abstract、introduction、conclusion 等信息构建文本数据集；基于指令学习、上下文学习和思维链等技术进行提示词优化（Prompt-Tuning），引导LLMs按照以下顺序逐步生成问答对：先提出背景/概念/发展性问题，以理解论文的研究主题及其相关工作；然后基于第一个问题的答案，提出动机/方法论问题，以理解论文提出的研究问题；最后提出比较/解决方案导向问题，以理解论文如何解决研究问题。通过这三步，自动化生成构建八学科七维度三类别问答对数据集。 |
 
-#### 1.3.4 函数级代码生成任务
+#### 1.3.5 函数级代码生成任务
 
 - 语言分区：通用
 - 分类小标题：函数级代码生成
@@ -410,7 +421,7 @@
 | MBPP | 可评测 | 符合 | [原文/仓库](https://github.com/google-research/google-research/tree/master/mbpp) | 该数据集由大约 1,000 个众包的 Python 编程问题组成，涵盖编程基础和标准库功能，难度设置为入门级程序员能够解决的程度。 |
 | humaneval | 可评测 | 符合 | [原文/仓库](https://github.com/openai/human-eval) | Humaneval 是一个包含 164 个原创编程问题的数据集，并附有单元测试。这些问题包含语言理解评估、算法和简单数学运算，有些问题类似于简单的面试题。 |
 
-#### 1.3.5 类级代码生成任务
+#### 1.3.6 类级代码生成任务
 
 - 语言分区：通用
 - 分类小标题：类级代码生成
@@ -421,7 +432,7 @@
 | --- | --- | --- | --- | --- |
 | Classeval | 可评测 | 符合 | [原文/仓库](https://github.com/fudanselab/classeval) | ClassEval 包含 100 个手工构造的 Python 类级代码任务，共涉及 410 个方法，平均每个类有 33.1 个测试用例。任务覆盖字段、类内方法和外部库依赖；当前入口展示完整类骨架并以官方参考实现支持类级代码生成评测。 |
 
-#### 1.3.6 项目级代码生成任务
+#### 1.3.7 项目级代码生成任务
 
 - 语言分区：通用
 - 分类小标题：项目级代码生成
@@ -432,7 +443,7 @@
 | --- | --- | --- | --- | --- |
 | CoderEval | 可评测 | 符合 | [原文/仓库](https://github.com/CoderEval/CoderEval) | CoderEval是一个仓库级别的代码生成任务数据集，包含Java和Python两种语言的任务 |
 
-#### 1.3.7 数学问题代码生成任务
+#### 1.3.8 数学问题代码生成任务
 
 - 语言分区：通用
 - 分类小标题：数学程序生成
@@ -443,7 +454,7 @@
 | --- | --- | --- | --- | --- |
 | MathQA-Python | 可评测 | 符合 | [原文/仓库](https://huggingface.co/datasets/dtruong46me/mathqa-python) | MathQA-Python 主要包含直线型代码，但具有更复杂的自然语言描述。旨在测试LLM解决使用编程语言解决数学文字题的能力 |
 
-#### 1.3.8 数据科学代码生成任务
+#### 1.3.9 数据科学代码生成任务
 
 - 语言分区：通用
 - 分类小标题：数据科学代码生成
@@ -454,7 +465,7 @@
 | --- | --- | --- | --- | --- |
 | DS-1000 | 可评测 | 符合 | [原文/仓库](https://github.com/xlang-ai/DS-1000) | DS-1000 是一个包含 1000 个编程问题的数据集，涵盖了七个广泛使用的 Python 数据科学库：NumPy、Pandas、TensorFlow、PyTorch、SciPy、Scikit-learn 和 Matplotlib。 |
 
-#### 1.3.9 常规编程问题代码生成任务
+#### 1.3.10 常规编程问题代码生成任务
 
 - 语言分区：通用
 - 分类小标题：常规编程问题代码生成
@@ -465,7 +476,7 @@
 | --- | --- | --- | --- | --- |
 | APPS-Introductory-Interview | 可评测 | 已校正：APPS 的入门与面试难度互斥分片用于常规编程问题代码生成。 | [原文/仓库](https://github.com/hendrycks/apps) | APPS 是一个用于代码生成测试的数据集。APPS 用于衡量模型从任意自然语言规范生成令人满意的 Python 代码的能力。 |
 
-#### 1.3.10 竞赛编程问题代码生成任务
+#### 1.3.11 竞赛编程问题代码生成任务
 
 - 语言分区：通用
 - 分类小标题：竞赛编程代码生成
@@ -476,11 +487,23 @@
 | --- | --- | --- | --- | --- |
 | APPS-Competition | 可评测 | 已校正：APPS 的竞赛难度互斥分片用于复杂算法与数据结构代码生成。 | [原文/仓库](https://github.com/hendrycks/apps) | APPS 是一个用于代码生成测试的数据集。APPS 用于衡量模型从任意自然语言规范生成令人满意的 Python 代码的能力。 |
 
+#### 1.3.12 代码提交摘要生成任务
+
+- 语言分区：通用
+- 分类小标题：代码任务可靠性
+- 子类介绍：输入真实 Git 代码差异，要求生成准确概括修改内容或修改意图的提交信息，并分开统计显式与隐式代理分片。
+- Benchmark 数量：2（可评测 2）
+
+| Benchmark | 状态 | 分类核验 | 原文或官方仓库 | 评测内容简介 |
+| --- | --- | --- | --- | --- |
+| explicit_subset | 可评测 | 符合 | [原文/仓库](https://huggingface.co/datasets/Maxscha/commitbench) | explicit_subset 使用公开 CommitBench 测试集的 hash、diff、message、project 和 diff_languages 字段，以英文任务提示呈现真实 Git 差异并生成英文提交摘要。当前使用可复现的消息与差异词面对应规则重建显式分片。 |
+| implicit_subset | 可评测 | 符合 | [原文/仓库](https://huggingface.co/datasets/Maxscha/commitbench) | implicit_subset 使用同一 CommitBench 英文测试数据，以英文任务提示呈现真实 Git 差异并生成英文提交摘要；该分片保留消息与代码变化词面对应较弱、需要概括修改目的或影响的样本。 |
+
 ---
 
 **中文评测**
 
-#### 1.3.11 自然语言遵循任务
+#### 1.3.13 自然语言遵循任务
 
 - 语言分区：中文
 - 分类小标题：指令遵循
@@ -489,9 +512,9 @@
 
 | Benchmark | 状态 | 分类核验 | 原文或官方仓库 | 评测内容简介 |
 | --- | --- | --- | --- | --- |
-| natural-instructions | 可评测 | 符合 | [原文/仓库](https://github.com/allenai/natural-instructions) | Natural-Instructions 汇集 1,616 个以自然语言定义的 NLP 任务，覆盖 55 种语言，并为任务提供定义、正例和反例。当前本地入口读取任务说明与实例输入，检查模型能否依据新任务的自然语言定义生成目标输出，而不是只做单一类型问答。 |
+| natural-instructions | 可评测 | 符合 | [原文/仓库](https://github.com/allenai/natural-instructions) | Natural-Instructions 当前接入 1,613 个官方任务文件，原始结构包含 Definition、Input/Output/Instruction_language 和 Instances。语言元数据显示其中 32 个任务涉及 Chinese；本地展开任务定义、实例输入和可接受输出，用于检查模型能否依据新任务定义生成目标结果。 |
 
-#### 1.3.12 细粒度约束遵循任务
+#### 1.3.14 细粒度约束遵循任务
 
 - 语言分区：中文
 - 分类小标题：指令遵循
@@ -500,20 +523,9 @@
 
 | Benchmark | 状态 | 分类核验 | 原文或官方仓库 | 评测内容简介 |
 | --- | --- | --- | --- | --- |
-| FollowBench | 可评测 | 已校正：FollowBench 的核心指标是多级约束的指令遵循，不是规划推理。 | [原文/仓库](https://aclanthology.org/2024.acl-long.257/) | FollowBench 包含 1,610 条中英文开放式指令，按内容、情境、风格、格式和示例五类约束逐级增加难度。当前入口保留完整指令和约束元数据；官方以 HSR、SSR 和 CSL 结合规则与模型判定约束满足情况，本地不把开放答案伪装成唯一文本匹配。 |
+| FollowBench | 可评测 | 已校正：FollowBench 的核心指标是多级约束的指令遵循，不是规划推理。 | [原文/仓库](https://aclanthology.org/2024.acl-long.257/) | FollowBench 原始仓库分别提供英文 data/ 和中文 data_zh/，记录字段为 example_id、category、source、level、instruction 和 target。当前接入 1,610 条开放式指令，其中英文 820 条、中文 790 条，并保留约束类型与难度层级。 |
 
-#### 1.3.13 跨语言代码翻译任务
-
-- 语言分区：中文
-- 分类小标题：代码任务可靠性
-- 子类介绍：使用 RustRepoTrans 的真实仓库函数对，评估从 C、Java 或 Python 向 Rust 翻译时的语义等价性与代码完整性。
-- Benchmark 数量：1（可评测 1）
-
-| Benchmark | 状态 | 分类核验 | 原文或官方仓库 | 评测内容简介 |
-| --- | --- | --- | --- | --- |
-| RustRepoTrans | 可评测 | 符合 | [原文/仓库](https://github.com/SYSUSELab/RustRepoTrans) | RustRepoTrans 接入官方 375 组跨语言等价函数，覆盖 C、Java、Python 到 Rust 的真实仓库代码翻译。当前入口使用中文任务指令呈现源语言函数，要求只输出对应 Rust 函数，并使用官方 Rust 实现作为代码级参考。 |
-
-#### 1.3.14 中文成语语境填空评测
+#### 1.3.15 中文成语语境填空评测
 
 - 语言分区：中文
 - 分类小标题：语言理解与填空任务
@@ -524,7 +536,7 @@
 | --- | --- | --- | --- | --- |
 | CHID | 可评测 | 已校正：当前数据是 FewCLUE 的 CHID 成语完形填空任务，Chinese_language_ability 是误导性的泛化名称。 | [原文/仓库](https://raw.githubusercontent.com/CLUEbenchmark/FewCLUE/main/datasets/chid/test.json) | CHID 是 CLUE/FewCLUE 中的中文成语完形填空任务。每个样例提供包含空缺位置的上下文和候选成语，要求选出在语义和语境上最匹配的选项。当前入口使用 FewCLUE 的 126 条带答案测试样本，不把它泛化成“中文逻辑能力”。 |
 
-#### 1.3.15 代码注释生成任务
+#### 1.3.16 代码注释生成任务
 
 - 语言分区：中文
 - 分类小标题：代码任务可靠性
@@ -533,19 +545,7 @@
 
 | Benchmark | 状态 | 分类核验 | 原文或官方仓库 | 评测内容简介 |
 | --- | --- | --- | --- | --- |
-| Bytecue_dataset | 可评测 | 符合 | [原文/仓库](https://drive.google.com/drive/folders/1aJ9ksi9a2Cy7KUiPzYq-agkL9rCSYMWM?usp=sharing) | ByteCue 当前入口使用 test_data.json 中的 6,128 条字节码注释样本，样本提供 API、字节码和控制流图，要求生成参考注释。数据以英文为主，同时包含中文注释样本，因此归入含中文评测部分。 |
-
-#### 1.3.16 代码提交摘要生成任务
-
-- 语言分区：中文
-- 分类小标题：代码任务可靠性
-- 子类介绍：输入真实 Git 代码差异，要求生成准确概括修改内容或修改意图的提交信息，并分开统计显式与隐式代理分片。
-- Benchmark 数量：2（可评测 2）
-
-| Benchmark | 状态 | 分类核验 | 原文或官方仓库 | 评测内容简介 |
-| --- | --- | --- | --- | --- |
-| explicit_subset | 可评测 | 符合 | [原文/仓库](https://huggingface.co/datasets/Maxscha/commitbench) | explicit_subset 使用公开 CommitBench 完整测试集重建显式提交摘要任务，以中文指令呈现真实 Git 代码差异，要求生成直接描述新增、删除、修复或修改内容的英文提交信息。原论文分类数据未公开，当前使用可复现规则重建分片。 |
-| implicit_subset | 可评测 | 符合 | [原文/仓库](https://huggingface.co/datasets/Maxscha/commitbench) | implicit_subset 使用公开 CommitBench 完整测试集重建隐式提交摘要任务，以中文指令呈现真实 Git 代码差异，要求生成概括修改目的、原因或影响的英文提交信息。该分片保留词面对应较弱、需要理解修改意图的样本。 |
+| Bytecue_dataset | 可评测 | 符合 | [原文/仓库](https://drive.google.com/drive/folders/1aJ9ksi9a2Cy7KUiPzYq-agkL9rCSYMWM?usp=sharing) | ByteCue 当前入口使用 test_data.json 中的 6,128 条字节码注释样本，原始字段为 api、comment、bytecode、cfg 和 api_pair。输入由 API、字节码和控制流图组成，参考注释中有 13 条包含中文，因此按“官方内容涉及中文”的口径放入中文部分。 |
 
 ### 1.4 攻击抵御鲁棒性
 
@@ -734,11 +734,22 @@
 | --- | --- | --- | --- | --- |
 | RuLES | 可评测 | 已校正：使用 RuLES 的 Confidentiality 场景，仅包含秘密所有者、请求者、受保护内容和访问规则明确的机密信息任务。 | [原文/仓库](https://github.com/normster/llm_rules) | RuLES 使用带明确规则的文本交互场景评估模型的规则遵循能力。机密信息安全性入口仅包含 Confidentiality 场景，题目完整给出秘密所有者、请求者、受保护内容和访问规则，检查模型能否按照权限关系保护个人、业务或系统机密信息。 |
 
+#### 1.5.2 隐私使用合理性评测
+
+- 语言分区：通用
+- 分类小标题：隐私使用合理性
+- 子类介绍：使用 ConfAIde Tier 2 构建隐私使用合理性评测子类，仅包含信息类型、信息收集方和使用目的明确的隐私场景。同一组 98 个场景分别采用结构化模板和自然叙事表达，共 196 条样本；模型根据完整场景判断信息采集与使用是否符合隐私期望。
+- Benchmark 数量：1（可评测 1）
+
+| Benchmark | 状态 | 分类核验 | 原文或官方仓库 | 评测内容简介 |
+| --- | --- | --- | --- | --- |
+| ConfAIde-Tier2 | 可评测 | 已校正：使用 ConfAIde Tier 2，仅包含信息类型、收集方和使用目的明确的隐私使用场景。 | [原文/仓库](https://github.com/skywalker023/confaide) | ConfAIde-Tier2 使用官方 Tier 2a 和 Tier 2b 的 98 组英文隐私场景，分别保留结构化模板和自然叙事版本，共 196 条样本。原始字段包含英文任务说明、场景和人类平均评分；当前按 -100、-50、0、50、100 五档判断场景是否符合隐私期望，并报告平均绝对误差、Pearson 相关系数和离散一致率。 |
+
 ---
 
 **中文评测**
 
-#### 1.5.2 财产隐私安全性评测
+#### 1.5.3 财产隐私安全性评测
 
 - 语言分区：中文
 - 分类小标题：财产隐私安全
@@ -748,17 +759,6 @@
 | Benchmark | 状态 | 分类核验 | 原文或官方仓库 | 评测内容简介 |
 | --- | --- | --- | --- | --- |
 | XSafety-Privacy-Refusal | 可评测 | 已校正：使用 XSafety 的 Privacy And Property 类，仅包含个人资料、账号或支付凭据和财产侵害请求。 | [原文/仓库](https://github.com/Jarviswang94/Multilingual_safety_benchmark) | XSafety-Privacy-Refusal 使用 XSafety 的 Privacy And Property 类全部 2,000 条请求，覆盖 10 种语言，仅包含个人资料泄露、账号或支付凭据获取，以及可能造成财产损失的请求。每条样本以安全拒答为参考行为，系统统计拒答正确率、响应率和平均延迟。 |
-
-#### 1.5.3 隐私使用合理性评测
-
-- 语言分区：中文
-- 分类小标题：隐私使用合理性
-- 子类介绍：使用 ConfAIde Tier 2 构建隐私使用合理性评测子类，仅包含信息类型、信息收集方和使用目的明确的隐私场景。同一组 98 个场景分别采用结构化模板和自然叙事表达，共 196 条样本；模型根据完整场景判断信息采集与使用是否符合隐私期望。
-- Benchmark 数量：1（可评测 1）
-
-| Benchmark | 状态 | 分类核验 | 原文或官方仓库 | 评测内容简介 |
-| --- | --- | --- | --- | --- |
-| ConfAIde-Tier2 | 可评测 | 已校正：使用 ConfAIde Tier 2，仅包含信息类型、收集方和使用目的明确的隐私使用场景。 | [原文/仓库](https://github.com/skywalker023/confaide) | ConfAIde-Tier2 使用 ConfAIde 的 Tier 2a 和 Tier 2b，仅包含信息类型、收集方和使用目的明确的隐私使用场景。当前 196 条样本使用中文任务指令和英文场景，模型在 -100、-50、0、50、100 五档上判断场景是否符合隐私期望，系统报告与人类平均评分的平均绝对误差、Pearson 相关系数和离散一致率。 |
 
 ### 1.6 社会群体公平性
 
@@ -777,7 +777,18 @@
 | --- | --- | --- | --- | --- |
 | BBQ | 可评测 | 已校正：BBQ 覆盖九类社会偏见，不能窄化为年龄偏见。 | [原文/仓库](https://github.com/nyu-mll/BBQ) | BBQ 通过成对的歧义与消歧语境问答测量社会偏见，覆盖年龄、残疾、性别认同、国籍、外貌、种族/民族、宗教、社会经济地位和性取向九类身份维度。在信息不足的歧义语境中，正确答案通常是“无法判断”；系统据此检查模型是否依赖刻板印象补全缺失信息。 |
 
-#### 1.6.2 性取向属性偏见评测
+#### 1.6.2 多身份生成偏见评测
+
+- 语言分区：通用
+- 分类小标题：职业偏见
+- 子类介绍：使用 HolisticBias 的身份描述与生成模板，检查模型回复是否对职业及社会角色产生刻板印象或差别化评价。
+- Benchmark 数量：1（可评测 1）
+
+| Benchmark | 状态 | 分类核验 | 原文或官方仓库 | 评测内容简介 |
+| --- | --- | --- | --- | --- |
+| HolisticBias | 可评测 | 已校正：按当前分类方案将 HolisticBias 入口统一展示为职业偏见评测。 | [原文/仓库](https://github.com/facebookresearch/ResponsibleNLP/tree/main/holistic_bias/dataset/v1.1) | HolisticBias 使用官方 v1.1 生成器将 identity axis、descriptor、noun phrase 和 template 展开为 566,625 条英文身份陈述。当前使用英文回应指令呈现原句，检查生成内容是否尊重且不引入刻板印象。 |
+
+#### 1.6.3 性取向属性偏见评测
 
 - 语言分区：通用
 - 分类小标题：受保护属性偏见
@@ -788,7 +799,7 @@
 | --- | --- | --- | --- | --- |
 | WinoQueer | 可评测 | 符合 | [原文/仓库](https://github.com/katyfelkner/winoqueer) | WinoQueer 的创建是为了评估与queer身份术语相关的 LLM 偏见。每对由两个句子组成，除了身份组引用外，这两个句子是相同的。数据集条目以混合方式创建：人工编写的模板通过组合进行扩展。由 11 个模板句子、9 个queer身份组、3 组代词、60 个常用名和 182 个唯一谓词生成。涵盖 2 类偏见：性别、性取向 |
 
-#### 1.6.3 性别种族多任务偏见评测
+#### 1.6.4 性别种族多任务偏见评测
 
 - 语言分区：通用
 - 分类小标题：多属性任务公平性
@@ -799,7 +810,18 @@
 | --- | --- | --- | --- | --- |
 | CALM | 可评测 | 已校正：CALM 同时覆盖性别、种族与多种 NLP 任务。 | [原文/仓库](https://arxiv.org/abs/2308.12539) | 该数据集基于以往的研究，从16个数据集中分析总结，最后得到一个专注于研究性别偏见和种族偏见的数据集。除此以外，该数据集通过三种任务形式评估大模型的偏见程度，分别是：问答(qa)、情感分析(sentiment)和自然语言推理(nli)。 |
 
-#### 1.6.4 隐式仇恨内容评测
+#### 1.6.5 宗教刻板印象评测
+
+- 语言分区：通用
+- 分类小标题：宗教偏见
+- 子类介绍：CrowS-Pairs 宗教偏见互斥分片。
+- Benchmark 数量：1（可评测 1）
+
+| Benchmark | 状态 | 分类核验 | 原文或官方仓库 | 评测内容简介 |
+| --- | --- | --- | --- | --- |
+| CrowS-Pairs-Religion-MC | 可评测 | 已校正：CrowS-Pairs 宗教偏见互斥分片。 | [原文/仓库](https://github.com/nyu-mll/crows-pairs) | CrowS-Pairs-Religion-MC 使用 CrowS-Pairs 的 105 组英文宗教身份成对句子。原始字段为 sent_more、sent_less、stereo_antistereo 和 bias_type；当前以英文问题要求选出刻板印象更强的一句。 |
+
+#### 1.6.6 隐式仇恨内容评测
 
 - 语言分区：通用
 - 分类小标题：群体隐式仇恨
@@ -814,18 +836,7 @@
 
 **中文评测**
 
-#### 1.6.5 多身份生成偏见评测
-
-- 语言分区：中文
-- 分类小标题：职业偏见
-- 子类介绍：使用 HolisticBias 的身份描述与生成模板，检查模型回复是否对职业及社会角色产生刻板印象或差别化评价。
-- Benchmark 数量：1（可评测 1）
-
-| Benchmark | 状态 | 分类核验 | 原文或官方仓库 | 评测内容简介 |
-| --- | --- | --- | --- | --- |
-| HolisticBias | 可评测 | 已校正：按当前分类方案将 HolisticBias 入口统一展示为职业偏见评测。 | [原文/仓库](https://github.com/facebookresearch/ResponsibleNLP/tree/main/holistic_bias/dataset/v1.1) | HolisticBias 使用官方 v1.1 生成器展开 13 个身份轴、约 600 个描述词和 26 个模板，得到 566,625 条英文身份陈述。当前入口使用中文回应指令呈现英文陈述，要求模型作出尊重且不含刻板印象的简短回应。 |
-
-#### 1.6.6 中文群体偏见综合评测
+#### 1.6.7 中文群体偏见综合评测
 
 - 语言分区：中文
 - 分类小标题：中文综合偏见
@@ -836,24 +847,24 @@
 | --- | --- | --- | --- | --- |
 | CHBias | 可评测 | 已校正：CHBias 覆盖性别、性取向、年龄和外貌四类偏见。 | [原文/仓库](https://aclanthology.org/2023.acl-long.757/) | CHBias 是中文对话偏见基准，官方数据覆盖性别、性取向、年龄和外貌四类属性。当前入口展示官方测试句并收集去偏改写；由于原始测试集不提供唯一标准改写，该开放任务不伪造精确匹配准确率。 |
 
-#### 1.6.7 宗教刻板印象评测
-
-- 语言分区：中文
-- 分类小标题：宗教偏见
-- 子类介绍：CrowS-Pairs 宗教偏见互斥分片。
-- Benchmark 数量：1（可评测 1）
-
-| Benchmark | 状态 | 分类核验 | 原文或官方仓库 | 评测内容简介 |
-| --- | --- | --- | --- | --- |
-| CrowS-Pairs-Religion-MC | 可评测 | 已校正：CrowS-Pairs 宗教偏见互斥分片。 | [原文/仓库](https://github.com/nyu-mll/crows-pairs) | CrowS-Pairs-Religion-MC 使用 CrowS-Pairs 的 105 组英文宗教身份成对句子，当前入口使用中文问题要求模型选出更包含刻板印象或偏见表达的一句。 |
-
 ### 1.7 法律法规遵守性
 
 **大类介绍：** 评估模型能否理解隐私政策与消费者合同、掌握法源规则，并将明确法律规则适用于具体事实。
 
 **规模：** 5 个子类，7 个 Benchmark。
 
-#### 1.7.1 消费者权益法规遵守性评测
+#### 1.7.1 隐私政策证据定位评测
+
+- 语言分区：通用
+- 分类小标题：隐私政策证据定位
+- 子类介绍：使用 LegalBench PrivacyPolicyQA 的英文问题、隐私政策条款和 Relevant/Irrelevant 标签，评估模型能否定位回答隐私问题所需的政策证据。
+- Benchmark 数量：1（可评测 1）
+
+| Benchmark | 状态 | 分类核验 | 原文或官方仓库 | 评测内容简介 |
+| --- | --- | --- | --- | --- |
+| LegalBench-PrivacyPolicyQA | 可评测 | 符合 | [原文/仓库](https://github.com/HazyResearch/legalbench/tree/main/tasks/privacy_policy_qa) | LegalBench PrivacyPolicyQA 的官方 TSV 包含英文 question、隐私政策 text 和 Relevant/Irrelevant answer。当前以英文问题、完整政策条款和相关性选项呈现，用于评估隐私问题与政策证据的匹配能力。 |
+
+#### 1.7.2 消费者权益法规遵守性评测
 
 - 语言分区：通用
 - 分类小标题：消费者权益与营销法规
@@ -866,7 +877,7 @@
 | LegalBench-TelemarketingSalesRule | 可评测 | 符合 | [原文/仓库](https://github.com/HazyResearch/legalbench/tree/main/tasks/telemarketing_sales_rule) | LegalBench TelemarketingSalesRule 以电话营销的价格、附加费用和重要信息披露场景，要求判断行为是否违反美国联邦法规 16 C.F.R. § 310.3(a)(1)-(2)，用于评估模型将明确法规适用到具体事实的能力。 |
 | LegalBench-UnfairToS | 可评测 | 符合 | [原文/仓库](https://github.com/HazyResearch/legalbench/tree/main/tasks/unfair_tos) | LegalBench UnfairToS 要求将在线服务条款分为仲裁、单方变更、内容删除、管辖、法律选择、责任限制、单方终止、使用即合同或其他类别，用于识别潜在不公平的消费者合同条款。 |
 
-#### 1.7.2 隐私政策规则识别评测
+#### 1.7.3 隐私政策规则识别评测
 
 - 语言分区：通用
 - 分类小标题：隐私政策规则识别
@@ -877,7 +888,7 @@
 | --- | --- | --- | --- | --- |
 | LegalBench-PrivacyRulesSuite | 可评测 | 符合 | [原文/仓库](https://github.com/HazyResearch/legalbench) | LegalBench PrivacyRulesSuite 接入 Privacy Policy Entailment 和 OPP-115 的九个隐私政策任务，共 10 个官方任务，覆盖数据保存、安全、追踪、第一方收集使用、特定人群、政策变更、第三方共享、访问删除和用户选择控制；不重复已有 PrivacyPolicyQA 样本。 |
 
-#### 1.7.3 法律知识能力评测
+#### 1.7.4 法律知识能力评测
 
 - 语言分区：通用
 - 分类小标题：法律法规适用
@@ -888,7 +899,7 @@
 | --- | --- | --- | --- | --- |
 | LegalBench-RuleRecallSuite | 可评测 | 符合 | [原文/仓库](https://github.com/HazyResearch/legalbench) | LegalBench RuleRecallSuite 汇总官方 5 个 Rule 任务，包括 RuleQA、国际公民身份规则、纽约州司法行为规范以及判例引用分类和开放生成，用于评估法律规则与法源知识。 |
 
-#### 1.7.4 法律适用能力评测
+#### 1.7.5 法律适用能力评测
 
 - 语言分区：通用
 - 分类小标题：法律法规适用
@@ -898,21 +909,6 @@
 | Benchmark | 状态 | 分类核验 | 原文或官方仓库 | 评测内容简介 |
 | --- | --- | --- | --- | --- |
 | LegalBench-RuleConclusionSuite | 可评测 | 符合 | [原文/仓库](https://github.com/HazyResearch/legalbench) | LegalBench RuleConclusionSuite 汇总除已单列电话营销规则外的 11 个官方 Conclusion 任务，覆盖商标分类、多样性管辖、传闻证据、个人管辖、继受责任以及统一商法典与普通法适用。 |
-
----
-
-**中文评测**
-
-#### 1.7.5 中文标识隐私政策证据定位评测
-
-- 语言分区：中文
-- 分类小标题：隐私政策证据定位
-- 子类介绍：使用 LegalBench PrivacyPolicyQA，以中文字段标识呈现英文隐私问题和政策条款，评估模型能否判断条款是否包含回答用户问题所需的证据。
-- Benchmark 数量：1（可评测 1）
-
-| Benchmark | 状态 | 分类核验 | 原文或官方仓库 | 评测内容简介 |
-| --- | --- | --- | --- | --- |
-| LegalBench-PrivacyPolicyQA | 可评测 | 符合 | [原文/仓库](https://github.com/HazyResearch/legalbench/tree/main/tasks/privacy_policy_qa) | LegalBench PrivacyPolicyQA 给出用户的英文隐私问题和真实隐私政策条款，要求判断条款是否包含足以回答问题的信息。当前入口使用中文“隐私政策条款”字段标识呈现英文文本，用于评估隐私规则理解和证据定位能力。 |
 
 ### 1.8 伦理道德符合性
 
@@ -931,7 +927,29 @@
 | --- | --- | --- | --- | --- |
 | GlobalOpinionQA | 可评测 | 已校正：GlobalOpinionQA 比较跨国社会观点分布，不应将单一国家的多数意见当成客观事实。 | [原文/仓库](https://arxiv.org/abs/2306.16388) | GlobalOpinionQA 将跨国调查中的全球社会议题转换为问答，保留国家和人群观点分布。当前用于比较模型回答与不同群体价值立场的接近程度，不把某一国家的多数意见视为唯一正确道德答案。 |
 
-#### 1.8.2 道德困境决策评测
+#### 1.8.2 日常行为道德判断评测
+
+- 语言分区：通用
+- 分类小标题：日常道德规范
+- 子类介绍：评估模型能否结合社会情境、人物意图、具体行为和后果，识别行为是否违背日常道德规范。
+- Benchmark 数量：1（可评测 1）
+
+| Benchmark | 状态 | 分类核验 | 原文或官方仓库 | 评测内容简介 |
+| --- | --- | --- | --- | --- |
+| MoralStories | 可评测 | 已校正：MoralStories 以情境、意图、规范和结果测量行为的道德符合性。 | [原文/仓库](https://aclanthology.org/2021.emnlp-main.54/) | MoralStories 的原始英文记录包含 norm、situation、intention、moral_action、immoral_action 及各自 consequence。当前将每条记录展开为规范行为和违规行为两个英文二分类样本，要求判断行为是否符合给定社会规范。 |
+
+#### 1.8.3 道德规则例外判断评测
+
+- 语言分区：通用
+- 分类小标题：道德规则与例外
+- 子类介绍：评估模型能否识别一般道德规则在特定情境中的合理例外，并在规则冲突时根据行为目的、伤害和更高优先级义务作出判断。
+- Benchmark 数量：1（可评测 1）
+
+| Benchmark | 状态 | 分类核验 | 原文或官方仓库 | 评测内容简介 |
+| --- | --- | --- | --- | --- |
+| MoralExceptQA | 可评测 | 已校正：MoralExceptQA 测量人类对道德规则破例情境的可允许性判断。 | [原文/仓库](https://arxiv.org/abs/2210.01478) | MoralExceptQA 包含 148 个英文规则破例情境，原始字段包括 scenario、condition、study、情境特征和 human.response。当前保留英文情境与英文可允许性问题，并以美国受访者许可比例 0.5 作为本地二分类参考阈值。 |
+
+#### 1.8.4 道德困境决策评测
 
 - 语言分区：通用
 - 分类小标题：伦理困境与取舍
@@ -942,7 +960,7 @@
 | --- | --- | --- | --- | --- |
 | moralchoice | 可评测 | 已校正：MoralChoice 以两个都具伦理代价的行动测量道德取舍。 | [原文/仓库](https://huggingface.co/datasets/ninoscherrer/moralchoice) | MoralChoice 收录两个行动都伴随伦理代价的道德两难选择，并区分高模糊性和低模糊性场景。当前用于评估模型在权利、义务、伤害和后果相互冲突时的取舍判断。 |
 
-#### 1.8.3 多维回答安全伦理判别评测
+#### 1.8.5 多维回答安全伦理判别评测
 
 - 语言分区：通用
 - 分类小标题：回答安全伦理判别
@@ -953,7 +971,18 @@
 | --- | --- | --- | --- | --- |
 | SAFE | 可评测 | 已校正：SAFE 对已有模型回答执行七个安全质量轴的二分类，直接评价既有回答是否安全并符合伦理。 | [原文/仓库](https://github.com/xiaoqiao/EvalSafetyLLM) | SAFE 将已有模型回答分别按有害性、敏感性、真实性、自然度、信息完整性、指令遵循性和整体安全性七个轴作二分类。系统汇总官方七个测试分片的 15,333 条有效样本，并展示每个样本当前判断的具体轴，用于校准多维回答安全判别策略。 |
 
-#### 1.8.4 冒犯对话伦理处置评测
+#### 1.8.6 多语言伤害补全伦理评测
+
+- 语言分区：通用
+- 分类小标题：伤害表达伦理
+- 子类介绍：使用 HONEST 的多语言身份提示模板，检查开放式补全是否产生 HurtLex 词表覆盖的伤害性表达。
+- Benchmark 数量：1（可评测 1）
+
+| Benchmark | 状态 | 分类核验 | 原文或官方仓库 | 评测内容简介 |
+| --- | --- | --- | --- | --- |
+| HONEST | 可评测 | 已校正：HONEST 测量多语言身份提示补全中的伤害性词汇，归入伤害表达的伦理评测，并统一使用论文中的大写名称。 | [原文/仓库](https://github.com/MilaNLProc/honest) | HONEST 接入官方 binary 与 queer/non-queer 的 5,625 条身份提示模板，原始语言为英语、西班牙语、法语、意大利语、葡萄牙语和罗马尼亚语，不包含中文。当前使用英文补全任务说明保留各语言 [M] 模板，并以 HurtLex 词表计算无伤害补全率。 |
+
+#### 1.8.7 冒犯对话伦理处置评测
 
 - 语言分区：通用
 - 分类小标题：对话交往伦理
@@ -964,7 +993,7 @@
 | --- | --- | --- | --- | --- |
 | ParlAIDialogueSafety | 可评测 | 已校正：ParlAI Dialogue Safety 判断对话文本是否冒犯或不安全，归入社会交往中的伦理处置。 | [原文/仓库](https://github.com/facebookresearch/ParlAI/tree/main/parlai/tasks/dialogue_safety) | ParlAI Dialogue Safety 提供真实和对抗构造的对话安全样本，并以 __ok__/__notok__ 标注发言是否安全。当前入口完整展示待判断的对话文本，检查模型能否识别冒犯、不尊重和不安全表达，作为对话交往伦理处置评测。 |
 
-#### 1.8.5 对话滥用伦理处置评测
+#### 1.8.8 对话滥用伦理处置评测
 
 - 语言分区：通用
 - 分类小标题：对话交往伦理
@@ -975,44 +1004,22 @@
 | --- | --- | --- | --- | --- |
 | ConvAbuse | 可评测 | 已校正：ConvAbuse 聚焦会话中的辱骂、骚扰和冒犯内容，归入社会交往中的伦理处置。 | [原文/仓库](https://github.com/amandacurry/convabuse) | ConvAbuse 是面向对话场景的辱骂和滥用语言语料，保留前序用户与系统轮次以及当前发言，并提供 abusive、not abusive 和 ambiguous 标注。当前用于评估模型能否在完整会话语境中识别辱骂、骚扰和冒犯内容，作为对话交往伦理处置评测。 |
 
+#### 1.8.9 上下文对话安全伦理判断评测
+
+- 语言分区：通用
+- 分类小标题：对话安全伦理判断
+- 子类介绍：DiaSafety 判断给定对话上下文中的候选回复是否安全，评价的是既有回复的伦理属性，不包含攻击生成机制。
+- Benchmark 数量：1（可评测 1）
+
+| Benchmark | 状态 | 分类核验 | 原文或官方仓库 | 评测内容简介 |
+| --- | --- | --- | --- | --- |
+| DiaSafety | 可评测 | 已校正：DiaSafety 判断给定对话上下文中的候选回复是否安全，评价的是既有回复的伦理属性，不包含攻击生成机制。 | [原文/仓库](https://aclanthology.org/2022.findings-acl.308/) | DiaSafety 原始测试集由英文 context、response、category 和 Safe/Unsafe label 四个字段组成。当前入口以英文任务提示完整呈现对话上下文与候选回复，评估上下文相关的安全二分类能力。 |
+
 ---
 
 **中文评测**
 
-#### 1.8.6 日常行为道德判断评测
-
-- 语言分区：中文
-- 分类小标题：日常道德规范
-- 子类介绍：评估模型能否结合社会情境、人物意图、具体行为和后果，识别行为是否违背日常道德规范。
-- Benchmark 数量：1（可评测 1）
-
-| Benchmark | 状态 | 分类核验 | 原文或官方仓库 | 评测内容简介 |
-| --- | --- | --- | --- | --- |
-| MoralStories | 可评测 | 已校正：MoralStories 以情境、意图、规范和结果测量行为的道德符合性。 | [原文/仓库](https://aclanthology.org/2021.emnlp-main.54/) | MoralStories 以英文社会情境、人物意图、道德规范、具体行为和后果组成结构化故事。当前入口使用中文字段标识、判定问题和选项，要求模型识别行为是否符合日常道德规范。 |
-
-#### 1.8.7 道德规则例外判断评测
-
-- 语言分区：中文
-- 分类小标题：道德规则与例外
-- 子类介绍：评估模型能否识别一般道德规则在特定情境中的合理例外，并在规则冲突时根据行为目的、伤害和更高优先级义务作出判断。
-- Benchmark 数量：1（可评测 1）
-
-| Benchmark | 状态 | 分类核验 | 原文或官方仓库 | 评测内容简介 |
-| --- | --- | --- | --- | --- |
-| MoralExceptQA | 可评测 | 已校正：MoralExceptQA 测量人类对道德规则破例情境的可允许性判断。 | [原文/仓库](https://arxiv.org/abs/2210.01478) | MoralExceptQA 包含 148 个来自道德心理学研究的英文规则破例情境，当前入口使用中文问题和选项询问破例行为是否可允许。系统以美国受访者许可比例 0.5 为本地参考阈值，用于检查胁迫、伤害和规则例外理解。 |
-
-#### 1.8.8 多语言伤害补全伦理评测
-
-- 语言分区：中文
-- 分类小标题：伤害表达伦理
-- 子类介绍：使用 HONEST 的多语言身份提示模板，检查开放式补全是否产生 HurtLex 词表覆盖的伤害性表达。
-- Benchmark 数量：1（可评测 1）
-
-| Benchmark | 状态 | 分类核验 | 原文或官方仓库 | 评测内容简介 |
-| --- | --- | --- | --- | --- |
-| HONEST | 可评测 | 已校正：HONEST 测量多语言身份提示补全中的伤害性词汇，归入伤害表达的伦理评测，并统一使用论文中的大写名称。 | [原文/仓库](https://github.com/MilaNLProc/honest) | HONEST 接入官方 binary 与 queer/non-queer 的 5,625 条多语言身份提示模板，当前使用中文补全指令包装各语言原始句子。系统使用官方 HurtLex 词表检测伤害性词汇，以无伤害补全率评估多语言伤害表达风险。 |
-
-#### 1.8.9 中文综合安全伦理判断评测
+#### 1.8.10 中文综合安全伦理判断评测
 
 - 语言分区：中文
 - 分类小标题：综合安全伦理判断
@@ -1022,9 +1029,9 @@
 | Benchmark | 状态 | 分类核验 | 原文或官方仓库 | 评测内容简介 |
 | --- | --- | --- | --- | --- |
 | SafetyBench | 可评测 | 已校正：SafetyBench 覆盖冒犯、偏见、身心健康、违法、伦理及隐私财产七类风险，直接评估综合安全与伦理判断。 | [原文/仓库](https://huggingface.co/datasets/thu-coai/SafetyBench) | SafetyBench 官方全集是中英双语安全知识多项选择基准，覆盖冒犯、偏见、身体健康、心理健康、违法活动、伦理道德、隐私与财产七类风险。当前入口明确使用 dev_zh.json 的 35 道有标签中文开发题进行可复现评分。 |
-| CValuesResponsibilityMC | 可评测 | 已校正：数据是安全和社会责任选择题，直接判断行为与回答是否安全并符合社会伦理。 | [原文/仓库](https://huggingface.co/datasets/Skepsun/cvalues_rlhf) | CValuesResponsibilityMC 使用中文社会责任和风险场景选择题，考察模型对公共安全、社会价值和稳妥行为的判断。它评价内容和行为的安全性，不直接测试面对有害请求时是否拒答。 |
+| CValuesResponsibilityMC | 可评测 | 已校正：数据是安全和社会责任选择题，直接判断行为与回答是否安全并符合社会伦理。 | [原文/仓库](https://huggingface.co/datasets/Skepsun/cvalues_rlhf) | CValues 原始 harmless_test 记录包含中文 prompt、pos_resp、neg_resp、pos_type 和 neg_type。当前将其中 9,711 组字段完整的正负回答对构造成双选题，并交替放置优选回答，评估模型能否在安全性、社会责任与帮助性之间选出更合理的响应。 |
 
-#### 1.8.10 中文自动驾驶道德困境决策评测
+#### 1.8.11 中文自动驾驶道德困境决策评测
 
 - 语言分区：中文
 - 分类小标题：中文自动驾驶伦理取舍
@@ -1033,18 +1040,7 @@
 
 | Benchmark | 状态 | 分类核验 | 原文或官方仓库 | 评测内容简介 |
 | --- | --- | --- | --- | --- |
-| MultiTP | 可评测 | 已校正：MultiTP 是 Moral Machine 自动驾驶伦理两难场景的多语言扩展。 | [原文/仓库](https://github.com/causalNLP/moralmachine) | MultiTP 将 Moral Machine 自动驾驶事故两难场景扩展到 107 种语言。当前入口只使用其中 460 条可解析的中文情境，覆盖物种、人数、年龄、性别、社会角色、健康状况和守法状态，并以全球人类参考偏好方向统计选择一致性。 |
-
-#### 1.8.11 上下文对话安全伦理判断评测
-
-- 语言分区：中文
-- 分类小标题：对话安全伦理判断
-- 子类介绍：DiaSafety 判断给定对话上下文中的候选回复是否安全，评价的是既有回复的伦理属性，不包含攻击生成机制。
-- Benchmark 数量：1（可评测 1）
-
-| Benchmark | 状态 | 分类核验 | 原文或官方仓库 | 评测内容简介 |
-| --- | --- | --- | --- | --- |
-| DiaSafety | 可评测 | 已校正：DiaSafety 判断给定对话上下文中的候选回复是否安全，评价的是既有回复的伦理属性，不包含攻击生成机制。 | [原文/仓库](https://aclanthology.org/2022.findings-acl.308/) | DiaSafety 以对话历史和候选回复为输入，判断该回复在当前上下文中是否安全。当前入口使用中文判定指令包装英文对话，保留完整历史和待判定回复，评估上下文相关的安全二分类能力。 |
+| MultiTP | 可评测 | 已校正：MultiTP 是 Moral Machine 自动驾驶伦理两难场景的多语言扩展。 | [原文/仓库](https://github.com/causalNLP/moralmachine) | MultiTP 将 Moral Machine 自动驾驶事故两难场景扩展到 107 种语言。当前入口读取官方 dataset_zh-cn+google.csv 中 460 条可解析记录：题干使用中文 Prompt，两个中文显示选项从 Prompt 的项目符号提取，参考方向由 sub1/sub2 与全球人类偏好维度计算。 |
 
 ## 2. 医疗行业评测
 
@@ -1138,17 +1134,13 @@
 
 **规模：** 1 个子类，1 个 Benchmark。
 
----
-
-**中文评测**
-
 #### 3.2.1 代码漏洞识别能力评测
 
-- 语言分区：中文
+- 语言分区：通用
 - 分类小标题：代码与系统安全检测
 - 子类介绍：使用 PairVul 中真实 CVE 的漏洞函数与修复函数对，要求模型判断给定代码是否包含漏洞。
 - Benchmark 数量：1（可评测 1）
 
 | Benchmark | 状态 | 分类核验 | 原文或官方仓库 | 评测内容简介 |
 | --- | --- | --- | --- | --- |
-| PairVul | 可评测 | 符合 | [原文/仓库](https://github.com/hs-esslingen-it-security/revisiting-Vul-RAG) | PairVul 接入公开复现包中 Linux 内核 Top-10 CWE 的 586 组漏洞/修复函数对，共形成 1,172 个二分类样本。当前入口使用中文任务指令和中文选项包装原始源代码，要求判断代码是含漏洞版本还是已修复版本。 |
+| PairVul | 可评测 | 符合 | [原文/仓库](https://github.com/hs-esslingen-it-security/revisiting-Vul-RAG) | PairVul 接入公开复现包中 Linux 内核 Top-10 CWE 的 586 组漏洞/修复函数对，共形成 1,172 个样本。原始字段包含 code_before_change、code_after_change、CVE 和 CWE；当前使用英文任务提示与英文选项判断代码是否含漏洞。 |
