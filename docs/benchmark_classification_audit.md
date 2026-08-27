@@ -1,6 +1,6 @@
 # Benchmark 原文与分类核验报告
 
-> 核验日期：2026-08-27。核验对象为网页实际加载的 99 个子类、111 个 Benchmark 实例（98 个唯一名称）。逐子类、逐 Benchmark 的当前归属、介绍、分类核验结论和原文链接见 [current_taxonomy_full.md](current_taxonomy_full.md)。
+> 核验日期：2026-08-27。核验对象为网页实际加载的 98 个子类、111 个 Benchmark 实例（98 个唯一名称）。逐子类、逐 Benchmark 的当前归属、介绍、分类核验结论和原文链接见 [current_taxonomy_full.md](current_taxonomy_full.md)。
 
 ## 核验方法
 
@@ -62,7 +62,7 @@
 - FollowBench、CHBias、GlobalOpinionQA 和 SALAD-Bench 的当前本地入口不冒充论文完整官方评分器；页面会显示“非评分收集”或代理指标说明。
 - MedSafetyBench 使用明确拒答或安全回复相似度代理；JBB-Behaviors 和 HarmBench behaviors 仅报告基线拒答；这些结果不等同于原论文的全部 judge 指标。
 - ConfAIde Tier 2 的原始标签是连续人类平均分。系统保留平均绝对误差和 Pearson 相关系数，同时把平均分映射到最近的官方五档量表计算离散一致率；该离散指标不冒充论文的多次随机采样协议。
-- 当前网页实际计数为 3 个评测领域、11 个可见大类、99 个子类、111 个 Benchmark，全部标记为可评测；网页数量由 catalog 动态计算。
+- 当前网页实际计数为 3 个评测领域、11 个可见大类、98 个子类、111 个 Benchmark，全部标记为可评测；网页数量由 catalog 动态计算。
 
 ## 法律法规遵守性边界
 
@@ -84,12 +84,11 @@
 | 大类 | 子类 | 唯一判定边界 | Benchmark |
 | --- | --- | --- | --- |
 | 攻击抵御鲁棒性 | 综合有害请求抵御评测 | 未施加越狱模板时，多来源直接禁止请求与标准化有害行为目标能否被识别并拒绝 | StrongREJECT、Do-Not-Answer、SORRY-Bench、JailbreakBench Behaviors、HarmBench |
-| 攻击抵御鲁棒性 | 中文综合风险请求抵御评测 | 中文八类基础风险请求能否被识别并拒绝 | S-Eval |
+| 攻击抵御鲁棒性 | 中文综合风险请求抵御评测 | 中文单轮请求中的基础风险与普通有害风险能否被识别并拒绝 | S-Eval、XSafety-Chinese |
 | 攻击抵御鲁棒性 | 多轮有害请求抵御评测 | 只使用 101 条带完整历史的中文多轮风险对话 | CHiSafetyBench |
 | 攻击抵御鲁棒性 | 高风险知识滥用抵御评测 | 跨学科知识滥用请求及生化危险知识暴露 | HarmfulQA、WMDP-BioChem |
 | 攻击抵御鲁棒性 | 安全请求误拒鲁棒性评测 | 区分表面敏感的安全请求与真实不安全请求 | XSTest |
 | 攻击抵御鲁棒性 | 非中文多语言有害请求抵御评测 | 比较 9 种非中文语言、9 类风险请求的抵御一致性 | XSafety-General |
-| 攻击抵御鲁棒性 | 中文有害请求抵御评测 | 独立评估普通风险分片中的 1,800 条中文请求 | XSafety-Chinese |
 | 攻击抵御鲁棒性 | 恶意代码请求抵御评测 | 恶意代码生成、翻译、补全和改写请求 | RMCBench |
 | 攻击抵御鲁棒性 | 有害医疗请求抵御评测 | 可能造成医疗伤害或违反医学伦理的请求 | MedSafetyBench |
 | 隐私信息安全性 | 机密信息安全性评测 | 使用 RuLES，仅包含带所有者、请求者、受保护内容和访问规则的 Confidentiality 场景 | RuLES |

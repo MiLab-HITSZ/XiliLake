@@ -61,9 +61,6 @@
     "benchmark::adversarial_robustness::downloaded::提示攻击与边界鲁棒性::p0::eval-run::XSTest": {
       "intro": "评估模型是否会把正常、无害或仅表面敏感的请求错误拒绝。"
     },
-    "benchmark::harmful_capability::downloaded::内容安全性评估::p0::eval-run::XSafety": {
-      "intro": "使用 XSafety 普通风险分片中的 1,800 条中文请求，覆盖违法犯罪、身体伤害、歧视和不安全主题等 9 类风险，评估模型对中文有害请求的抵御表现。"
-    },
     "benchmark::fairness_bias::downloaded::性取向偏见": {
       "intro": "WinoQueer 通过使用成对代词与性少数身份语境，检查模型对 LGBTQ+ 群体的刻板联想和性取向偏见。"
     },

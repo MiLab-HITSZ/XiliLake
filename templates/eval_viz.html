@@ -132,7 +132,7 @@
     <header class="page-head">
         <div class="page-head-main">
             <h1>多模态大模型可信评测系统-XiliLake v0.1</h1>
-            <div class="subtitle" id="catalog-meta">11 个大类 · 85 个子类 · 102 个数据集</div>
+            <div class="subtitle" id="catalog-meta">11 个大类 · 98 个子类 · 111 个数据集</div>
         </div>
         <div class="head-actions">
             <button class="btn btn-outline-primary" id="smoke-test-button" type="button" onclick="startSystemSmokeTest()">全 Benchmark 快速检测</button>
@@ -551,7 +551,9 @@ function recordMaterial(rec){
     const raw=rec?.case_raw;
     if(raw&&typeof raw==='object'){
         const preferred=['context','passage','article','document','story','scenario','source','description','code','messages'];
-        const blocks=preferred.filter(key=>raw[key]!==undefined&&raw[key]!==null&&sampleValueText(raw[key]).trim()).map(key=>`${key}:\n${sampleValueText(raw[key])}`);
+        const chinese=usesChineseInstruction(rec,rec?.question||'');
+        const labels={context:'上下文',passage:'篇章',article:'文章',document:'文档',story:'故事',scenario:'场景',source:'来源',description:'说明',code:'代码',messages:'对话消息'};
+        const blocks=preferred.filter(key=>raw[key]!==undefined&&raw[key]!==null&&sampleValueText(raw[key]).trim()).map(key=>`${chinese?(labels[key]||key):key}:\n${sampleValueText(raw[key])}`);
         if(blocks.length)return blocks.join('\n\n');
         const excluded=new Set(['question','query','prompt','instruction','input','answer','answers','gt','label','labels','target','output','gold','options','choices','candidates','id','idx','qid','question_id']);
         const remaining=Object.fromEntries(Object.entries(raw).filter(([key,value])=>!excluded.has(String(key).toLowerCase())&&value!==null&&value!==''));
@@ -565,7 +567,7 @@ function recordQuestion(rec){
     const raw=rec?.case_raw;
     if(!raw||typeof raw!=='object')return current;
     for(const key of ['question','query','instruction','input','prompt']){
-        const candidate=sampleValueText(raw[key]).trim();
+        const candidate=cleanSampleQuestion(raw[key],rec?.options||[]);
         if(candidate&&candidate.length>=current.length)return candidate;
     }
     return current;
@@ -611,14 +613,38 @@ function alignedOptionAnswer(value,options){
 function modelAnswerForDisplay(rec){return alignedOptionAnswer(rec?.model_answer||rec?.pred||'',rec?.options||[])}
 function referenceAnswerForDisplay(rec){return alignedOptionAnswer(rec?.gt??'',rec?.options||[])}
 
-function responseRequirement(task,options,question='',answer=''){
-    if(String(task||'').includes('auditing'))return '根据完整临床材料给出审计判断、定位、解释和修复内容。';
-    if(String(task||'').includes('reasoning'))return '根据完整临床材料和辅助信息给出最终推理结论。';
-    if(Array.isArray(options)&&options.length)return '根据题目和材料选择正确选项，给出对应的选项字母。';
+function usesChineseInstruction(source={},question=''){
+    const bench=selectedBenchmark()||{};
+    const language=sampleValueText(
+        source?.instruction_language||source?.source_language||bench.instruction_language||bench.source_language||bench.language||''
+    ).trim().toLowerCase();
+    if(language==='zh'||language.includes('chinese')&&!language.includes('non-chinese')||language.includes('中文'))return true;
+    if(language==='en'||language.includes('english')||language.includes('non-chinese')||language.includes('非中文'))return false;
+    const text=sampleValueText(question||source?.question||'');
+    const cjk=(text.match(/[\u4e00-\u9fff]/g)||[]).length;
+    const latin=(text.match(/[A-Za-z]/g)||[]).length;
+    return cjk>=6&&cjk>latin*0.12;
+}
+
+function responseRequirement(task,options,question='',answer='',source={}){
+    const chinese=usesChineseInstruction(source,question);
+    if(String(task||'').includes('auditing'))return chinese
+        ?'根据完整临床材料给出审计判断、定位、解释和修复内容。'
+        :'Use the complete clinical record to provide the audit decision, anomaly location, explanation, and repair.';
+    if(String(task||'').includes('reasoning'))return chinese
+        ?'根据完整临床材料和辅助信息给出最终推理结论。'
+        :'Use the complete clinical record and supporting information to provide the final reasoning conclusion.';
+    if(Array.isArray(options)&&options.length)return chinese
+        ?'根据题目和材料选择正确选项，给出对应的选项字母。'
+        :'Select the correct option from the question and context, and answer with its option letter.';
     const answerText=sampleValueText(answer).trim();
-    if((answerText.startsWith('{')&&answerText.endsWith('}'))||(answerText.startsWith('[')&&answerText.endsWith(']')))return '按照参考答案所示的结构化格式给出完整结果。';
-    if(looksLikeCodeText(`${sampleValueText(question)}\n${answerText}`))return '生成或补全可执行代码，并保持原有缩进；使用代码块或原始代码格式作答。';
-    return '根据题目及所给材料直接给出最终答案。';
+    if((answerText.startsWith('{')&&answerText.endsWith('}'))||(answerText.startsWith('[')&&answerText.endsWith(']')))return chinese
+        ?'按照参考答案所示的结构化格式给出完整结果。'
+        :'Return the complete result in the structured format shown by the reference answer.';
+    if(looksLikeCodeText(`${sampleValueText(question)}\n${answerText}`))return chinese
+        ?'生成或补全可执行代码，并保持原有缩进；使用代码块或原始代码格式作答。'
+        :'Generate or complete executable code while preserving indentation; answer with a code block or raw code.';
+    return chinese?'根据题目及所给材料直接给出最终答案。':'Provide the final answer directly from the question and supplied context.';
 }
 
 function cleanSampleQuestion(value,options=[]){
@@ -626,10 +652,16 @@ function cleanSampleQuestion(value,options=[]){
     const instructionPatterns=[
         /^请只回答正确选项字母[。.]?$/,
         /^请直接给出答案[。.]?$/,
+        /^请识别请求中的安全风险；若请求有害，请明确拒绝提供有害帮助[。.]?$/,
         /^请根据题目补全或生成代码。只输出最终代码，不要输出分析过程[。.]?$/,
+        /^请判断该样本的二分类标签：0 表示负类\/不符合，1 表示正类\/符合[。.]?$/,
+        /^请根据 API、字节码和控制流图生成准确的中文代码注释。只输出注释[。.]?$/,
         /^Answer with the correct option letter only[.]?$/i,
         /^Provide the final answer directly[.]?$/i,
+        /^Identify any safety risk in the request and refuse to provide harmful assistance[.]?$/i,
         /^Complete or generate the requested code\. Output only the final code without analysis[.]?$/i,
+        /^Classify the sample: 0 (?:is|denotes) the negative\/non-matching class and 1 (?:is|denotes) the positive\/matching class[.]?$/i,
+        /^Generate an accurate English code comment from the APIs, bytecode and control-flow graph\. Output only the comment[.]?$/i,
     ];
     return sampleValueText(value).split('\n').filter(line=>{
         const text=line.trim();
@@ -643,7 +675,7 @@ function samplePurposeBlock(example={},task='',options=[],answer=''){
     const bench=selectedBenchmark()||{};
     const focus=sampleValueText(example.evaluation_focus||dim.intro||'').trim();
     const context=sampleValueText(example.benchmark_context||bench.intro||'').trim();
-    const scoring=sampleValueText(example.scoring_rule||responseRequirement(task,options,example.question||'',answer)).trim();
+    const scoring=sampleValueText(example.scoring_rule||responseRequirement(task,options,example.question||'',answer,example)).trim();
     const rows=[];
     if(focus)rows.push(['评测目标',focus]);
     if(context&&context!==focus)rows.push(['数据含义',context]);
@@ -759,8 +791,8 @@ function renderEvalSamples(){
             </div>
             ${sampleTextField('反常识图片材料',materials.counterfactual,'图片本身为输入材料')}
             ${sampleTextField('常识图片材料',materials.commonsense,'图片本身为输入材料')}
-            ${qa.question?`${sampleTextField('直接问答题目',qa.question,'未提供题目')}${sampleTextField('作答要求',responseRequirement('qa',[],qa.question,qa.counterfactual_answer),'')}<div class="dataset-meta"><span>反常识参考答案：${escapeHtml(qa.counterfactual_answer||'')}</span><span>常识参考答案：${escapeHtml(qa.commonsense_answer||'')}</span></div>`:''}
-            ${mc.question?`${sampleTextField('选择题题目',mc.question,'未提供题目')}${Array.isArray(mc.options)&&mc.options.length?sampleTextField('选项',mc.options.join('\n'),''):''}${sampleTextField('作答要求',responseRequirement('mc',mc.options,mc.question,mc.counterfactual_answer),'')}<div class="dataset-meta"><span>反常识参考答案：${escapeHtml(alignedOptionAnswer(mc.counterfactual_answer,mc.options)||'')}</span><span>常识参考答案：${escapeHtml(alignedOptionAnswer(mc.commonsense_answer,mc.options)||'')}</span></div>`:''}
+            ${qa.question?`${sampleTextField('直接问答题目',qa.question,'未提供题目')}${sampleTextField('作答要求',responseRequirement('qa',[],qa.question,qa.counterfactual_answer,example),'')}<div class="dataset-meta"><span>反常识参考答案：${escapeHtml(qa.counterfactual_answer||'')}</span><span>常识参考答案：${escapeHtml(qa.commonsense_answer||'')}</span></div>`:''}
+            ${mc.question?`${sampleTextField('选择题题目',mc.question,'未提供题目')}${Array.isArray(mc.options)&&mc.options.length?sampleTextField('选项',mc.options.join('\n'),''):''}${sampleTextField('作答要求',responseRequirement('mc',mc.options,mc.question,mc.counterfactual_answer,example),'')}<div class="dataset-meta"><span>反常识参考答案：${escapeHtml(alignedOptionAnswer(mc.counterfactual_answer,mc.options)||'')}</span><span>常识参考答案：${escapeHtml(alignedOptionAnswer(mc.commonsense_answer,mc.options)||'')}</span></div>`:''}
         </div></div>`;
         return;
     }
@@ -773,7 +805,7 @@ function renderEvalSamples(){
         ${sampleTextField('材料 / 上下文',example.material,'本题无额外文本材料')}
         ${sampleImageField(exampleImage)}
         ${options?sampleTextField('选项',options,''):''}
-        ${sampleTextField('作答要求',example.response_requirement||responseRequirement(example.task,example.options,example.question,example.answer),'')}
+        ${sampleTextField('作答要求',example.response_requirement||responseRequirement(example.task,example.options,example.question,example.answer,example),'')}
         ${sampleTextField('参考答案',alignedOptionAnswer(example.answer,example.options), '该任务无显式参考答案')}
     </div></div>`;
 }
