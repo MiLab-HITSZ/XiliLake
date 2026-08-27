@@ -108,18 +108,18 @@
   "categories": [
     {
       "id": "ehr_end_to_end_auditing",
-      "label": "电子病历端到端审计",
+      "label": "电子病历事实准确性",
       "dimensions": [
         {
           "id": "ehr_temporal_end_to_end",
-          "label": "电子病历时序端到端审计",
-          "name_en": "EHR Temporal End-to-End Auditing",
+          "label": "病历时序准确性",
+          "name_en": "EHR Temporal Accuracy",
           "intro": "评估模型在没有异常提示的情况下，能否从完整电子病历中发现事件时间、先后顺序或时间线叙述之间的冲突，并完成证据定位、类型判定和最小修复。",
           "execution": {
             "extra_args": {
               "--taxonomy": "T1",
               "--benchmark-name": "EHRPerturb-T1-End-to-End",
-              "--dimension-label": "电子病历时序端到端审计"
+              "--dimension-label": "病历时序准确性"
             }
           },
           "benchmarks": [
@@ -137,14 +137,14 @@
         },
         {
           "id": "clinical_representation_end_to_end",
-          "label": "临床表征端到端审计",
-          "name_en": "Clinical Representation End-to-End Auditing",
+          "label": "临床表征准确性",
+          "name_en": "Clinical Representation Accuracy",
           "intro": "评估模型在没有异常提示的情况下，能否发现同一临床事实在数值、标记、解释、结构化字段或邻近叙述中的相互矛盾，并独立完成审计。",
           "execution": {
             "extra_args": {
               "--taxonomy": "T2",
               "--benchmark-name": "EHRPerturb-T2-End-to-End",
-              "--dimension-label": "临床表征端到端审计"
+              "--dimension-label": "临床表征准确性"
             }
           },
           "benchmarks": [
@@ -162,14 +162,14 @@
         },
         {
           "id": "physiological_plausibility_end_to_end",
-          "label": "临床生理端到端审计",
-          "name_en": "Clinical Physiology End-to-End Auditing",
+          "label": "临床生理准确性",
+          "name_en": "Clinical Physiology Accuracy",
           "intro": "评估模型在没有异常提示的情况下，能否结合患者状态、生命体征趋势、检验结果和干预记录，发现格式合法但生理上不可信的数值或轨迹。",
           "execution": {
             "extra_args": {
               "--taxonomy": "T3",
               "--benchmark-name": "EHRPerturb-T3-End-to-End",
-              "--dimension-label": "临床生理端到端审计"
+              "--dimension-label": "临床生理准确性"
             }
           },
           "benchmarks": [
@@ -187,14 +187,14 @@
         },
         {
           "id": "treatment_logic_end_to_end",
-          "label": "临床治疗逻辑端到端审计",
-          "name_en": "Treatment Logic End-to-End Auditing",
+          "label": "临床治疗准确性",
+          "name_en": "Clinical Treatment Accuracy",
           "intro": "评估模型在没有异常提示的情况下，能否核对治疗意图、医嘱、配药、给药和护理过程与患者证据，发现治疗或照护动作层的不一致。",
           "execution": {
             "extra_args": {
               "--taxonomy": "T4",
               "--benchmark-name": "EHRPerturb-T4-End-to-End",
-              "--dimension-label": "临床治疗逻辑端到端审计"
+              "--dimension-label": "临床治疗准确性"
             }
           },
           "benchmarks": [
@@ -212,14 +212,14 @@
         },
         {
           "id": "documentation_evidence_end_to_end",
-          "label": "诊疗文档证据端到端审计",
-          "name_en": "Documentation-Evidence End-to-End Auditing",
+          "label": "诊疗文档准确性",
+          "name_en": "Clinical Documentation Accuracy",
           "intro": "评估模型在没有异常提示的情况下，能否核对高层诊疗文档结论与检验、影像、用药和病程等底层证据，发现不受支持或直接冲突的记录。",
           "execution": {
             "extra_args": {
               "--taxonomy": "T5",
               "--benchmark-name": "EHRPerturb-T5-End-to-End",
-              "--dimension-label": "诊疗文档证据端到端审计"
+              "--dimension-label": "诊疗文档准确性"
             }
           },
           "benchmarks": [

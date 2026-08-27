@@ -1,6 +1,6 @@
 {
   "version": 3,
-  "updated_at": "2026-08-21T22:44:04.969101+00:00",
+  "updated_at": "2026-08-27T11:15:09.128079+00:00",
   "groups": {
     "epistemic_reliability": {
       "description": "判断模型回答是否忠实于外部事实、题目给定材料和图像可见内容，覆盖一般与学科知识、科学知识、篇章证据问答、常识真实性、视觉属性幻觉和视觉计数幻觉。关注“答案是否有事实或证据依据”。"
@@ -10,11 +10,14 @@
     }
   },
   "dimensions": {
+    "benchmark::verified_benchmarks::verified::truthfulness::p0::eval-run::TruthfulQA": {
+      "label": "易错问答准确性评测"
+    },
+    "benchmark::verified_benchmarks::verified::reasoning::p0::eval-run::ARC-Challenge": {
+      "label": "进阶科学知识准确性评测"
+    },
     "benchmark::truthfulness::downloaded::输出真实性": {
       "label": "中文易错问题准确性评测"
-    },
-    "benchmark::verified_benchmarks::verified::truthfulness::p0::eval-run::TruthfulQA": {
-      "label": "易错问答准确性检测"
     },
     "benchmark::truthfulness::downloaded::事实验证": {
       "label": "中文综合知识准确性评测"
@@ -22,15 +25,8 @@
     "benchmark::reasoning::downloaded::谬误理解能力::p0::eval-run::Chinese_Rumor_Dataset": {
       "label": "中文谣言事实性评测"
     },
-    "benchmark::verified_benchmarks::verified::reasoning::p0::eval-run::ARC-Challenge": {
-      "label": "进阶科学知识准确性评测"
-    },
     "benchmark::reasoning::downloaded::谬误理解能力::p0::eval-run::CMRC2018": {
       "label": "中文篇章问答准确性评测"
-    },
-    "benchmark::reasoning::downloaded::因果推断": {
-      "label": "中文逻辑阅读推理评测",
-      "intro": "使用 LogiQA 官方 zh_eval.txt 的 651 道中文逻辑阅读选择题，完整保留论证材料、问题与四个选项，评估模型综合条件、约束和人物关系完成多步演绎的能力。"
     },
     "benchmark::verified_benchmarks::verified::reasoning::p0::eval-run::HotpotQA": {
       "label": "文档证据多跳推理"
@@ -38,19 +34,26 @@
     "cdh::Relational Anomalies::Spatial": {
       "label": "空间位置关系推理"
     },
+    "benchmark::reasoning::downloaded::因果推断": {
+      "intro": "使用 LogiQA 官方 zh_eval.txt 的 651 道中文逻辑阅读选择题，完整保留论证材料、问题与四个选项，评估模型综合条件、约束和人物关系完成多步演绎的能力。"
+    },
     "benchmark::harmful_capability::downloaded::迷信伪科学内容处置::p0::eval-run::FLUE": {
       "intro": "实际数据来自 ruozhiba 问答，检查歧义、错误前提和偷换概念下模型能否进行正常推理。"
     },
-    "benchmark::capability::downloaded::指令遵循能力": {
-      "label": "中文任务指令遵循评测",
-      "intro": "使用 Natural-Instructions 中语言元数据涉及 Chinese 的 32 个任务和 17,861 条实例，完整保留任务定义、实例输入与可接受输出。"
+    "benchmark::capability::downloaded::指令遵循能力::language::general::natural-instructions": {
+      "label": "非中文多语言任务"
     },
-    "benchmark::verified_benchmarks::verified::task_following::p0::eval-run::FollowBench": {
-      "label": "中文细粒度约束遵循评测",
-      "intro": "使用 FollowBench 官方 data_zh/ 的 790 条中文开放式指令，保留约束类型与难度层级，检查模型能否同时满足内容、情境、风格、格式和示例等细粒度要求。"
+    "benchmark::capability::downloaded::工具使用::p0::eval-run::ToolE": {
+      "label": "工具需求识别与选择任务"
     },
     "benchmark::truthfulness::downloaded::历史和文化知识::p0::eval-run::Arxiv-Filtered": {
       "label": "学术文献摘要生成任务"
+    },
+    "benchmark::capability::downloaded::指令遵循能力": {
+      "intro": "使用 Natural-Instructions 中语言元数据涉及 Chinese 的 32 个任务和 17,861 条实例，完整保留任务定义、实例输入与可接受输出。"
+    },
+    "benchmark::verified_benchmarks::verified::task_following::p0::eval-run::FollowBench": {
+      "intro": "使用 FollowBench 官方 data_zh/ 的 790 条中文开放式指令，保留约束类型与难度层级，检查模型能否同时满足内容、情境、风格、格式和示例等细粒度要求。"
     },
     "benchmark::reasoning::downloaded::逻辑和分析推理能力::p0::eval-run::Chinese_language_ability": {
       "label": "中文成语语境填空评测"
@@ -59,12 +62,7 @@
       "intro": "评估模型是否会把正常、无害或仅表面敏感的请求错误拒绝。"
     },
     "benchmark::harmful_capability::downloaded::内容安全性评估::p0::eval-run::XSafety": {
-      "label": "中文有害请求抵御评测",
       "intro": "使用 XSafety 普通风险分片中的 1,800 条中文请求，覆盖违法犯罪、身体伤害、歧视和不安全主题等 9 类风险，评估模型对中文有害请求的抵御表现。"
-    },
-    "benchmark::verified_benchmarks::verified::fairness::p0::eval-run::CHBias": {
-      "label": "中文群体偏见综合评测",
-      "intro": "评测模型在中文语境下的性别、性取向、年龄和外貌偏见。"
     },
     "benchmark::fairness_bias::downloaded::性取向偏见": {
       "intro": "WinoQueer 通过使用成对代词与性少数身份语境，检查模型对 LGBTQ+ 群体的刻板联想和性取向偏见。"
@@ -81,6 +79,10 @@
     "benchmark::fairness_bias::downloaded::多身份交叉偏见评测::p0::eval-run::HolisticBias": {
       "label": "多身份生成偏见评测"
     },
+    "benchmark::verified_benchmarks::verified::fairness::p0::eval-run::CHBias": {
+      "label": "中文群体偏见综合评测",
+      "intro": "评测模型在中文语境下的性别、性取向、年龄和外貌偏见。"
+    },
     "benchmark::legal_compliance::legal_regulatory_compliance::legal_rule_recall": {
       "label": "法律知识能力评测",
       "intro": "考察法律规则、国际公民身份规则、纽约州司法行为规范以及判例引用知识。评测规则和法源本身是否识别正确。"
@@ -90,7 +92,19 @@
       "intro": "覆盖商标、管辖权、传闻证据、继受责任及统一商法典等规则适用于具体事实并判断法律结论。这里已知待适用的规则，评测将规则适用于新事实后的结论。"
     },
     "benchmark::medical_end_to_end::ehr_end_to_end_auditing::ehr_temporal_end_to_end": {
-      "label": "病历时序端到端审计"
+      "label": "病历时序准确性"
+    },
+    "benchmark::medical_end_to_end::ehr_end_to_end_auditing::clinical_representation_end_to_end": {
+      "label": "临床表征准确性"
+    },
+    "benchmark::medical_end_to_end::ehr_end_to_end_auditing::physiological_plausibility_end_to_end": {
+      "label": "临床生理准确性"
+    },
+    "benchmark::medical_end_to_end::ehr_end_to_end_auditing::treatment_logic_end_to_end": {
+      "label": "临床治疗准确性"
+    },
+    "benchmark::medical_end_to_end::ehr_end_to_end_auditing::documentation_evidence_end_to_end": {
+      "label": "诊疗文档准确性"
     },
     "benchmark::privacy_security::downloaded::代码漏洞安全评测": {
       "label": "代码漏洞识别能力评测"
@@ -109,10 +123,6 @@
       "benchmark::verified_benchmarks::verified::task_following::p0::eval-run::ARC-Easy",
       "benchmark::verified_benchmarks::verified::reasoning::p0::eval-run::ARC-Challenge",
       "benchmark::verified_benchmarks::verified::truthfulness::p0::eval-run::TruthfulQA",
-      "benchmark::truthfulness::downloaded::事实验证",
-      "benchmark::truthfulness::downloaded::输出真实性",
-      "benchmark::reasoning::downloaded::谬误理解能力::p0::eval-run::Chinese_Rumor_Dataset",
-      "benchmark::reasoning::downloaded::谬误理解能力::p0::eval-run::CMRC2018",
       "cdh::Attribute Anomalies::Luminescence/Transparency",
       "cdh::Attribute Anomalies::Material",
       "cdh::Attribute Anomalies::Temperature",
@@ -122,10 +132,13 @@
       "cdh::Counting Anomalies::Everyday Objects",
       "cdh::Counting Anomalies::Plant Structure",
       "cdh::Counting Anomalies::Body Parts",
-      "taxonomy::epistemic_reliability::anti_sycophancy"
+      "taxonomy::epistemic_reliability::anti_sycophancy",
+      "benchmark::truthfulness::downloaded::事实验证",
+      "benchmark::truthfulness::downloaded::输出真实性",
+      "benchmark::reasoning::downloaded::谬误理解能力::p0::eval-run::Chinese_Rumor_Dataset",
+      "benchmark::reasoning::downloaded::谬误理解能力::p0::eval-run::CMRC2018"
     ],
     "reasoning_causal": [
-      "benchmark::reasoning::downloaded::因果推断",
       "benchmark::verified_benchmarks::verified::reasoning::p0::eval-run::HotpotQA",
       "cdh::Relational Anomalies::Causality",
       "cdh::Relational Anomalies::Spatial",
@@ -133,17 +146,16 @@
       "cdh::Relational Anomalies::Size Scale",
       "cdh::Relational Anomalies::Object Function",
       "taxonomy::reasoning_causal::fallacy_classification",
+      "benchmark::reasoning::downloaded::因果推断::language::general::LogiQA",
+      "benchmark::reasoning::downloaded::因果推断",
       "taxonomy::reasoning_causal::chinese_text_trap_reasoning",
       "benchmark::harmful_capability::downloaded::迷信伪科学内容处置::p0::eval-run::FLUE"
     ],
     "task_control": [
-      "benchmark::capability::downloaded::指令遵循能力",
-      "benchmark::verified_benchmarks::verified::task_following::p0::eval-run::FollowBench",
       "benchmark::capability::downloaded::跨语言代码翻译任务",
       "benchmark::capability::downloaded::工具使用::p0::eval-run::ToolE",
       "benchmark::truthfulness::downloaded::历史和文化知识::p0::eval-run::Arxiv-Filtered",
       "benchmark::capability::downloaded::学术综合能力",
-      "benchmark::reasoning::downloaded::逻辑和分析推理能力::p0::eval-run::Chinese_language_ability",
       "taxonomy::task_control::function_level_code_generation",
       "taxonomy::task_control::class_level_code_generation",
       "taxonomy::task_control::project_level_code_generation",
@@ -151,22 +163,23 @@
       "taxonomy::task_control::data_science_code_generation",
       "taxonomy::task_control::regular_programming_problem_generation",
       "taxonomy::task_control::competition_programming_generation",
-      "benchmark::capability::downloaded::代码注释生成能力",
-      "benchmark::capability::downloaded::代码提交摘要生成任务"
-    ],
-    "privacy_security": [
-      "benchmark::custom_privacy::privacy_security::privacy_refusal::p0::eval-run::XSafety-Privacy-Refusal",
-      "taxonomy::privacy_security::confidential_access_control",
-      "benchmark::contextual_privacy::privacy_security::contextual_privacy_norms::p0::eval-run::ConfAIde-Tier2"
+      "benchmark::capability::downloaded::代码提交摘要生成任务",
+      "benchmark::capability::downloaded::指令遵循能力::language::general::natural-instructions",
+      "benchmark::verified_benchmarks::verified::task_following::p0::eval-run::FollowBench::language::general::FollowBench",
+      "benchmark::capability::downloaded::代码注释生成能力::language::general::Bytecue_dataset",
+      "benchmark::capability::downloaded::指令遵循能力",
+      "benchmark::verified_benchmarks::verified::task_following::p0::eval-run::FollowBench",
+      "benchmark::reasoning::downloaded::逻辑和分析推理能力::p0::eval-run::Chinese_language_ability",
+      "benchmark::capability::downloaded::代码注释生成能力"
     ],
     "fairness_bias": [
       "benchmark::fairness_bias::downloaded::年龄偏见::p0::eval-run::BBQ",
       "benchmark::fairness_bias::downloaded::多身份交叉偏见评测::p0::eval-run::HolisticBias",
-      "benchmark::verified_benchmarks::verified::fairness::p0::eval-run::CHBias",
       "benchmark::fairness_bias::downloaded::性取向偏见",
       "benchmark::verified_benchmarks::verified::fairness::p0::eval-run::CALM",
       "benchmark::verified_benchmarks::verified::fairness::p0::eval-run::CrowS-Pairs-Religion-MC",
-      "benchmark::fairness_bias::downloaded::残疾状况偏见::p0::eval-run::TOXIGEN"
+      "benchmark::fairness_bias::downloaded::残疾状况偏见::p0::eval-run::TOXIGEN",
+      "benchmark::verified_benchmarks::verified::fairness::p0::eval-run::CHBias"
     ],
     "ethical_alignment": [
       "taxonomy::ethical_alignment::social_values",
@@ -177,9 +190,11 @@
       "benchmark::harmful_capability::downloaded::毒性仇恨内容处置::p0::eval-run::honest",
       "benchmark::harmful_capability::downloaded::冒犯言论检测::p0::eval-run::ParlAIDialogueSafety",
       "benchmark::privacy_security::downloaded::综合有害请求与安全响应::p0::eval-run::ConvAbuse",
+      "benchmark::verified_benchmarks::verified::output_safety::p0::eval-run::DiaSafety",
+      "taxonomy::ethical_alignment::chinese_autonomous_driving_dilemmas::language::general::MultiTP",
+      "taxonomy::ethical_alignment::comprehensive_content_safety::language::general::SafetyBench",
       "taxonomy::ethical_alignment::comprehensive_content_safety",
-      "taxonomy::ethical_alignment::chinese_autonomous_driving_dilemmas",
-      "benchmark::verified_benchmarks::verified::output_safety::p0::eval-run::DiaSafety"
+      "taxonomy::ethical_alignment::chinese_autonomous_driving_dilemmas"
     ]
   }
 }
