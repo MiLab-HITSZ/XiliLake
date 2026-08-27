@@ -1,6 +1,6 @@
 # Benchmark 原文与分类核验报告
 
-> 核验日期：2026-08-27。核验对象为网页实际加载的 98 个子类、111 个 Benchmark 实例（98 个唯一名称）。逐子类、逐 Benchmark 的当前归属、介绍、分类核验结论和原文链接见 [current_taxonomy_full.md](current_taxonomy_full.md)。
+> 核验日期：2026-08-27。核验对象为网页实际加载的 100 个子类、113 个 Benchmark 实例（100 个唯一名称）。逐子类、逐 Benchmark 的当前归属、介绍、分类核验结论和原文链接见 [current_taxonomy_full.md](current_taxonomy_full.md)。
 
 ## 核验方法
 
@@ -13,9 +13,11 @@
 
 | 大类 | 纳入条件 | 明确排除 |
 | --- | --- | --- |
-| 基本事实准确性 | 直接检查外部事实、证据或可见属性的真伪 | 多步演绎、拒答策略 |
+| 基本事实准确性 | 直接检查外部知识或给定文本证据的真伪 | 图像属性与数量感知、多步演绎、拒答策略 |
+| 感知内容真实性（幻觉） | 检查模型对输入图像中可直接观察属性与数量的描述是否忠实 | 图文伪造、因果与关系推断 |
 | 推理决策可靠性 | 结论需由题面关系、多跳证据、逻辑或因果导出 | 普通语言填空、科学考试问答 |
 | 任务遵循可靠性 | 检查指令、格式、工具选择或普通任务产出 | 有害策略、越狱攻击 |
+| 伪造识别准确性 | 联合图像和文本识别真实内容、单模态篡改或跨模态错配 | 模型回答的知识事实准确性、一般视觉幻觉 |
 | 攻击抵御鲁棒性 | 输入包含越狱结构、对抗变换或诱导模型提供有害帮助的直接风险请求 | 既有回复伦理判别、隐私与机密访问控制 |
 | 隐私信息安全性 | 使用 RuLES、ConfAIde Tier 2 和 XSafety-Privacy-Refusal 评估机密信息、隐私使用合理性和财产隐私安全 | 非隐私有害请求、一般内容安全判断 |
 | 社会群体公平性 | 指标明确关联身份群体差异、刻板印象或隐式仇恨 | 不按任意单条样例窄化整个数据集 |
@@ -51,6 +53,9 @@
 | PRISM / CDialBias-QA / CrowS-Pairs-General-MC / FrenchCrowPairs / Regard | 与当前精简后的伦理或公平性目录范围重复 | 从当前评测目录移除，保留本地原始数据以便追溯 | 各 Benchmark 原始论文或仓库 |
 | HolisticBias | 原目录名为多身份交叉偏见评测 | 按当前目录命名改为职业偏见评测；介绍仍注明官方数据实际覆盖多个身份轴 | [HolisticBias](https://github.com/facebookresearch/ResponsibleNLP/tree/main/holistic_bias) |
 | ARC-Easy / ARC-Challenge / CMRC2018 | 按普通任务完成展示，未突出答案的事实与证据准确性 | 两个 ARC 分片改为科学知识准确性；CMRC2018 改为篇章证据问答准确性，统一移入基本事实准确性 | [AI2 ARC](https://allenai.org/data/arc) / [CMRC2018](https://github.com/ymcui/cmrc2018) |
+| CDH-Bench | 可见属性、计数和关系异常曾混在基本事实准确性 | 颜色、材质、温度、物理状态、发光透明及四类计数移入感知内容真实性；因果、空间、行为、功能和尺度关系保留在推理决策可靠性 | 当前本地 CDH-Bench 严格标注文件 |
+| MMFakeBench | 伪造识别大类缺少真实数据入口 | 接入 10,000 条测试图文及对应图片，按真实、文本篡改、图像篡改和图文错配进行二分类评测 | [官方仓库](https://github.com/liuxuannan/MMFakeBench) |
+| CLadder | 因果推理缺少覆盖关联、干预和反事实阶梯的形式化数据 | 接入 10,112 条答案均衡题，并按 model_id 拼接因果背景、given_info 与问题 | [官方仓库](https://github.com/causalNLP/cladder) |
 | RMCBench | 曾按最终代码危害性归入输出内容 | 当前入口已把 473 条恶意代码请求的 gold 统一为 SAFE_REFUSAL，因此改为恶意代码请求抵御评测并归入攻击抵御鲁棒性 | [RMCBench](https://github.com/qing-yuan233/RMCBench) |
 | HONEST / ParlAI Dialogue Safety / ConvAbuse | 伤害补全、冒犯发言和对话滥用与系统拒答策略混在一起 | 分别归入多语言伤害补全、冒犯对话处置和对话滥用处置三个伦理子类；它们判定社会交往表达，不测试越狱或普通风险请求拒答 | [HONEST](https://github.com/MilaNLProc/honest) / [ParlAI Dialogue Safety](https://github.com/facebookresearch/ParlAI/tree/main/parlai/tasks/dialogue_safety) / [ConvAbuse](https://github.com/amandacurry/convabuse) |
 | GlobalOpinionQA / MoralStories / MultiTP / MoralChoice / MoralExceptQA | 样例存在 CSV 错分列、只显示局部行为或把主观分布当唯一答案 | 重建完整情境、选项、群体分布和行为后果；主观任务明确标记本地代理 | [GlobalOpinionQA](https://arxiv.org/abs/2306.16388) / [MoralStories](https://aclanthology.org/2021.emnlp-main.54/) / [MoralChoice](https://huggingface.co/datasets/ninoscherrer/moralchoice) |
@@ -62,7 +67,7 @@
 - FollowBench、CHBias、GlobalOpinionQA 和 SALAD-Bench 的当前本地入口不冒充论文完整官方评分器；页面会显示“非评分收集”或代理指标说明。
 - MedSafetyBench 使用明确拒答或安全回复相似度代理；JBB-Behaviors 和 HarmBench behaviors 仅报告基线拒答；这些结果不等同于原论文的全部 judge 指标。
 - ConfAIde Tier 2 的原始标签是连续人类平均分。系统保留平均绝对误差和 Pearson 相关系数，同时把平均分映射到最近的官方五档量表计算离散一致率；该离散指标不冒充论文的多次随机采样协议。
-- 当前网页实际计数为 3 个评测领域、11 个可见大类、98 个子类、111 个 Benchmark，全部标记为可评测；网页数量由 catalog 动态计算。
+- 当前网页实际计数为 3 个评测领域、13 个可见大类、100 个子类、113 个 Benchmark，全部标记为可评测；网页数量由 catalog 动态计算。
 
 ## 法律法规遵守性边界
 
@@ -106,4 +111,4 @@ XSafety 先按输入机制拆分，再按语言拆分为互斥数据：普通风
 ## 行业大类边界
 
 - 医疗行业统一使用“医疗事实准确性”，五个 EHRPerturb 准确性子类分别检查病历时序、临床表征、临床生理、治疗逻辑和诊疗文档证据异常；评测采用端到端输入设置，模型需要从完整病历中自主发现异常，不使用给定金标准证据的 Oracle 辅助设置。
-- 网络安全行业拆分为“网络安全可靠性”和“漏洞识别准确性”：WMDP-Cyber 衡量网络安全高风险知识作答，PairVul 衡量真实漏洞函数与修复函数的二分类准确率。
+- 网络安全行业拆分为“网安知识准确性”和“漏洞识别准确性”：WMDP-Cyber 衡量网络安全高风险知识作答，PairVul 衡量真实漏洞函数与修复函数的二分类准确率。

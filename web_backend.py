@@ -60,6 +60,7 @@ DATASET_PATH = BASE_DIR / 'CDH-Bench.revised.strict.jsonl'
 TRUSTEDGPT_CATALOG_PATH = BASE_DIR / 'data' / 'trustedgpt_catalog.json'
 RESULT_DIR = BASE_DIR / 'result'
 IMAGE_DIR = BASE_DIR / 'images'
+MANUAL_DATASET_DIR = BASE_DIR / 'downloads' / 'datasets' / 'manual'
 MODELS_DIR = BASE_DIR / 'models'
 RUNTIME_DIR = BASE_DIR / 'runtime'
 JOBS_DIR = RUNTIME_DIR / 'eval_jobs'
@@ -205,7 +206,7 @@ SCIENTIFIC_TAXONOMY_DOMAINS = [
     {
         'id': 'general_evaluation',
         'label': '通用评测',
-        'description': '覆盖模型在通用知识、推理、任务执行、攻击防御、用户隐私、群体公平、法律规则适用和伦理价值判断方面的可信表现。',
+        'description': '覆盖事实准确性、视觉感知幻觉、推理与决策、任务遵循、多模态伪造识别、隐私信息安全、攻击防御、群体公平、法律规则适用和伦理价值判断。',
     },
     {
         'id': 'medical_industry_evaluation',
@@ -223,7 +224,12 @@ SCIENTIFIC_TAXONOMY_GROUPS = [
     {
         'id': 'epistemic_reliability',
         'label': '基本事实准确性',
-        'description': '判断模型回答是否忠实于外部事实、题目给定材料和图像可见内容，覆盖一般与学科知识、科学知识、篇章证据问答、常识真实性、视觉属性幻觉和视觉计数幻觉。这里关注“答案是否有事实或证据依据”，不主要评价推理链条是否严密，也不评价安全策略选择。',
+        'description': '判断模型回答是否忠实于外部事实与题目给定文本证据，覆盖一般知识、学科与科学知识、篇章问答、易错问题和事实立场保持。这里关注知识或文本答案是否准确；图像可见属性与数量是否被正确感知归入感知内容真实性，推理过程是否正确归入推理决策可靠性。',
+    },
+    {
+        'id': 'perceptual_truthfulness',
+        'label': '感知内容真实性（幻觉）',
+        'description': '评估多模态模型是否忠实描述输入图像中可直接观察的属性与数量，包括颜色、材质、温度、物理状态、发光或透明特征，以及动物部位、身体部位、日常物体和植物结构计数。这里仅包含感知事实幻觉；因果、空间、行为、功能和尺度关系归入推理决策可靠性，新闻图文是否经过篡改或错配归入伪造识别准确性。',
     },
     {
         'id': 'reasoning_causal',
@@ -236,14 +242,19 @@ SCIENTIFIC_TAXONOMY_GROUPS = [
         'description': '评估模型能否按用户意图稳定完成普通任务，包括指令遵循、工具选择、代码生成、代码注释、摘要、翻译、语言填空和学术问答。这里关注是否按要求完成任务、格式是否正确和产出是否可用；以事实或给定材料答案正确性为核心的科学问答与阅读理解归入基本事实准确性。',
     },
     {
-        'id': 'adversarial_robustness',
-        'label': '攻击抵御鲁棒性',
-        'description': '评估模型面对越狱、目标劫持、对抗改写以及直接有害请求时能否保持安全边界。这里关注攻击或风险输入能否诱导模型提供有害帮助；仅判断既有文本是否符合伦理、是否冒犯或是否安全的任务归入伦理道德符合性，个人信息、财产和机密信息相关评测归入隐私信息安全性。',
+        'id': 'forgery_detection_accuracy',
+        'label': '伪造识别准确性',
+        'description': '评估模型能否联合图像和文本识别内容是否真实、遭到篡改或发生跨模态错配。当前使用 MMFakeBench 覆盖原始真实新闻、文本真实性篡改、图像真实性篡改和图文语义错配；这里判断媒介内容是否被伪造，不评估模型自身回答的知识事实准确性。',
     },
     {
         'id': 'privacy_security',
         'label': '隐私信息安全性',
         'description': '使用 RuLES、ConfAIde Tier 2 和 XSafety-Privacy-Refusal 评估模型的隐私信息安全表现，分别包含机密信息访问规则、个人信息采集与使用场景，以及个人信息、账号凭据、支付信息和财产侵害请求。',
+    },
+    {
+        'id': 'adversarial_robustness',
+        'label': '攻击抵御鲁棒性',
+        'description': '评估模型面对越狱、目标劫持、对抗改写以及直接有害请求时能否保持安全边界。这里关注攻击或风险输入能否诱导模型提供有害帮助；仅判断既有文本是否符合伦理、是否冒犯或是否安全的任务归入伦理道德符合性，个人信息、财产和机密信息相关评测归入隐私信息安全性。',
     },
     {
         'id': 'fairness_bias',
@@ -279,8 +290,9 @@ SCIENTIFIC_TAXONOMY_GROUPS = [
 
 TAXONOMY_DOMAIN_GROUP_IDS = {
     'general_evaluation': {
-        'epistemic_reliability', 'reasoning_causal', 'task_control',
-        'adversarial_robustness', 'privacy_security', 'fairness_bias',
+        'epistemic_reliability', 'perceptual_truthfulness',
+        'reasoning_causal', 'task_control', 'forgery_detection_accuracy',
+        'privacy_security', 'adversarial_robustness', 'fairness_bias',
         'legal_compliance', 'ethical_alignment',
     },
     'medical_industry_evaluation': {
@@ -303,12 +315,14 @@ TAXONOMY_GROUP_ORDER = {row['id']: idx for idx, row in enumerate(SCIENTIFIC_TAXO
 SOURCE_GROUP_TAXONOMY_OVERRIDES = {
     'truthfulness': 'epistemic_reliability',
     'reasoning': 'reasoning_causal',
+    'causal_reasoning': 'reasoning_causal',
     'capability': 'task_control',
     'code': 'task_control',
     'general': 'task_control',
     'harmful_capability': 'adversarial_robustness',
     'safety': 'adversarial_robustness',
     'adversarial_robustness': 'adversarial_robustness',
+    'multimodal_forgery': 'forgery_detection_accuracy',
     'privacy_security': 'privacy_security',
     'custom_privacy': 'privacy_security',
     'contextual_privacy': 'privacy_security',
@@ -2286,7 +2300,7 @@ def taxonomy_group_id_for_dimension(source_group: Dict[str, Any], dim: Dict[str,
     if source_group_id == 'cdh_hallucination':
         if label in CDH_REASONING_DIMENSIONS or display_label in CDH_REASONING_DIMENSIONS:
             return 'reasoning_causal'
-        return 'epistemic_reliability'
+        return 'perceptual_truthfulness'
 
     override = DIMENSION_TAXONOMY_OVERRIDES.get(label)
     if override:
@@ -2308,6 +2322,8 @@ def taxonomy_group_id_for_dimension(source_group: Dict[str, Any], dim: Dict[str,
         return 'adversarial_robustness'
     if text_has_any(text, ['毒性', '冒犯', 'toxicity', 'offensive']):
         return 'ethical_alignment'
+    if text_has_any(text, ['图文伪造', '多模态伪造', '图像篡改', '图文错配', 'deepfake']):
+        return 'forgery_detection_accuracy'
     if text_has_any(text, ['幻觉', '事实', '真实性', '伪造', '迷信', '常识', 'hallucination', 'truthful', 'factual', 'misinformation']):
         return 'epistemic_reliability'
     if text_has_any(text, ['逻辑', '推理', '因果', '谬误', '规划', 'reasoning', 'causal', 'fallacy', 'planning']):
@@ -2332,7 +2348,7 @@ def taxonomy_secondary_label(group_id: str, source_group: Dict[str, Any], dim: D
         if secondary:
             return secondary
 
-    if group_id == 'epistemic_reliability' and str(source_group.get('id') or '') == 'cdh_hallucination':
+    if group_id == 'perceptual_truthfulness' and str(source_group.get('id') or '') == 'cdh_hallucination':
         category = str(dim.get('category_label') or '')
         return {
             '计数幻觉': '视觉计数幻觉评测',
@@ -2352,8 +2368,10 @@ def taxonomy_secondary_label(group_id: str, source_group: Dict[str, Any], dim: D
 
     fallback = {
         'epistemic_reliability': '事实可靠性',
+        'perceptual_truthfulness': '视觉感知事实核验',
         'reasoning_causal': '推理可靠性',
         'task_control': '任务可靠性',
+        'forgery_detection_accuracy': '多模态伪造识别',
         'adversarial_robustness': '对抗鲁棒性',
         'privacy_security': '隐私信息安全',
         'fairness_bias': '公平性与偏见',
@@ -3188,7 +3206,12 @@ def path_to_image_url(image_path: str) -> Optional[str]:
     try:
         p = Path(image_path)
         if p.is_absolute():
-            rel = p.relative_to(IMAGE_DIR)
+            try:
+                rel = p.relative_to(IMAGE_DIR)
+                return f'/images/{rel.as_posix()}'
+            except ValueError:
+                rel = p.relative_to(MANUAL_DATASET_DIR)
+                return f'/dataset-images/{rel.as_posix()}'
         else:
             raw = image_path.replace('\\', '/')
             if 'images/' in raw:
@@ -4327,6 +4350,14 @@ def full_generic_example_payload(
         question or case.get('display_question') or case.get('question') or '',
         use_chinese,
     )
+    benchmark_key = normalize_benchmark_key(bench.get('name') or '')
+    if benchmark_key in {
+        normalize_benchmark_key('MMFakeBench'),
+        normalize_benchmark_key('CLadder'),
+    }:
+        question_text = str(case.get('display_question') or case.get('question') or question_text).strip()
+        answer = case.get('gt') or answer
+        options = list(case.get('options') or options)
     if normalize_benchmark_key(bench.get('name') or '') == normalize_benchmark_key('MAFALDA'):
         question_text = str(case.get('display_question') or case.get('question') or question_text).strip()
         answer = case.get('gt') or answer
@@ -4355,6 +4386,8 @@ def full_generic_example_payload(
         'source_language': 'Chinese' if use_chinese else str(bench.get('source_language') or bench.get('language') or 'Non-Chinese'),
         'instruction_language': 'zh' if use_chinese else 'en',
     }
+    if case.get('image_path'):
+        payload['image_url'] = path_to_image_url(str(case.get('image_path') or '')) or ''
     if normalize_benchmark_key(bench.get('name') or '').startswith('multitp'):
         phenomenon = str(row.get('phenomenon_category') or '').strip()
         if use_chinese:
@@ -5753,6 +5786,41 @@ def resolve_local_model(model_name_or_path: str) -> str:
     raise ValueError(f'本地模型不存在: {raw}')
 
 
+def catalog_scope_rows(payload: Dict[str, Any]) -> List[Dict[str, Any]]:
+    scope_type = str(payload.get('scope_type') or '').strip()
+    if scope_type not in {'group', 'dimension', 'benchmark'}:
+        return []
+    group_id = str(payload.get('group_id') or '').strip()
+    dimension_id = str(payload.get('dimension_id') or '').strip()
+    benchmark_id = str(payload.get('benchmark_id') or '').strip()
+    rows: List[Dict[str, Any]] = []
+    for group in build_trust_catalog().get('groups') or []:
+        if str(group.get('id') or '') != group_id:
+            continue
+        for dimension in group.get('dimensions') or []:
+            if scope_type in {'dimension', 'benchmark'} and str(dimension.get('id') or '') != dimension_id:
+                continue
+            for benchmark in dimension.get('benchmarks') or []:
+                execution_id = str(benchmark.get('execution_option_id') or benchmark.get('id') or '')
+                if scope_type == 'benchmark' and benchmark_id not in {
+                    str(benchmark.get('id') or ''), execution_id,
+                }:
+                    continue
+                if not benchmark.get('implemented') or not execution_id:
+                    continue
+                rows.append({
+                    'group_id': group_id,
+                    'group_label': str(group.get('label') or ''),
+                    'dimension_id': str(dimension.get('id') or ''),
+                    'dimension_label': str(dimension.get('label') or ''),
+                    'benchmark_id': execution_id,
+                    'benchmark_label': str(benchmark.get('name') or 'Benchmark'),
+                })
+    if not rows:
+        raise ValueError('当前层级没有可运行的 Benchmark。')
+    return rows
+
+
 
 def create_job(payload: Dict[str, Any]) -> Dict[str, Any]:
     model_id = str(payload.get('model_id') or '').strip()
@@ -5764,6 +5832,13 @@ def create_job(payload: Dict[str, Any]) -> Dict[str, Any]:
 
     backend_mode = str(preset.get('backend_mode') or '').strip()
     smoke_all = bool(payload.get('smoke_all'))
+    scope_rows: List[Dict[str, Any]] = []
+    catalog_scope = False
+    scope_type = str(payload.get('scope_type') or '').strip()
+    scope_group_id = str(payload.get('group_id') or '').strip()
+    scope_dimension_id = str(payload.get('dimension_id') or '').strip()
+    scope_benchmark_id = str(payload.get('benchmark_id') or '').strip()
+    scope_label = ''
     if smoke_all:
         requested_dimensions = []
         benchmark_ids = []
@@ -5783,6 +5858,27 @@ def create_job(payload: Dict[str, Any]) -> Dict[str, Any]:
             raise ValueError('无法为全部可评测 Benchmark 生成快速检测任务。')
         real_run = None
         tasks = ['mc']
+    elif scope_type:
+        scope_rows = catalog_scope_rows(payload)
+        requested_dimensions = [row['dimension_id'] for row in scope_rows]
+        benchmark_ids = [row['benchmark_id'] for row in scope_rows]
+        catalog_scope = len(scope_rows) > 1
+        if scope_type == 'group':
+            scope_label = scope_rows[0]['group_label']
+        elif scope_type == 'dimension':
+            scope_label = scope_rows[0]['dimension_label']
+        else:
+            scope_label = scope_rows[0]['benchmark_label']
+        if catalog_scope:
+            real_run = None
+            tasks = ['qa']
+        else:
+            real_run = resolve_catalog_benchmark_run(requested_dimensions, benchmark_ids)
+            if not real_run:
+                raise ValueError('所选 Benchmark 暂不支持真实评测。')
+            tasks = automatic_tasks(real_run.get('execution') or {})
+            if not tasks:
+                raise ValueError('当前 Benchmark 没有可用的评测格式')
     else:
         requested_dimensions = selected_dimensions_from_payload(payload)
         benchmark_ids = selected_benchmark_ids_from_payload(payload)
@@ -5803,7 +5899,9 @@ def create_job(payload: Dict[str, Any]) -> Dict[str, Any]:
         # originating from several source configs and therefore cannot be
         # identified by parsing only the display dimension ID.
         real_dimension_ids = list(requested_dimensions)
-    placeholder_dimensions = [] if smoke_all else [d for d in requested_dimensions if d not in real_dimension_ids]
+    if catalog_scope:
+        real_dimension_ids = list(requested_dimensions)
+    placeholder_dimensions = [] if (smoke_all or catalog_scope) else [d for d in requested_dimensions if d not in real_dimension_ids]
     job_id = uuid.uuid4().hex[:12]
     job_dir = JOBS_DIR / job_id
     job_dir.mkdir(parents=True, exist_ok=True)
@@ -5812,6 +5910,12 @@ def create_job(payload: Dict[str, Any]) -> Dict[str, Any]:
     clean_payload = {
         'run_name': result_model,
         'smoke_all': smoke_all,
+        'catalog_scope': catalog_scope,
+        'scope_type': scope_type or ('all' if smoke_all else 'benchmark'),
+        'scope_group_id': scope_group_id,
+        'scope_dimension_id': scope_dimension_id,
+        'scope_benchmark_id': scope_benchmark_id,
+        'scope_label': scope_label,
         'selected_model_id': model_id,
         'selected_model_name': preset['name'],
         'backend_mode': backend_mode,
@@ -6061,6 +6165,28 @@ def run_job(job_id: str) -> None:
             if payload.get('api_key_env'):
                 eval_cmd.extend(['--api-key-env', str(payload['api_key_env'])])
             resolved_run = {'benchmark_id': 'all_subcategories_smoke'}
+        elif payload.get('catalog_scope'):
+            selections_path = job_dir / 'scope_selections.json'
+            write_json(selections_path, payload.get('result_selections') or [])
+            eval_cmd = [
+                python_bin,
+                str(BASE_DIR / 'run_system_smoke_test.py'),
+                '--base-url', base_url,
+                '--model', model_value,
+                '--display-name', str(payload.get('selected_model_name') or job['result_model']),
+                '--output-dir', str(staging_result_dir),
+                '--progress-file', str(progress_path),
+                '--python-bin', python_bin,
+                '--workers', str(max(1, int(os.environ.get('TRUSTED_EVAL_SCOPE_WORKERS', '4')))),
+                '--timeout-s', str(int(payload.get('timeout_s') or 300)),
+                '--max-tokens', str(min(2048, int(payload.get('max_tokens') or 1024))),
+                '--selections-file', str(selections_path),
+                '--cases-per-benchmark', str(max(1, int(os.environ.get('TRUSTED_EVAL_SCOPE_CASES', '20')))),
+                '--scope-label', str(payload.get('scope_label') or ''),
+            ]
+            if payload.get('api_key_env'):
+                eval_cmd.extend(['--api-key-env', str(payload['api_key_env'])])
+            resolved_run = {'benchmark_id': 'catalog_scope'}
         else:
             resolved_run = resolve_catalog_benchmark_run(
                 payload.get('trust_dimensions') or [],
@@ -6323,8 +6449,10 @@ def get_summary():
     model_name = (request.args.get('model') or CURRENT_RESULT_NAME).strip()
     category = (request.args.get('category') or '').strip()
     subcategories = set(parse_csv_param(request.args.get('subcategories') or ''))
+    dimension_ids = set(parse_csv_param(request.args.get('dimension_ids') or request.args.get('dimension_id') or ''))
+    benchmark_ids = set(parse_csv_param(request.args.get('benchmark_ids') or request.args.get('benchmark_id') or ''))
     results_path = RESULT_DIR / model_name / 'results.jsonl'
-    if not category and not subcategories:
+    if not category and not subcategories and not dimension_ids and not benchmark_ids:
         if results_path.exists():
             return jsonify(build_summary_from_records(read_jsonl(results_path)))
         summary = read_json(RESULT_DIR / model_name / 'summary.json', {}) or {}
@@ -6336,6 +6464,10 @@ def get_summary():
         records = [r for r in records if str(r.get('category') or '') == category]
     if subcategories:
         records = [r for r in records if str(r.get('subcategory') or '') in subcategories]
+    if dimension_ids:
+        records = [r for r in records if str(r.get('dimension_id') or '') in dimension_ids]
+    if benchmark_ids:
+        records = [r for r in records if str(r.get('benchmark_id') or '') in benchmark_ids]
     return jsonify(build_summary_from_records(records))
 
 
@@ -6346,6 +6478,7 @@ def get_eval_data():
     per_page = int(request.args.get('per_page', 10))
     category = (request.args.get('category') or '').strip()
     dimension_id = (request.args.get('dimension_id') or '').strip()
+    dimension_ids = set(parse_csv_param(request.args.get('dimension_ids') or ''))
     subcategory = (request.args.get('subcategory') or '').strip()
     subcategories = set(parse_csv_param(request.args.get('subcategories') or ''))
     benchmark_ids = set(parse_csv_param(request.args.get('benchmark_ids') or request.args.get('benchmark_id') or ''))
@@ -6370,6 +6503,11 @@ def get_eval_data():
         ]
         if dimension_records:
             records = dimension_records
+    if dimension_ids:
+        records = [
+            row for row in records
+            if str(row.get('dimension_id') or '') in dimension_ids
+        ]
     if benchmark_ids:
         benchmark_records = [
             row for row in records
@@ -6478,6 +6616,11 @@ def cancel_evaluation(job_id: str):
 @app.route('/images/<path:filename>')
 def serve_image(filename: str):
     return send_from_directory(IMAGE_DIR, filename)
+
+
+@app.route('/dataset-images/<path:filename>')
+def serve_dataset_image(filename: str):
+    return send_from_directory(MANUAL_DATASET_DIR, filename)
 
 
 if __name__ == '__main__':

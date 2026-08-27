@@ -1,0 +1,74 @@
+{
+  "id": "multimodal_forgery",
+  "label": "多模态伪造识别",
+  "benchmark_name": "MMFakeBench",
+  "description": "使用图像与新闻文本的联合证据评估多模态模型识别真实内容、文本篡改、图像篡改和图文错配的准确性。",
+  "source_type": "manual",
+  "enabled": true,
+  "paths": {
+    "dataset": "downloads/datasets/manual/MMFakeBench/MMFakeBench_test.json",
+    "results": "result"
+  },
+  "execution": {
+    "adapter": "python_cli",
+    "script": "evaluate_generic_benchmark.py",
+    "default_tasks": ["mc"],
+    "supported_tasks": ["mc"],
+    "supports_real_eval": true,
+    "args": {
+      "dataset": "--dataset",
+      "output_dir": "--output-dir",
+      "models": "--models",
+      "tasks": "--tasks",
+      "parallel": "--parallel",
+      "retry": "--retry",
+      "timeout_s": "--timeout-s",
+      "progress_file": "--progress-file"
+    },
+    "extra_args": {
+      "--benchmark-name": "MMFakeBench",
+      "--dimension-label": "多模态新闻伪造识别评测",
+      "--benchmark-url": "https://github.com/liuxuannan/MMFakeBench",
+      "--max-cases": 20
+    }
+  },
+  "display": {
+    "mode": "multimodal_binary_classification",
+    "sections": ["selection_detail", "progress", "summary", "metrics"]
+  },
+  "metrics": [
+    {"key": "accuracy", "label": "伪造识别准确率", "format": "percent"},
+    {"key": "response_rate", "label": "响应率", "format": "percent"},
+    {"key": "avg_latency_ms", "label": "平均延迟 ms", "format": "number"},
+    {"key": "n_total", "label": "样本数", "format": "number"}
+  ],
+  "categories": [
+    {
+      "id": "forgery_detection",
+      "label": "多模态伪造识别",
+      "dimensions": [
+        {
+          "id": "image_text_news_authenticity",
+          "label": "多模态新闻伪造识别评测",
+          "name_en": "Multimodal News Forgery Detection",
+          "intro": "使用 MMFakeBench 测试集的 10,000 条英文图文新闻样本，包含 3,000 条真实样本和 7,000 条伪造样本。伪造样本覆盖文本真实性篡改、图像真实性篡改以及图文语义错配，模型需联合图片和新闻文本判断内容真实或伪造。",
+          "benchmarks": [
+            {
+              "option_key": "mmfakebench_test",
+              "name": "MMFakeBench",
+              "intro": "MMFakeBench 测试集包含 10,000 组英文新闻图文，其中 3,000 组为原始真实内容，3,000 组经过文本真实性篡改，1,000 组经过图像真实性篡改，3,000 组为图文错配。评测向模型同时提供图片和文本，并按真实或伪造二分类结果计算准确率。",
+              "url": "https://github.com/liuxuannan/MMFakeBench",
+              "language": "English",
+              "scale": "10,000",
+              "evaluation": "Binary accuracy",
+              "paths": {
+                "dataset": "downloads/datasets/manual/MMFakeBench/MMFakeBench_test.json",
+                "results": "result"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -60,6 +60,12 @@
         .group-brief-title{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px;font-size:17px;font-weight:900;}
         .group-brief-title span{font-size:14px;color:var(--muted);font-weight:700;}
         .group-brief-text{max-width:1100px;color:#334155;font-size:16px;line-height:1.8;}
+        .scope-box{border:1px solid #b8c8e6;background:#f7faff;padding:14px 16px;}
+        .scope-box-title{font-size:13px;font-weight:900;color:#475569;margin-bottom:9px;}
+        .scope-box-path{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+        .scope-box-path .separator{color:#94a3b8;font-weight:900;}
+        .scope-box-meta{margin-top:9px;color:#475569;font-size:13px;font-weight:700;}
+        .scope-list{margin:10px 0 0;padding-left:20px;color:#334155;line-height:1.75;}
         .intro-box{padding:16px 18px;border:1px solid var(--line);background:#fbfdff;}
         .intro-box h3{margin:0 0 8px;font-size:25px;font-weight:900;}
         .intro-box h4{margin:0 0 10px;font-size:18px;font-weight:900;}
@@ -132,10 +138,9 @@
     <header class="page-head">
         <div class="page-head-main">
             <h1>多模态大模型可信测评系统-XiliLake v0.1</h1>
-            <div class="subtitle" id="catalog-meta">11 个大类 · 98 个子类 · 111 个数据集</div>
+            <div class="subtitle" id="catalog-meta">13大类 · 100子类</div>
         </div>
         <div class="head-actions">
-            <button class="btn btn-outline-primary" id="smoke-test-button" type="button" onclick="startSystemSmokeTest()">全 Benchmark 快速检测</button>
             <button class="btn btn-primary" type="button" onclick="openLeaderboardPopup()">总榜</button>
         </div>
     </header>
@@ -164,29 +169,29 @@
             <section class="content-section">
                 <div class="section-head">
                     <div>
-                        <h2>当前选择</h2>
-                        <div class="meta">展示类别、子类与 Benchmark 的具体介绍。</div>
+                        <h2>启动评测</h2>
+                        <div class="meta">可直接评测当前大类、子类或单个 Benchmark；综合评测期间模型只加载一次。</div>
                     </div>
                 </div>
-                <div id="group-brief" class="group-brief"></div>
-                <div id="selection-detail"><div class="empty">请选择子类与 Benchmark。</div></div>
+                <div id="evaluation-launcher"><div class="empty">请选择评测层级。</div></div>
             </section>
 
             <section class="content-section">
                 <div class="section-head">
                     <div>
-                        <h2>启动评测</h2>
-                        <div class="meta">选择模型后启动当前 Benchmark；系统优先使用选择题格式。</div>
+                        <h2>当前选择</h2>
+                        <div class="meta">展示当前大类、子类或 Benchmark 的介绍与覆盖范围。</div>
                     </div>
                 </div>
-                <div id="evaluation-launcher"><div class="empty">请选择子类与 Benchmark。</div></div>
+                <div id="group-brief" class="group-brief"></div>
+                <div id="selection-detail"><div class="empty">请选择评测层级。</div></div>
             </section>
 
             <section class="content-section">
                 <div class="section-head">
                     <div>
                         <h2>评测进度</h2>
-                        <div class="meta">显示当前选择对应的任务；全 Benchmark 快速检测会在任意子类下显示总进度。</div>
+                        <div class="meta">显示当前层级评测的 Benchmark 总进度与最新结果。</div>
                     </div>
                     <button class="btn btn-sm btn-outline-secondary" type="button" onclick="refreshJobs(true)">刷新</button>
                 </div>
@@ -201,7 +206,7 @@
                     </div>
                     <button class="btn btn-sm btn-outline-secondary" type="button" onclick="exportCurrentResult()">导出结果</button>
                 </div>
-                <div id="metrics-shell"><div class="empty">请选择 Benchmark。</div></div>
+                <div id="metrics-shell"><div class="empty">请选择评测层级。</div></div>
             </section>
 
             <section class="content-section">
@@ -242,7 +247,7 @@ let activePollingJobId=null;
 let selectedModelId='';
 let selectionTouched=false;
 let taxonomyRevision='default';
-const TASK_LABELS={qa:'直接问答',mc:'选择题',caption:'描述题',system_smoke:'快速检测'};
+const TASK_LABELS={qa:'直接问答',mc:'选择题',caption:'描述题',catalog_scope:'综合评测'};
 const METRIC_LABELS={CF_Acc:'反常识准确率 CF Acc',CS_Acc:'常识准确率 CS Acc',Gap:'性能差值 Gap',CCR:'一致纠错率 CCR',RPD:'相对性能下降 RPD'};
 const DEFAULT_BENCHMARK_METRICS=[
     {key:'accuracy',label:'准确率',format:'percent'},
@@ -266,16 +271,11 @@ function resultFilterForSelection(){
 }
 function hasRealResultForSelection(){
     if(!(selectedBenchmarkImplemented()&&currentResult.has_real_results))return false;
-    const ids=currentResult.benchmark_ids||[];
-    const executionId=selectedExecutionBenchmarkId();
+    const wanted=new Set(selectedScopeSelections().map(item=>`${item.dimension_id}::${item.benchmark_id}`));
     const selections=currentResult.result_selections||[];
-    const dim=selectedDimension();
-    const bench=selectedBenchmark();
-    const resultDimensionIds=new Set([selectedDimId,bench?.result_dimension_id,...(dim?.result_dimension_ids||[])].filter(Boolean));
-    if(selections.length){
-        return selections.some(item=>resultDimensionIds.has(item.dimension_id)&&(!executionId||item.benchmark_id===executionId));
-    }
-    return !executionId||!ids.length||ids.includes(executionId);
+    if(selections.length)return selections.some(item=>wanted.has(`${item.dimension_id}::${item.benchmark_id}`));
+    const ids=new Set(currentResult.benchmark_ids||[]);
+    return selectedBenchmarkIds().some(id=>ids.has(id));
 }
 function isActiveJob(job){return ['queued','starting','running'].includes(job?.status)}
 function statusClass(s){if(s==='completed')return 'status-completed';if(s==='failed')return 'status-failed';if(s==='cancelled')return 'status-cancelled';return ''}
@@ -285,12 +285,31 @@ function currentGroup(){return groupMap[selectedGroupId]||null}
 function groupsForDomain(){const ids=currentDomain()?.group_ids||[];return ids.map(id=>groupMap[id]).filter(Boolean)}
 function selectedDimension(){return dimensionMap[selectedDimId]||null}
 function selectedBenchmark(){const dim=selectedDimension();if(!dim)return null;return (dim.benchmarks||[]).find(b=>b.id===selectedBenchmarkId)||null}
-function selectedDims(){return selectedDimId?[selectedDimId]:[]}
+function selectedScopeDimensions(){
+    const dim=selectedDimension();
+    if(dim)return [dim];
+    return currentGroup()?.dimensions||[];
+}
+function selectedScopeSelections(){
+    const selectedBench=selectedBenchmark();
+    const rows=[];
+    selectedScopeDimensions().forEach(dim=>{
+        (dim.benchmarks||[]).forEach(bench=>{
+            if(selectedBench&&bench.id!==selectedBench.id)return;
+            const benchmarkId=bench.execution_option_id||bench.id||'';
+            if(bench.implemented&&benchmarkId)rows.push({dimension_id:dim.id,benchmark_id:benchmarkId,dimension:dim,benchmark:bench});
+        });
+    });
+    return rows;
+}
+function selectedDims(){return selectedScopeSelections().map(item=>item.dimension_id)}
 function selectedExecutionBenchmarkId(){const bench=selectedBenchmark();return bench?.execution_option_id||selectedBenchmarkId}
-function selectedBenchmarkIds(){const id=selectedExecutionBenchmarkId();return id?[id]:[]}
+function selectedBenchmarkIds(){return selectedScopeSelections().map(item=>item.benchmark_id)}
 function selectedCdhDims(){return selectedDims().filter(isCdh)}
 function selectedPlaceholderDims(){return selectedDims().filter(id=>!isCdh(id))}
-function selectedBenchmarkImplemented(){return !!selectedBenchmark()?.implemented}
+function selectedBenchmarkImplemented(){const rows=selectedScopeSelections();return !!rows.length&&rows.every(item=>item.benchmark.implemented)}
+function evaluationScopeType(){return selectedBenchmark()?'benchmark':(selectedDimension()?'dimension':'group')}
+function evaluationScopeLabel(){return selectedBenchmark()?.name||dimensionDisplayLabel(selectedDimension())||currentGroup()?.label||''}
 function benchmarkMetrics(bench){const rows=bench?.metrics||[];if(Array.isArray(rows)&&rows.length){return rows.map(item=>typeof item==='string'?{label:item,key:item,format:'text'}:item)}return DEFAULT_BENCHMARK_METRICS}
 function benchmarkMetaTags(bench){
     const tags=[];
@@ -326,16 +345,18 @@ function captureFormState(){
     if(modelSel&&modelSel.value)selectedModelId=modelSel.value;
 }
 function jobMatchesSelection(job){
-    if(!job||!selectedDimId)return false;
-    const dims=job.payload?.trust_dimensions||[];
-    if(!dims.includes(selectedDimId))return false;
-    const benchIds=job.payload?.benchmark_ids||[];
-    const executionId=selectedExecutionBenchmarkId();
-    if(executionId&&benchIds.length)return benchIds.includes(executionId);
-    return true;
+    if(!job||!selectedGroupId)return false;
+    const payload=job.payload||{};
+    if(payload.scope_type==='group'&&payload.scope_group_id===selectedGroupId&&!selectedDimId)return true;
+    if(payload.scope_type==='dimension'&&payload.scope_dimension_id===selectedDimId&&!selectedBenchmarkId)return true;
+    if(payload.scope_type==='benchmark'&&payload.scope_benchmark_id===selectedExecutionBenchmarkId())return true;
+    const wanted=new Set(selectedScopeSelections().map(item=>`${item.dimension_id}::${item.benchmark_id}`));
+    const jobSelections=payload.result_selections||[];
+    if(jobSelections.length)return jobSelections.some(item=>wanted.has(`${item.dimension_id}::${item.benchmark_id}`));
+    return (payload.trust_dimensions||[]).some(id=>selectedScopeDimensions().some(dim=>dim.id===id));
 }
 function describeJob(job){
-    const dim=(job?.payload?.trust_dimensions||[]).map(id=>dimensionMap[id]?.label).filter(Boolean)[0]||'某个子类';
+    const dim=job?.payload?.scope_label||(job?.payload?.trust_dimensions||[]).map(id=>dimensionMap[id]?.label).filter(Boolean)[0]||'当前层级';
     const model=job?.payload?.selected_model_name||'某个模型';
     return `${dim} / ${model}`;
 }
@@ -372,7 +393,7 @@ function ensureSelection(){
     if(dim){
         const benches=dim.benchmarks||[];
         if(!benches.length)selectedBenchmarkId='';
-        else if(!benchmarksContain(dim, selectedBenchmarkId))selectedBenchmarkId=benches[0].id;
+        else if(selectedBenchmarkId&&!benchmarksContain(dim, selectedBenchmarkId))selectedBenchmarkId='';
     }else{
         selectedBenchmarkId='';
     }
@@ -382,10 +403,8 @@ function benchmarksContain(dim, benchId){return !!(dim?.benchmarks||[]).find(b=>
 function renderHeaderMeta(){
     const totalGroups=(catalog.groups||[]).length;
     const domainDimensionTotal=(catalog.domains||[]).reduce((sum,domain)=>sum+Number(domain.dimension_count||0),0);
-    const domainBenchmarkTotal=(catalog.domains||[]).reduce((sum,domain)=>sum+Number(domain.benchmark_count||0),0);
     const totalDims=domainDimensionTotal||catalog.total_dimensions||0;
-    const totalBenchmarks=domainBenchmarkTotal||catalog.total_benchmarks||0;
-    document.getElementById('catalog-meta').textContent=`${totalGroups} 个大类 · ${totalDims} 个子类 · ${totalBenchmarks} 个数据集`;
+    document.getElementById('catalog-meta').textContent=`${totalGroups}大类 · ${totalDims}子类`;
 }
 
 function renderDomainGroups(){
@@ -393,11 +412,11 @@ function renderDomainGroups(){
     const groupBox=document.getElementById('group-list');
     const groupTitle=document.getElementById('group-section-title');
     const domains=catalog.domains||[];
-    switcher.innerHTML=domains.length?domains.map(domain=>`<button type="button" class="domain-switch ${domain.id===selectedDomainId?'active':''}" onclick="selectDomain('${escapeHtml(domain.id)}')"><span class="name">${escapeHtml(domain.label)}</span><span class="count">${domain.group_count||0} 个大类 · ${domain.dimension_count||0} 个子类</span></button>`).join(''):'<div class="empty">暂无评测领域。</div>';
+    switcher.innerHTML=domains.length?domains.map(domain=>`<button type="button" class="domain-switch ${domain.id===selectedDomainId?'active':''}" onclick="selectDomain('${escapeHtml(domain.id)}')"><span class="name">${escapeHtml(domain.label)}</span><span class="count">${domain.group_count||0}大类 · ${domain.dimension_count||0}子类</span></button>`).join(''):'<div class="empty">暂无评测领域。</div>';
     const domain=currentDomain();
     const groups=groupsForDomain();
     groupTitle.textContent=domain?.label||'评测大类';
-    groupBox.innerHTML=groups.length?groups.map(group=>`<button type="button" class="selector-item ${group.id===selectedGroupId?'active':''}" onclick="selectGroup('${escapeHtml(group.id)}')"><span class="name">${escapeHtml(group.label)}</span><span class="meta">${(group.dimensions||[]).length} 个子类 · ${(group.dimensions||[]).reduce((sum,dim)=>sum+(dim.benchmarks||[]).length,0)} 个数据集</span></button>`).join(''):'<div class="empty">当前领域暂无评测大类。</div>';
+    groupBox.innerHTML=groups.length?groups.map(group=>`<button type="button" class="selector-item ${group.id===selectedGroupId?'active':''}" onclick="selectGroup('${escapeHtml(group.id)}')"><span class="name">${escapeHtml(group.label)}</span><span class="meta">${(group.dimensions||[]).length}子类 · ${(group.dimensions||[]).reduce((sum,dim)=>sum+(dim.benchmarks||[]).length,0)}数据集</span></button>`).join(''):'<div class="empty">当前领域暂无评测大类。</div>';
 }
 
 function renderDimensions(){
@@ -405,7 +424,7 @@ function renderDimensions(){
     const group=currentGroup();
     const dims=group?.dimensions||[];
     if(!dims.length){box.innerHTML='<div class="empty">当前大类下暂无子类。</div>';return}
-    const renderDimension=dim=>`<button type="button" class="selector-item ${dim.id===selectedDimId?'active':''}" onclick="selectDimension('${escapeHtml(dim.id)}')"><span class="name dimension-name"><span>${escapeHtml(dimensionDisplayLabel(dim))}</span>${dim.language_label?`<span class="dimension-language">${escapeHtml(dim.language_label)}</span>`:''}</span><span class="meta">${(dim.benchmarks||[]).length} 个 Benchmark</span></button>`;
+    const renderDimension=dim=>`<button type="button" class="selector-item ${dim.id===selectedDimId?'active':''}" onclick="selectDimension('${escapeHtml(dim.id)}')"><span class="name dimension-name"><span>${escapeHtml(dimensionDisplayLabel(dim))}</span>${dim.language_label?`<span class="dimension-language">${escapeHtml(dim.language_label)}</span>`:''}</span><span class="meta">${(dim.benchmarks||[]).length} Benchmark</span></button>`;
     const generalDimensions=dims.filter(dim=>dim.language_label!=='中文');
     const chineseDimensions=dims.filter(dim=>dim.language_label==='中文');
     const divider=generalDimensions.length&&chineseDimensions.length?'<div class="dimension-language-divider" role="separator"><span>中文评测</span></div>':'';
@@ -416,7 +435,10 @@ function renderBenchmarks(){
     const box=document.getElementById('benchmark-list');
     const dim=selectedDimension();
     const benches=dim?.benchmarks||[];
-    box.innerHTML=benches.length?benches.map(bench=>`<button type="button" class="selector-item ${bench.id===selectedBenchmarkId?'active':''}" onclick="selectBenchmark('${escapeHtml(bench.id)}')"><span class="name">${escapeHtml(bench.name||'Benchmark')}</span><span class="meta">${bench.implemented?'可评测':'资料展示'}</span></button>`).join(''):(dim?'<div class="empty">当前子类下暂无 Benchmark。</div>':'<div class="empty">请先选择子类。</div>');
+    if(!dim){box.innerHTML='<div class="empty">请先选择子类。</div>';return}
+    if(!benches.length){box.innerHTML='<div class="empty">当前子类下暂无 Benchmark。</div>';return}
+    const aggregate=`<button type="button" class="selector-item ${selectedBenchmarkId?'':'active'}" onclick="selectBenchmark('')"><span class="name">全部数据集</span><span class="meta">${benches.length} Benchmark 综合评测</span></button>`;
+    box.innerHTML=aggregate+benches.map(bench=>`<button type="button" class="selector-item ${bench.id===selectedBenchmarkId?'active':''}" onclick="selectBenchmark('${escapeHtml(bench.id)}')"><span class="name">${escapeHtml(bench.name||'Benchmark')}</span><span class="meta">${bench.implemented?'可评测':'资料展示'}</span></button>`).join('');
 }
 
 function renderGroupBrief(){
@@ -430,7 +452,7 @@ function renderGroupBrief(){
     box.innerHTML=`
         <div class="group-brief-title">
             ${escapeHtml(domain?.label||'')} / ${escapeHtml(group.label)}
-            <span>${dims.length} 个子类 · ${benchCount} 个数据集</span>
+            <span>${dims.length}子类 · ${benchCount}数据集</span>
         </div>
         <div class="group-brief-text">${escapeHtml(group.description||'')}</div>`;
 }
@@ -445,9 +467,31 @@ function renderSelectionDetail(){
     const dim=selectedDimension();
     const bench=selectedBenchmark();
     if(!group){shell.innerHTML='<div class="empty">暂无评测目录。</div>';launcher.innerHTML='<div class="empty">暂无可启动的评测。</div>';return}
+    const scopeRows=selectedScopeSelections();
+    const scopeType=evaluationScopeType();
+    const scopeLabel={group:'大类综合评测',dimension:'子类综合评测',benchmark:'Benchmark 评测'}[scopeType];
+    const hierarchy=[domain?.label,group.label,dim?dimensionDisplayLabel(dim):'',bench?.name||''].filter(Boolean);
+    const uniqueDimensions=new Set(scopeRows.map(item=>item.dimension_id)).size;
+    const launchLabel={group:'启动大类综合评测',dimension:'启动子类综合评测',benchmark:'启动评测'}[scopeType];
+    launcher.innerHTML=`
+        <div class="scope-box">
+            <div class="scope-box-title">当前评测层级</div>
+            <div class="scope-box-path">${hierarchy.map((label,index)=>`${index?'<span class="separator">/</span>':''}<span class="tag">${escapeHtml(label)}</span>`).join('')}</div>
+            <div class="scope-box-meta">${escapeHtml(scopeLabel)} · ${uniqueDimensions}子类 · ${scopeRows.length} Benchmark</div>
+        </div>
+        <div class="form-grid">
+            <div>
+                <label class="form-label fw-semibold">评测模型</label>
+                <select id="model-select" class="form-select" onchange="onModelChange()">${modelOptionsHtml()}</select>
+            </div>
+            <div class="toolbar">
+                <button class="btn btn-primary" type="button" onclick="submitEval()" ${scopeRows.length?'':'disabled'}>${escapeHtml(launchLabel)}</button>
+                <button class="btn btn-outline-danger" type="button" onclick="deleteCurrentResult()">删除当前结果</button>
+            </div>
+        </div>`;
     if(!dim){
-        shell.innerHTML=`<div class="intro-box"><div class="pathline"><span class="tag">${escapeHtml(domain?.label||'')}</span><span class="tag">${escapeHtml(group.label)}</span></div><div class="intro-text">请选择子类。</div></div>`;
-        launcher.innerHTML='<div class="empty">请选择子类与 Benchmark。</div>';
+        const dimNames=(group.dimensions||[]).map(item=>dimensionDisplayLabel(item));
+        shell.innerHTML=`<div class="intro-box"><div class="pathline"><span class="tag">${escapeHtml(domain?.label||'')}</span><span class="tag">${escapeHtml(group.label)}</span></div><h3>${escapeHtml(group.label)}</h3><h4>大类介绍</h4><div class="intro-text">${escapeHtml(group.description||'')}</div><h4 style="margin-top:16px;">覆盖子类</h4><ul class="scope-list">${dimNames.map(name=>`<li>${escapeHtml(name)}</li>`).join('')}</ul></div>`;
         return;
     }
     const benchmarkTags=bench?benchmarkMetaTags(bench):[];
@@ -466,6 +510,7 @@ function renderSelectionDetail(){
                 <div class="intro-text">${escapeHtml(dim.intro||'')}</div>
             </div>
             <div class="intro-box">
+                ${bench?`
                 <div class="d-flex justify-content-between align-items-start gap-3">
                     <div>
                         <h4 style="margin-bottom:6px;">${escapeHtml(bench?.name||'')}</h4>
@@ -473,17 +518,10 @@ function renderSelectionDetail(){
                     </div>
                     ${bench?.url?`<a class="btn btn-sm btn-outline-secondary" href="${escapeHtml(bench.url)}" target="_blank" rel="noopener">链接</a>`:''}
                 </div>
-                ${benchmarkTags.length?`<div class="dataset-meta">${benchmarkTags.map(tag=>`<span>${escapeHtml(tag)}</span>`).join('')}</div>`:''}
-            </div>
-        </div>`;
-    launcher.innerHTML=`<div class="form-grid" style="margin-top:0;padding-top:0;border-top:0;">
-            <div>
-                <label class="form-label fw-semibold">评测模型</label>
-                <select id="model-select" class="form-select" onchange="onModelChange()">${modelOptionsHtml()}</select>
-            </div>
-            <div class="toolbar">
-                <button class="btn btn-primary" type="button" onclick="submitEval()">启动评测</button>
-                <button class="btn btn-outline-danger" type="button" onclick="deleteCurrentResult()">删除当前结果</button>
+                ${benchmarkTags.length?`<div class="dataset-meta">${benchmarkTags.map(tag=>`<span>${escapeHtml(tag)}</span>`).join('')}</div>`:''}`:`
+                <h4>综合评测范围</h4>
+                <div class="intro-text">将依次运行当前子类下全部 ${scopeRows.length} Benchmark，并汇总显示进度、指标和结果样例。</div>
+                <ul class="scope-list">${scopeRows.map(item=>`<li>${escapeHtml(item.benchmark.name||'Benchmark')}</li>`).join('')}</ul>`}
             </div>
         </div>`;
 }
@@ -507,18 +545,17 @@ function onModelChange(){
 function renderMetrics(){
     const shell=document.getElementById('metrics-shell');
     const meta=document.getElementById('result-meta');
-    const dim=selectedDimension();
     const bench=selectedBenchmark();
-    if(!dim||!bench){shell.innerHTML='<div class="empty">请选择 Benchmark。</div>';meta.textContent='尚无结果。';return}
+    if(!currentGroup()){shell.innerHTML='<div class="empty">请选择评测大类。</div>';meta.textContent='尚无结果。';return}
     meta.textContent=currentResult.exists?`当前结果：${currentResult.display_name||'当前结果'}`:`当前未生成结果。`;
-    const metricDefs=benchmarkMetrics(bench);
+    const metricDefs=bench?benchmarkMetrics(bench):DEFAULT_BENCHMARK_METRICS;
     const metricCards=stats=>metricDefs.map(metric=>`<div class="metric-card"><div class="label">${escapeHtml(metric.label||metric.key||'')}</div><div class="value">${formatMetricValue(stats?.[metric.key], metric.format)}</div></div>`).join('');
     if(hasRealResultForSelection()){
-        const parsed=resultFilterForSelection();
-        const byTask=fullSummary.by_subcategory||{};
+        const parsed=bench?resultFilterForSelection():null;
+        const byTask=bench?(fullSummary.by_subcategory||{}):(fullSummary.overall||{});
         let html='';
         Object.keys(byTask).forEach(task=>{
-            const stats=parsed?byTask[task]?.[`${parsed.category} / ${parsed.subcategory}`]:null;
+            const stats=bench?(parsed?byTask[task]?.[`${parsed.category} / ${parsed.subcategory}`]:null):byTask[task];
             if(!stats)return;
             html+=`<div class="task-metrics"><div class="task-title">${escapeHtml(TASK_LABELS[task]||task)}</div><div class="metric-grid">${metricCards(stats)}${metricDefs.some(metric=>metric.key==='n_total')?'':`<div class="metric-card"><div class="label">样本数</div><div class="value">${stats.n_total??'—'}</div></div>`}</div></div>`;
         });
@@ -957,10 +994,14 @@ async function fetchSummary(){
     fullSummary={};
     if(!(currentResult.exists&&hasRealResultForSelection()))return;
     const parsed=resultFilterForSelection();
-    if(!parsed)return;
     const url=new URL('/api/summary',location.origin);
-    url.searchParams.set('category',parsed.category);
-    url.searchParams.set('subcategories',parsed.subcategory);
+    if(parsed){
+        url.searchParams.set('category',parsed.category);
+        url.searchParams.set('subcategories',parsed.subcategory);
+    }else{
+        url.searchParams.set('dimension_ids',[...new Set(selectedDims())].join(','));
+        url.searchParams.set('benchmark_ids',[...new Set(selectedBenchmarkIds())].join(','));
+    }
     const res=await fetch(url);
     fullSummary=await res.json();
 }
@@ -968,7 +1009,27 @@ async function fetchSummary(){
 async function fetchEvalSamples(force){
     const dim=selectedDimension();
     const bench=selectedBenchmark();
-    if(!dim||!bench){benchmarkExample=null;renderEvalSamples();return}
+    if(!bench){
+        benchmarkExample=null;
+        evalSamples=[];
+        if(currentResult.exists&&hasRealResultForSelection()){
+            const cacheKey=`scope-result::${currentResult.created_at||currentResult.updated_at||''}::${selectedGroupId}::${selectedDimId}::${force?'shuffle':'stable'}`;
+            if(!force&&evalSamplesCacheKey===cacheKey){renderEvalSamples();return}
+            const url=new URL('/api/eval_data',location.origin);
+            url.searchParams.set('dimension_ids',[...new Set(selectedDims())].join(','));
+            url.searchParams.set('benchmark_ids',[...new Set(selectedBenchmarkIds())].join(','));
+            url.searchParams.set('page','1');
+            url.searchParams.set('per_page','3');
+            if(force)url.searchParams.set('shuffle','1');
+            const res=await fetch(url);
+            const data=await res.json();
+            evalSamples=data.items||[];
+            evalSamplesCacheKey=cacheKey;
+        }
+        renderEvalSamples();
+        return;
+    }
+    if(!dim){benchmarkExample=null;renderEvalSamples();return}
     if(force)showingRandomBenchmarkExample=true;
     if(!force&&showingRandomBenchmarkExample&&benchmarkExample){evalSamples=[];renderEvalSamples();return}
     if(!force&&currentResult.exists&&hasRealResultForSelection()){
@@ -1017,7 +1078,7 @@ async function fetchPlaceholderResults(){
 }
 
 function selectGroup(id){
-    if(selectedGroupId===id)return;
+    if(selectedGroupId===id&&!selectedDimId)return;
     selectionTouched=true;
     selectedGroupId=id;
     selectedDomainId=groupMap[id]?.domain_id||selectedDomainId;
@@ -1028,8 +1089,8 @@ function selectGroup(id){
     renderDimensions();
     renderBenchmarks();
     renderSelectionDetail();
-    renderMetrics();
-    evalSamples=[];renderEvalSamples();
+    evalSamples=[];
+    refreshResultViewsIfNeeded();
     refreshJobs(false);
 }
 
@@ -1038,8 +1099,8 @@ function selectDomain(id){
     selectionTouched=true;
     selectedDomainId=id;
     selectedGroupId=(domainMap[id]?.group_ids||[]).find(groupId=>groupMap[groupId])||'';
-    selectedDimId=currentGroup()?.dimensions?.[0]?.id||'';
-    selectedBenchmarkId=selectedDimension()?.benchmarks?.[0]?.id||'';
+    selectedDimId='';
+    selectedBenchmarkId='';
     setBenchmarkExampleFromSelection();
     evalSamples=[];
     renderDomainGroups();
@@ -1057,7 +1118,7 @@ function selectDimension(id){
     selectedGroupId=dim.group_id;
     selectedDomainId=groupMap[selectedGroupId]?.domain_id||selectedDomainId;
     selectedDimId=id;
-    selectedBenchmarkId=(dim.benchmarks||[])[0]?.id||'';
+    selectedBenchmarkId='';
     setBenchmarkExampleFromSelection();
     evalSamples=[];
     renderDomainGroups();
@@ -1088,58 +1149,38 @@ async function refreshResultViewsIfNeeded(){
 async function submitEval(){
     const dims=selectedDims();
     const benchmarkIds=selectedBenchmarkIds();
-    if(!dims.length){alert('请选择子类');return}
-    if(!benchmarkIds.length){alert('请选择 Benchmark');return}
+    if(!selectedGroupId){alert('请选择评测大类');return}
+    if(!dims.length||!benchmarkIds.length){alert('当前层级没有可运行的 Benchmark');return}
     const modelId=document.getElementById('model-select')?.value||'';
     if(!modelId){alert('请选择评测模型');return}
     const trigger=document.querySelector('#evaluation-launcher .btn.btn-primary');
     if(trigger){trigger.disabled=true;trigger.textContent='正在启动...';}
     try{
         await maybePreemptActiveJob(modelId,dims,benchmarkIds);
-        if(selectedBenchmarkImplemented()){
-            const res=await fetch('/api/evaluations',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model_id:modelId,dimensions:dims,benchmark_ids:benchmarkIds})});
-            const data=await res.json();
-            if(!res.ok)throw new Error(data.error||'启动失败');
-            activePollingJobId=data.id;
-            await refreshJobs(true);
-        }else{
-            const res=await fetch('/api/placeholder_results',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model_id:modelId,dimensions:dims,benchmark_ids:benchmarkIds})});
-            const data=await res.json();
-            if(!res.ok)throw new Error(data.error||'生成结果失败');
-            await refreshCurrentResult(true);
-        }
-    }catch(e){alert(e.message||'启动失败');}
-    finally{if(trigger){trigger.disabled=false;trigger.textContent='启动评测';}}
-}
-
-async function refreshJobs(refreshResult){
-    const jobs=await fetchJobs();
-    const globalActive=jobs.find(isActiveJob)||null;
-    const selectedJob=jobs.find(job=>isActiveJob(job)&&(job.payload?.smoke_all||jobMatchesSelection(job)))
-        ||jobs.find(job=>job.payload?.smoke_all||jobMatchesSelection(job))
-        ||null;
-    renderJob(selectedJob);
-    activePollingJobId=globalActive?.id||null;
-    if(refreshResult||!activePollingJobId)await refreshCurrentResult(false);
-}
-
-async function startSystemSmokeTest(){
-    const modelId=document.getElementById('model-select')?.value||selectedModelId||'';
-    if(!modelId){alert('请先选择一个模型');return}
-    if(!confirm('将只加载一次当前模型，对全部可评测 Benchmark 各运行 1 道真实题目，并替换当前结果。是否继续？'))return;
-    const button=document.getElementById('smoke-test-button');
-    if(button){button.disabled=true;button.textContent='正在启动...';}
-    try{
-        const jobs=await fetchJobs();
-        const active=jobs.find(isActiveJob);
-        if(active)throw new Error('当前已有评测任务在运行');
-        const res=await fetch('/api/evaluations',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model_id:modelId,smoke_all:true})});
+        const res=await fetch('/api/evaluations',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+            model_id:modelId,
+            scope_type:evaluationScopeType(),
+            group_id:selectedGroupId,
+            dimension_id:selectedDimId,
+            benchmark_id:selectedExecutionBenchmarkId(),
+        })});
         const data=await res.json();
         if(!res.ok)throw new Error(data.error||'启动失败');
         activePollingJobId=data.id;
         await refreshJobs(true);
     }catch(e){alert(e.message||'启动失败');}
-    finally{if(button){button.disabled=false;button.textContent='全 Benchmark 快速检测';}}
+    finally{if(trigger){trigger.disabled=false;trigger.textContent={group:'启动大类综合评测',dimension:'启动子类综合评测',benchmark:'启动评测'}[evaluationScopeType()];}}
+}
+
+async function refreshJobs(refreshResult){
+    const jobs=await fetchJobs();
+    const globalActive=jobs.find(isActiveJob)||null;
+    const selectedJob=jobs.find(job=>isActiveJob(job)&&jobMatchesSelection(job))
+        ||jobs.find(job=>jobMatchesSelection(job))
+        ||null;
+    renderJob(selectedJob);
+    activePollingJobId=globalActive?.id||null;
+    if(refreshResult||!activePollingJobId)await refreshCurrentResult(false);
 }
 
 async function cancelJob(id){

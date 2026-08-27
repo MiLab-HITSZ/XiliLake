@@ -2,11 +2,13 @@
 from __future__ import annotations
 
 import argparse
+import base64
 import csv
 import hashlib
 import gzip
 import difflib
 import json
+import mimetypes
 import os
 import re
 import ssl
@@ -45,9 +47,11 @@ ANSWER_KEYS = [
     'completion', 'response', 'target_response', 'human_majority', 'safe_answer',
     'pos_resp', 'preferred_response', 'chosen', 'score', 'human.response',
     'n_completion', 'solutions', 'abstract', 'selections', 'labels',
-    'is_abuse', 'abuse_label', 'toxicity_label', 'rumor_label',
+    'is_abuse', 'abuse_label', 'toxicity_label', 'rumor_label', 'gt_answers',
 ]
 OPTION_KEYS = ['options', 'choices', 'candidates', 'answers', 'label_candidates']
+
+_CLADDER_BACKGROUND_CACHE: Dict[str, Dict[str, str]] = {}
 
 
 def utc_now_iso() -> str:
@@ -760,6 +764,47 @@ def extract_options(row: Dict[str, Any]) -> List[str]:
     return letter_options
 
 
+def cladder_background(row: Dict[str, Any]) -> str:
+    source_file = Path(str(row.get('_source_file') or ''))
+    metadata_path = source_file.parent / 'cladder-v1-meta-models.json'
+    cache_key = str(metadata_path)
+    if cache_key not in _CLADDER_BACKGROUND_CACHE:
+        backgrounds: Dict[str, str] = {}
+        try:
+            payload = json.loads(metadata_path.read_text(encoding='utf-8'))
+            for item in payload if isinstance(payload, list) else []:
+                if isinstance(item, dict) and item.get('model_id') is not None:
+                    backgrounds[str(item['model_id'])] = str(item.get('background') or '').strip()
+        except Exception:
+            backgrounds = {}
+        _CLADDER_BACKGROUND_CACHE[cache_key] = backgrounds
+    meta = row.get('meta') if isinstance(row.get('meta'), dict) else {}
+    return _CLADDER_BACKGROUND_CACHE[cache_key].get(str(meta.get('model_id')), '')
+
+
+def resolve_case_image_path(row: Dict[str, Any]) -> str:
+    raw = str(row.get('image_path') or row.get('image') or '').strip()
+    if not raw:
+        return ''
+    candidate = Path(raw)
+    if candidate.is_absolute() and candidate.exists():
+        return str(candidate.resolve())
+    source_raw = str(row.get('_source_file') or '').strip()
+    if not source_raw:
+        return ''
+    source_file = Path(source_raw)
+    relative = raw.lstrip('/\\')
+    candidates = [
+        source_file.parent / relative,
+        source_file.parent / source_file.stem / relative,
+        source_file.parent.parent / source_file.stem / relative,
+    ]
+    for path in candidates:
+        if path.exists():
+            return str(path.resolve())
+    return str(candidates[0].resolve())
+
+
 def normalize_answer_letter(value: Any) -> str:
     text = compact_value(value, 200).strip()
     m = re.search(r'\b([A-I])\b', text.upper())
@@ -875,6 +920,26 @@ def build_case(row: Dict[str, Any], idx: int, benchmark_name: str, dimension_lab
             # preserves its original indentation.
             answer = answer[0]
     benchmark_key = re.sub(r'[^a-z0-9]+', '', str(benchmark_name or '').lower())
+    if benchmark_key == 'mmfakebench':
+        question = (
+            'News text:\n'
+            f'{str(row.get("text") or "").strip()}\n\n'
+            'Determine whether the image-text news item is authentic or fake. '
+            'Fake includes manipulated text, manipulated images, and mismatched image-text pairs.'
+        )
+        options = ['A. Authentic', 'B. Fake']
+        answer = 'A' if str(row.get('gt_answers') or '').strip().lower() == 'true' else 'B'
+        q_key = 'text'
+        a_key = 'gt_answers'
+    elif benchmark_key == 'cladder':
+        background = cladder_background(row)
+        given_info = str(row.get('given_info') or '').strip()
+        original_question = str(row.get('question') or question or '').strip()
+        question = '\n\n'.join(part for part in [background, given_info, original_question] if part)
+        options = ['A. Yes', 'B. No']
+        answer = 'A' if str(row.get('answer') or '').strip().lower() == 'yes' else 'B'
+        q_key = 'question'
+        a_key = 'answer'
     use_chinese_instruction = uses_chinese_instruction(row, benchmark_name)
     is_legalbench_case = bool(str(row.get('legalbench_task') or '').strip())
     if benchmark_key == 'mafalda' and answer not in (None, ''):
@@ -978,6 +1043,7 @@ def build_case(row: Dict[str, Any], idx: int, benchmark_name: str, dimension_lab
         'source_file': source_file,
         'source_language': 'Chinese' if use_chinese_instruction else 'Non-Chinese',
         'instruction_language': 'zh' if use_chinese_instruction else 'en',
+        'image_path': resolve_case_image_path(row),
         'raw': {k: v for k, v in row.items() if not str(k).startswith('_')},
     }
 
@@ -1564,12 +1630,30 @@ def http_post_json(url_str: str, payload: Dict[str, Any], api_key: Optional[str]
         conn.close()
 
 
-def call_chat(spec: ModelSpec, prompt: str, timeout_s: int) -> Tuple[str, Dict[str, Any]]:
+def image_data_url(image_path: str) -> str:
+    path = Path(image_path)
+    mime = mimetypes.guess_type(path.name)[0] or 'image/png'
+    encoded = base64.b64encode(path.read_bytes()).decode('ascii')
+    return f'data:{mime};base64,{encoded}'
+
+
+def call_chat(
+    spec: ModelSpec,
+    prompt: str,
+    timeout_s: int,
+    image_path: str = '',
+) -> Tuple[str, Dict[str, Any]]:
     base = spec.base_url.rstrip('/')
     url = base if base.endswith('/chat/completions') else (base + '/chat/completions' if base.endswith('/v1') else base + '/v1/chat/completions')
+    content: Any = prompt
+    if image_path:
+        content = [
+            {'type': 'text', 'text': prompt},
+            {'type': 'image_url', 'image_url': {'url': image_data_url(image_path)}},
+        ]
     payload = {
         'model': spec.model,
-        'messages': [{'role': 'user', 'content': prompt}],
+        'messages': [{'role': 'user', 'content': content}],
         'temperature': spec.temperature,
         'max_tokens': spec.max_tokens,
         'stream': False,
@@ -1704,7 +1788,12 @@ def main() -> int:
         for attempt in range(args.retry + 1):
             t0 = time.time()
             try:
-                pred, raw = call_chat(spec, case['question'], args.timeout_s)
+                pred, raw = call_chat(
+                    spec,
+                    case['question'],
+                    args.timeout_s,
+                    str(case.get('image_path') or ''),
+                )
                 latency_ms = int((time.time() - t0) * 1000)
                 status = 'ok'
                 break
@@ -1735,7 +1824,7 @@ def main() -> int:
             'subcategory': args.benchmark_name,
             'task': case['task'],
             'side': 'sample',
-            'image_path': '',
+            'image_path': case.get('image_path') or '',
             'status': status,
             'latency_ms': latency_ms,
             'question': case['question'],

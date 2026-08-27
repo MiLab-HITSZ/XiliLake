@@ -180,8 +180,8 @@
             const groups=catalog.groups||[];
             const dimensions=groups.reduce((sum,group)=>sum+(group.dimensions||[]).length,0);
             const domains=catalog.domains||[];
-            document.getElementById('catalog-count').textContent=`${domains.length} 个评测领域 · ${groups.length} 个大类 · ${dimensions} 个子类`;
-            document.getElementById('domain-count').textContent=`${domains.length} 项 · ${domains.reduce((sum,domain)=>sum+Number(domain.dimension_count||0),0)} 个子类`;
+            document.getElementById('catalog-count').textContent=`${domains.length}评测领域 · ${groups.length}大类 · ${dimensions}子类`;
+            document.getElementById('domain-count').textContent=`${domains.length}项 · ${domains.reduce((sum,domain)=>sum+Number(domain.dimension_count||0),0)}子类`;
             document.getElementById('group-count').textContent=`${groupsForDomain().length} 项`;
             renderDomainList();
             renderGroupList();

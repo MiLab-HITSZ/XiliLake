@@ -1,0 +1,74 @@
+{
+  "id": "causal_reasoning",
+  "label": "形式因果推理",
+  "benchmark_name": "CLadder",
+  "description": "使用自然语言描述的因果图、观测信息和干预条件，评估模型在因果阶梯不同层级上的形式推断能力。",
+  "source_type": "manual",
+  "enabled": true,
+  "paths": {
+    "dataset": "downloads/datasets/manual/cladder-v1/cladder-v1-q-balanced.json",
+    "results": "result"
+  },
+  "execution": {
+    "adapter": "python_cli",
+    "script": "evaluate_generic_benchmark.py",
+    "default_tasks": ["mc"],
+    "supported_tasks": ["mc"],
+    "supports_real_eval": true,
+    "args": {
+      "dataset": "--dataset",
+      "output_dir": "--output-dir",
+      "models": "--models",
+      "tasks": "--tasks",
+      "parallel": "--parallel",
+      "retry": "--retry",
+      "timeout_s": "--timeout-s",
+      "progress_file": "--progress-file"
+    },
+    "extra_args": {
+      "--benchmark-name": "CLadder",
+      "--dimension-label": "形式因果阶梯推理评测",
+      "--benchmark-url": "https://github.com/causalNLP/cladder",
+      "--max-cases": 20
+    }
+  },
+  "display": {
+    "mode": "generic_text_mc",
+    "sections": ["selection_detail", "progress", "summary", "metrics"]
+  },
+  "metrics": [
+    {"key": "accuracy", "label": "因果推理准确率", "format": "percent"},
+    {"key": "response_rate", "label": "响应率", "format": "percent"},
+    {"key": "avg_latency_ms", "label": "平均延迟 ms", "format": "number"},
+    {"key": "n_total", "label": "样本数", "format": "number"}
+  ],
+  "categories": [
+    {
+      "id": "causal_inference",
+      "label": "形式因果推理",
+      "dimensions": [
+        {
+          "id": "causal_ladder_reasoning",
+          "label": "形式因果阶梯推理评测",
+          "name_en": "Formal Causal Ladder Reasoning",
+          "intro": "使用 CLadder v1 balanced 的 10,112 道英文是非题，覆盖关联与边缘分布、平均处理效应、后门调整、碰撞偏差、已处理者处理效应、自然直接与间接效应及确定性反事实。每题完整提供因果图背景、数值条件和问题，评估关联、干预和反事实三个因果阶梯层级。",
+          "benchmarks": [
+            {
+              "option_key": "cladder_balanced",
+              "name": "CLadder",
+              "intro": "CLadder v1 balanced 包含 10,112 道答案均衡的英文因果推理题。系统根据 model_id 补充对应因果图背景，再拼接 given_info 和 question，覆盖 10 种查询类型以及关联、干预、反事实三个因果阶梯层级，按 Yes/No 选择准确率评分。",
+              "url": "https://github.com/causalNLP/cladder",
+              "language": "English",
+              "scale": "10,112",
+              "evaluation": "Yes/No accuracy",
+              "paths": {
+                "dataset": "downloads/datasets/manual/cladder-v1/cladder-v1-q-balanced.json",
+                "results": "result"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

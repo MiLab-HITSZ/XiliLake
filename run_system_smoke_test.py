@@ -76,6 +76,28 @@ def selected_catalog_rows() -> List[Dict[str, Any]]:
     return rows
 
 
+def filter_catalog_rows(
+    rows: List[Dict[str, Any]],
+    selections_file: str,
+) -> List[Dict[str, Any]]:
+    if not selections_file:
+        return rows
+    payload = json.loads(Path(selections_file).read_text(encoding='utf-8'))
+    requested = [
+        (str(item.get('dimension_id') or ''), str(item.get('benchmark_id') or ''))
+        for item in payload if isinstance(item, dict)
+    ] if isinstance(payload, list) else []
+    indexed = {
+        (str(row['dimension'].get('id') or ''), str(row.get('execution_id') or '')): row
+        for row in rows
+    }
+    selected = [indexed[key] for key in requested if key in indexed]
+    if len(selected) != len(requested):
+        missing = [key for key in requested if key not in indexed]
+        raise RuntimeError(f'Catalog scope contains unavailable Benchmarks: {missing[:3]}')
+    return selected
+
+
 def result_material(record: Dict[str, Any]) -> str:
     question = str(record.get('question') or '').strip()
     prompt = str(record.get('prompt') or '').strip()
@@ -142,6 +164,7 @@ def annotate_records(
     index: int,
     model: str,
     display_name: str,
+    is_system_smoke: bool,
 ) -> List[Dict[str, Any]]:
     dimension = selection['dimension']
     benchmark = selection['benchmark']
@@ -150,7 +173,7 @@ def annotate_records(
         row = dict(source)
         original_pair_id = str(row.get('pair_id') or 'case_1')
         row['source_pair_id'] = original_pair_id
-        row['pair_id'] = f'smoke_{index:03d}_{safe_slug(original_pair_id)}'
+        row['pair_id'] = f'{"smoke" if is_system_smoke else "scope"}_{index:03d}_{safe_slug(original_pair_id)}'
         row['pair_name'] = row.get('pair_name') or original_pair_id
         row['model_name'] = display_name
         row['model'] = model
@@ -160,7 +183,8 @@ def annotate_records(
         row['dimension_label'] = dimension.get('label') or ''
         row['benchmark_id'] = selection['execution_id']
         row['benchmark_name'] = benchmark.get('name') or ''
-        row['smoke_test'] = True
+        row['smoke_test'] = is_system_smoke
+        row['catalog_scope'] = not is_system_smoke
         row['material'] = row.get('material') or result_material(row)
         if not str(dimension.get('id') or '').startswith('cdh::'):
             row['category'] = dimension.get('label') or row.get('category') or ''
@@ -181,11 +205,16 @@ def main() -> int:
     parser.add_argument('--timeout-s', type=int, default=180)
     parser.add_argument('--max-tokens', type=int, default=192)
     parser.add_argument('--api-key-env', default='')
+    parser.add_argument('--selections-file', default='')
+    parser.add_argument('--cases-per-benchmark', type=int, default=1)
+    parser.add_argument('--scope-label', default='')
     args = parser.parse_args()
 
-    selections = selected_catalog_rows()
+    selections = filter_catalog_rows(selected_catalog_rows(), args.selections_file)
     if not selections:
         raise RuntimeError('No evaluable Benchmarks were found')
+    cases_per_benchmark = max(1, int(args.cases_per_benchmark or 1))
+    is_system_smoke = not bool(args.selections_file)
 
     output_dir = Path(args.output_dir).resolve()
     if output_dir.exists():
@@ -207,8 +236,11 @@ def main() -> int:
         'selected_model_name': args.display_name,
         'selected_backend_mode': 'local_vllm',
         'model': args.model,
-        'smoke_all': True,
-        'smoke_cases_per_benchmark': 1,
+        'smoke_all': is_system_smoke,
+        'catalog_scope': not is_system_smoke,
+        'scope_label': args.scope_label,
+        'cases_per_benchmark': cases_per_benchmark,
+        'smoke_cases_per_benchmark': cases_per_benchmark if is_system_smoke else None,
         'trust_dimensions': dimension_ids,
         'benchmark_ids': benchmark_ids,
         'result_selections': [
@@ -221,16 +253,16 @@ def main() -> int:
 
     progress: Dict[str, Any] = {
         'status': 'running',
-        'phase': 'system_smoke',
+        'phase': 'system_smoke' if is_system_smoke else 'catalog_scope',
         'started_at': utc_now_iso(),
         'completed': 0,
         'total': len(selections),
         'percent': 0.0,
-        'tasks': ['system_smoke'],
+        'tasks': ['system_smoke' if is_system_smoke else 'catalog_scope'],
         'categories': sorted({row['group_label'] for row in selections}),
         'subcategories': [str(row['dimension'].get('label') or '') for row in selections],
         'models': [args.display_name],
-        'message': f'Prepared {len(selections)} Benchmark smoke checks',
+        'message': f'Prepared {len(selections)} Benchmark evaluations',
         'last_result': None,
         'failure_count': 0,
     }
@@ -288,12 +320,13 @@ def main() -> int:
             )
             script_name = Path(str(execution.get('script') or '')).name
             if script_name == 'evaluate_cdh_bench.py':
-                # A normal CDH run evaluates both images in a pair. The system
-                # smoke test uses the anomalous image so every Benchmark makes
-                # exactly one request to the already-running shared model.
-                command.extend(['--limit', '1', '--sides', 'counterfactual'])
+                command.extend(['--limit', str(cases_per_benchmark)])
+                if is_system_smoke:
+                    # A normal CDH run evaluates both images in a pair. The
+                    # smoke check uses one anomalous image for one request.
+                    command.extend(['--sides', 'counterfactual'])
             else:
-                command.extend(['--max-cases', '1'])
+                command.extend(['--max-cases', str(cases_per_benchmark)])
             log_path = item_root / 'runner.log'
             with log_path.open('w', encoding='utf-8') as log_handle:
                 process = subprocess.run(
@@ -313,15 +346,31 @@ def main() -> int:
             if not any(row.get('status') == 'ok' for row in child_results):
                 errors = [str(row.get('pred') or row.get('error') or '') for row in child_results]
                 raise RuntimeError('all model calls failed: ' + ' | '.join(errors[:3]))
-            selected_result = next(
-                (row for row in child_results if row.get('status') == 'ok'),
-                child_results[0],
+            if is_system_smoke:
+                selected_result = next(
+                    (row for row in child_results if row.get('status') == 'ok'),
+                    child_results[0],
+                )
+                child_results = [selected_result]
+            records = annotate_records(
+                child_results,
+                selection,
+                index,
+                args.model,
+                args.display_name,
+                is_system_smoke,
             )
-            records = annotate_records([selected_result], selection, index, args.model, args.display_name)
             return {'ok': True, 'records': records, 'selection': selection, 'index': index}
         except Exception as exc:
             record = error_record(selection, index, str(exc))
-            record = annotate_records([record], selection, index, args.model, args.display_name)[0]
+            record = annotate_records(
+                [record],
+                selection,
+                index,
+                args.model,
+                args.display_name,
+                is_system_smoke,
+            )[0]
             return {'ok': False, 'records': [record], 'selection': selection, 'index': index, 'error': str(exc)}
 
     with ThreadPoolExecutor(max_workers=max(1, int(args.workers))) as pool:
@@ -368,7 +417,7 @@ def main() -> int:
     records = read_jsonl(result_path)
     summary = build_summary_from_records(records)
     failed_dimension_ids = {str(row.get('dimension_id') or '') for row in failures}
-    summary['smoke_test'] = {
+    scope_summary = {
         'total_benchmarks': len(selections),
         'completed_benchmarks': completed,
         'successful_benchmarks': len(selections) - len(failures),
@@ -380,13 +429,14 @@ def main() -> int:
         'result_records': len(records),
         'failures': failures,
     }
+    summary['smoke_test' if is_system_smoke else 'catalog_scope'] = scope_summary
     write_json(output_dir / 'summary.json', summary)
     run_config.update({
         'completed_at': utc_now_iso(),
-        'smoke_successful_benchmarks': len(selections) - len(failures),
-        'smoke_failed_benchmarks': len(failures),
-        'smoke_successful_dimensions': unique_dimension_count - len(failed_dimension_ids),
-        'smoke_failed_dimensions': len(failed_dimension_ids),
+        f'{"smoke" if is_system_smoke else "scope"}_successful_benchmarks': len(selections) - len(failures),
+        f'{"smoke" if is_system_smoke else "scope"}_failed_benchmarks': len(failures),
+        f'{"smoke" if is_system_smoke else "scope"}_successful_dimensions': unique_dimension_count - len(failed_dimension_ids),
+        f'{"smoke" if is_system_smoke else "scope"}_failed_dimensions': len(failed_dimension_ids),
     })
     write_json(output_dir / 'run_config.json', run_config)
     progress.update({
@@ -395,7 +445,7 @@ def main() -> int:
         'ended_at': utc_now_iso(),
         'completed': len(selections),
         'percent': 100.0,
-        'message': f'Benchmark smoke check completed: {len(selections) - len(failures)}/{len(selections)} successful',
+        'message': f'Benchmark evaluation completed: {len(selections) - len(failures)}/{len(selections)} successful',
         'failure_count': len(failures),
     })
     if progress_path:
