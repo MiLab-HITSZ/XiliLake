@@ -1,6 +1,6 @@
 # Benchmark 原文与分类核验报告
 
-> 核验日期：2026-08-21。核验对象为网页实际加载的 85 个子类、102 个 Benchmark 实例（89 个唯一名称）。逐子类、逐 Benchmark 的当前归属、介绍、分类核验结论和原文链接见 [current_taxonomy_full.md](current_taxonomy_full.md)。
+> 核验日期：2026-08-27。核验对象为网页实际加载的 99 个子类、111 个 Benchmark 实例（98 个唯一名称）。逐子类、逐 Benchmark 的当前归属、介绍、分类核验结论和原文链接见 [current_taxonomy_full.md](current_taxonomy_full.md)。
 
 ## 核验方法
 
@@ -27,6 +27,7 @@
 | Benchmark | 原问题 | 核验后处理 | 主证据 |
 | --- | --- | --- | --- |
 | FollowBench | 误放在规划推理 | 移入细粒度约束遵循；开放任务标记为非精确匹配评分 | [ACL 2024](https://aclanthology.org/2024.acl-long.257/) |
+| LogiQA / SafetyBench / FollowBench / Natural-Instructions / ByteCue / XSafety / MultiTP | 同一入口混合中文与英文或其他语言，中文分区样例可能出现非中文内容 | 按官方语言文件、目录、语言元数据或逐条语言标签拆成 18 个互斥入口；中文分片集中到中文部分，英文或非中文分片留在通用部分 | 各 Benchmark 官方仓库与 [语言审计](chinese_benchmark_language_audit.md) |
 | Chinese_language_ability | 名称泛化且误放在逻辑分析 | 根据实际 FewCLUE CHID 数据更名为 CHID，移入成语语境填空 | [FewCLUE 官方仓库](https://github.com/CLUEbenchmark/FewCLUE) |
 | ARC | 两个镜像重复，并因难度被分到不同大类 | 固定为 ARC-Easy 和 ARC-Challenge 互斥分片，均按科学知识答案准确率归入基本事实准确性 | [AI2 ARC](https://allenai.org/data/arc) |
 | FLUE | 名称与数据源不符 | 按实际 LooksJuicy/ruozhiba 数据更名为 RuozhibaQA，归入错误前提辨析 | [官方数据页](https://huggingface.co/datasets/LooksJuicy/ruozhiba) |
@@ -61,7 +62,7 @@
 - FollowBench、CHBias、GlobalOpinionQA 和 SALAD-Bench 的当前本地入口不冒充论文完整官方评分器；页面会显示“非评分收集”或代理指标说明。
 - MedSafetyBench 使用明确拒答或安全回复相似度代理；JBB-Behaviors 和 HarmBench behaviors 仅报告基线拒答；这些结果不等同于原论文的全部 judge 指标。
 - ConfAIde Tier 2 的原始标签是连续人类平均分。系统保留平均绝对误差和 Pearson 相关系数，同时把平均分映射到最近的官方五档量表计算离散一致率；该离散指标不冒充论文的多次随机采样协议。
-- 当前网页实际计数为 3 个评测领域、11 个可见大类、85 个子类、102 个 Benchmark，全部标记为可评测；网页标题下方仅展示大类、子类和数据集数量。
+- 当前网页实际计数为 3 个评测领域、11 个可见大类、99 个子类、111 个 Benchmark，全部标记为可评测；网页数量由 catalog 动态计算。
 
 ## 法律法规遵守性边界
 
@@ -87,18 +88,21 @@
 | 攻击抵御鲁棒性 | 多轮有害请求抵御评测 | 只使用 101 条带完整历史的中文多轮风险对话 | CHiSafetyBench |
 | 攻击抵御鲁棒性 | 高风险知识滥用抵御评测 | 跨学科知识滥用请求及生化危险知识暴露 | HarmfulQA、WMDP-BioChem |
 | 攻击抵御鲁棒性 | 安全请求误拒鲁棒性评测 | 区分表面敏感的安全请求与真实不安全请求 | XSTest |
-| 攻击抵御鲁棒性 | 跨语种有害请求抵御评测 | 比较 10 种语言、9 类风险请求的抵御一致性 | XSafety |
+| 攻击抵御鲁棒性 | 非中文多语言有害请求抵御评测 | 比较 9 种非中文语言、9 类风险请求的抵御一致性 | XSafety-General |
+| 攻击抵御鲁棒性 | 中文有害请求抵御评测 | 独立评估普通风险分片中的 1,800 条中文请求 | XSafety-Chinese |
 | 攻击抵御鲁棒性 | 恶意代码请求抵御评测 | 恶意代码生成、翻译、补全和改写请求 | RMCBench |
 | 攻击抵御鲁棒性 | 有害医疗请求抵御评测 | 可能造成医疗伤害或违反医学伦理的请求 | MedSafetyBench |
 | 隐私信息安全性 | 机密信息安全性评测 | 使用 RuLES，仅包含带所有者、请求者、受保护内容和访问规则的 Confidentiality 场景 | RuLES |
 | 隐私信息安全性 | 隐私使用合理性评测 | 使用 ConfAIde Tier 2，仅包含信息类型、收集主体和使用目的明确的隐私使用场景 | ConfAIde-Tier2 |
-| 隐私信息安全性 | 财产隐私安全性评测 | 使用 XSafety Privacy And Property，仅包含个人资料、账号凭据、支付信息和财产侵害请求 | XSafety-Privacy-Refusal |
-| 伦理道德符合性 | 综合内容安全伦理判断评测 | 对既有行为或回答进行综合安全与伦理判断 | SafetyBench、CValuesResponsibilityMC、SAFE |
+| 隐私信息安全性 | 非中文多语言财产隐私安全评测 | 使用 XSafety Privacy And Property 中 1,800 条非中文请求 | XSafety-Privacy-Refusal-General |
+| 隐私信息安全性 | 中文财产隐私安全评测 | 使用 XSafety Privacy And Property 中 200 条中文请求 | XSafety-Privacy-Refusal-Chinese |
+| 伦理道德符合性 | 英文综合安全伦理判断评测 | 使用 SafetyBench 的 35 道英文开发题判断七类安全伦理风险 | SafetyBench-English |
+| 伦理道德符合性 | 中文综合安全伦理判断评测 | 使用 SafetyBench 的 35 道中文开发题与 CValues 中文社会责任数据 | SafetyBench-Chinese、CValuesResponsibilityMC |
 | 伦理道德符合性 | 上下文对话安全伦理判断评测 | 根据对话历史判断候选回复是否安全 | DiaSafety |
 
 反谄媚任务不再属于安全类：sycophancy 直接检查模型在用户立场诱导下能否保持有依据的事实答案，因此归入基本事实准确性。
 
-XSafety 按输入机制拆分为互斥数据：17,990 条普通风险请求进入攻击抵御鲁棒性，2,000 条 Privacy And Property 进入隐私信息安全性，2,000 条 Goal Hijacking 用于越狱攻击防御。Prompt Leaking 和 Role Play Instruction 共 3,998 条因标签与实际内容混杂而不参与评分，三个可评测分片的样本 ID 交集为 0。
+XSafety 先按输入机制拆分，再按语言拆分为互斥数据：普通风险请求为中文 1,800 条、非中文 16,190 条；Privacy And Property 为中文 200 条、非中文 1,800 条；Goal Hijacking 为中文 200 条、非中文 1,800 条。Prompt Leaking 和 Role Play Instruction 共 3,998 条因标签与实际内容混杂而不参与评分，各可评测分片的样本 ID 交集为 0。
 
 ## 行业大类边界
 

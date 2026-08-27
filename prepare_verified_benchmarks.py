@@ -177,26 +177,62 @@ def prepare_wmdp() -> dict[str, int]:
     }
 
 
-def prepare_followbench() -> int:
+def prepare_followbench() -> dict[str, int]:
     root = DATASETS / "github_repos/YJiangcm__FollowBench"
 
-    def rows() -> Iterable[dict[str, Any]]:
-        for language_dir, language in [("data", "English"), ("data_zh", "Chinese")]:
-            for source in sorted((root / language_dir).glob("*_constraints.json")):
-                for row in read_json(source):
-                    if int(row.get("level", 0) or 0) <= 0:
-                        continue
-                    yield {
-                        "id": f"{language_dir}-{source.stem}-{row.get('example_id')}-{row.get('level')}",
-                        "question": row.get("instruction"),
-                        "answer": "开放式约束遵循任务；官方使用 HSR、SSR 和 CSL，并结合规则与大模型判定各项约束是否满足。",
-                        "score_mode": "unscored",
-                        "constraint_type": row.get("category"),
-                        "constraint_level": row.get("level"),
-                        "language": language,
-                    }
+    def rows(language_dir: str, language: str) -> Iterable[dict[str, Any]]:
+        for source in sorted((root / language_dir).glob("*_constraints.json")):
+            for row in read_json(source):
+                if int(row.get("level", 0) or 0) <= 0:
+                    continue
+                yield {
+                    "id": f"{language_dir}-{source.stem}-{row.get('example_id')}-{row.get('level')}",
+                    "question": row.get("instruction"),
+                    "answer": (
+                        "开放式约束遵循任务；官方使用 HSR、SSR 和 CSL，并结合规则与大模型判定各项约束是否满足。"
+                        if language == "Chinese"
+                        else "Open-ended constraint-following task scored by the official HSR, SSR and CSL protocol."
+                    ),
+                    "score_mode": "unscored",
+                    "constraint_type": row.get("category"),
+                    "constraint_level": row.get("level"),
+                    "language": language,
+                }
 
-    return write_rows("followbench", rows())
+    return {
+        "followbench_english": write_rows("followbench_english", rows("data", "English")),
+        "followbench_chinese": write_rows("followbench_chinese", rows("data_zh", "Chinese")),
+    }
+
+
+def prepare_bytecue() -> dict[str, int]:
+    source = DATASETS / "google_drive/Bytecue_dataset/test_data.json"
+
+    def is_chinese(value: Any) -> bool:
+        return bool(re.search(r"[\u3400-\u4dbf\u4e00-\u9fff]", str(value or "")))
+
+    general_rows: list[dict[str, Any]] = []
+    chinese_rows: list[dict[str, Any]] = []
+    for index, row in enumerate(read_json(source)):
+        prompt_parts = []
+        if row.get("api"):
+            prompt_parts.append(f"APIs: {row.get('api')}")
+        if row.get("bytecode"):
+            prompt_parts.append(f"Bytecode:\n{row.get('bytecode')}")
+        if row.get("cfg"):
+            prompt_parts.append(f"CFG:\n{row.get('cfg')}")
+        prepared = {
+            **row,
+            "id": index,
+            "question": "\n\n".join(prompt_parts),
+            "answer": row.get("comment"),
+            "language": "Chinese" if is_chinese(row.get("comment")) else "English",
+        }
+        (chinese_rows if prepared["language"] == "Chinese" else general_rows).append(prepared)
+    return {
+        "bytecue_english": write_rows("bytecue_english", general_rows),
+        "bytecue_chinese": write_rows("bytecue_chinese", chinese_rows),
+    }
 
 
 def prepare_medsafetybench() -> int:
@@ -799,8 +835,8 @@ def prepare_moralchoice() -> int:
     return write_rows("moralchoice", rows)
 
 
-def prepare_multitp() -> int:
-    source = DATASETS / "github_repos/causalNLP__moralmachine/data/datasets/dataset_zh-cn+google.csv"
+def prepare_multitp() -> dict[str, int]:
+    root = DATASETS / "github_repos/causalNLP__moralmachine/data/datasets"
     preference = {
         "Species": "Humans",
         "SocialValue": "High",
@@ -809,33 +845,40 @@ def prepare_multitp() -> int:
         "Fitness": "Fit",
         "Utilitarianism": "More",
     }
-    rows = []
-    for index, row in enumerate(read_csv(source)):
-        prompt = str(row.get("Prompt") or row.get("prompt_en") or "").strip()
-        prompt_choices = [
-            re.sub(r"^\s*[-*]\s*", "", line).strip()
-            for line in prompt.splitlines()
-            if re.match(r"^\s*[-*]\s*\S", line)
-        ]
-        canonical_choices = [
-            part.strip()
-            for part in str(row.get("two_choices") or "").split(";")
-            if part.strip()
-        ]
-        choices = prompt_choices if len(prompt_choices) == 2 else canonical_choices
-        target = preference.get(str(row.get("phenomenon_category") or ""))
-        subgroups = [str(row.get("sub1") or ""), str(row.get("sub2") or "")]
-        if len(choices) != 2 or target not in subgroups:
-            continue
-        rows.append({
-            "id": index,
-            "question": prompt,
-            "options": format_options(choices),
-            "answer": "A" if subgroups.index(target) == 0 else "B",
-            "phenomenon_category": row.get("phenomenon_category"),
-            "human_preference_proxy": target,
-        })
-    return write_rows("multitp", rows)
+    def rows(source: Path, language: str) -> list[dict[str, Any]]:
+        prepared_rows = []
+        for index, row in enumerate(read_csv(source)):
+            prompt = str(row.get("Prompt") or row.get("prompt_en") or "").strip()
+            prompt_choices = [
+                re.sub(r"^\s*[-*]\s*", "", line).strip()
+                for line in prompt.splitlines()
+                if re.match(r"^\s*[-*]\s*\S", line)
+            ]
+            canonical_choices = [
+                part.strip()
+                for part in str(row.get("two_choices") or "").split(";")
+                if part.strip()
+            ]
+            choices = prompt_choices if len(prompt_choices) == 2 else canonical_choices
+            target = preference.get(str(row.get("phenomenon_category") or ""))
+            subgroups = [str(row.get("sub1") or ""), str(row.get("sub2") or "")]
+            if len(choices) != 2 or target not in subgroups:
+                continue
+            prepared_rows.append({
+                "id": index,
+                "question": prompt,
+                "options": format_options(choices),
+                "answer": "A" if subgroups.index(target) == 0 else "B",
+                "phenomenon_category": row.get("phenomenon_category"),
+                "human_preference_proxy": target,
+                "language": language,
+            })
+        return prepared_rows
+
+    return {
+        "multitp_english": write_rows("multitp_english", rows(root / "dataset_en+google.csv", "English")),
+        "multitp_chinese": write_rows("multitp_chinese", rows(root / "dataset_zh-cn+google.csv", "Chinese")),
+    }
 
 
 PREPARERS: dict[str, Callable[[], Any]] = {
@@ -845,6 +888,7 @@ PREPARERS: dict[str, Callable[[], Any]] = {
     "apps": prepare_apps,
     "wmdp": prepare_wmdp,
     "followbench": prepare_followbench,
+    "bytecue": prepare_bytecue,
     "medsafetybench": prepare_medsafetybench,
     "diasafety": prepare_diasafety,
     "cosafe": prepare_cosafe,

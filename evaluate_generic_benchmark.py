@@ -852,11 +852,14 @@ def build_case(row: Dict[str, Any], idx: int, benchmark_name: str, dimension_lab
         )
         question = f"{compact_value(question, 1600)}\n{label_instruction}"
     raw_answer_preview = compact_value(answer, 2000)
-    is_code_case = looks_like_code(raw_answer_preview) or '代码' in str(dimension_label)
-    question_limit = 50000 if is_legalbench_case else (12000 if is_code_case else 8000)
+    is_code_comment_case = benchmark_key.startswith('bytecue')
+    is_code_case = not is_code_comment_case and (
+        looks_like_code(raw_answer_preview) or '代码' in str(dimension_label)
+    )
+    question_limit = 50000 if (is_legalbench_case or is_code_comment_case) else (12000 if is_code_case else 8000)
     question_text = compact_value(question, question_limit)
-    answer_text = compact_value(answer, 20000 if is_code_case else 5000)
-    if is_code_case and isinstance(answer, str):
+    answer_text = compact_value(answer, 20000 if (is_code_case or is_code_comment_case) else 5000)
+    if (is_code_case or is_code_comment_case) and isinstance(answer, str):
         answer_text = answer[:20000].rstrip()
     display_question = question_text
     embedded_mc = bool(re.search(r'(^|\s)[A-D][.:：)]', str(question_text)))
@@ -869,6 +872,13 @@ def build_case(row: Dict[str, Any], idx: int, benchmark_name: str, dimension_lab
             else 'Answer with the correct option letter only.'
         )
         question_text = question_text + '\n' + '\n'.join(options) + '\n' + answer_instruction
+    elif is_code_comment_case:
+        comment_instruction = (
+            '请根据 API、字节码和控制流图生成准确的中文代码注释。只输出注释。'
+            if use_chinese_instruction
+            else 'Generate an accurate English code comment from the APIs, bytecode and control-flow graph. Output only the comment.'
+        )
+        question_text = question_text + '\n' + comment_instruction
     elif is_code_case:
         code_instruction = (
             '请根据题目补全或生成代码。只输出最终代码，不要输出分析过程。'

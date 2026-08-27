@@ -165,20 +165,32 @@ def main() -> None:
             f'attack={len(attack_rows)}, excluded={len(excluded_rows)}'
         )
 
-    for path, rows in [
+    datasets = [
         (output_path, policy_rows),
         (privacy_output_path, privacy_rows),
         (attack_output_path, attack_rows),
-    ]:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        with path.open('w', encoding='utf-8') as stream:
-            for row in rows:
-                stream.write(json.dumps(row, ensure_ascii=False) + '\n')
+    ]
+    split_counts: dict[str, dict[str, int]] = {}
+    for path, rows in datasets:
+        language_splits = {
+            'general': [row for row in rows if str(row.get('language_code')) != 'zh'],
+            'chinese': [row for row in rows if str(row.get('language_code')) == 'zh'],
+        }
+        split_counts[path.stem] = {name: len(split_rows) for name, split_rows in language_splits.items()}
+        for split_name, split_rows in language_splits.items():
+            split_path = path.with_name(f'{path.stem}_{split_name}{path.suffix}')
+            split_path.parent.mkdir(parents=True, exist_ok=True)
+            with split_path.open('w', encoding='utf-8') as stream:
+                for row in split_rows:
+                    stream.write(json.dumps(row, ensure_ascii=False) + '\n')
     print(
-        f'Prepared {len(policy_rows)} policy XSafety rows at {output_path}; '
-        f'{len(privacy_rows)} privacy rows at {privacy_output_path}; '
-        f'{len(attack_rows)} attack rows at {attack_output_path}; '
-        f'excluded {len(excluded_rows)} ambiguous prompt-leaking/role-play rows'
+        json.dumps({
+            'policy_rows': len(policy_rows),
+            'privacy_rows': len(privacy_rows),
+            'attack_rows': len(attack_rows),
+            'excluded_rows': len(excluded_rows),
+            'language_splits': split_counts,
+        }, ensure_ascii=False)
     )
 
 

@@ -1374,26 +1374,138 @@ BENCHMARK_SPECIFIC_INTRO_OVERRIDES = {
     'CrowS-Pairs-Religion-MC': 'CrowS-Pairs-Religion-MC 使用 CrowS-Pairs 的 105 组英文宗教身份成对句子。原始字段为 sent_more、sent_less、stereo_antistereo 和 bias_type；当前以英文问题要求选出刻板印象更强的一句。',
 }
 
+BILINGUAL_BENCHMARK_SPLITS = {
+    'LogiQA': {
+        'chinese_name': 'LogiQA-Chinese',
+        'chinese_path': 'benchmarks/trusted_downloaded_reasoning/logiqa_chinese.jsonl',
+        'chinese_language': 'Chinese',
+        'chinese_label': '中文逻辑阅读推理评测',
+        'chinese_intro': 'LogiQA-Chinese 使用官方 zh_eval.txt 的 651 道中文逻辑阅读选择题，保留完整论证材料、问题与四个选项，评估多步演绎和约束推理。',
+        'general_name': 'LogiQA-English',
+        'general_path': 'benchmarks/trusted_downloaded_reasoning/logiqa_english.jsonl',
+        'general_language': 'English',
+        'general_label': '英文逻辑阅读推理评测',
+        'general_intro': '使用 LogiQA 官方 Eval.txt 的 651 道英文逻辑阅读选择题，评估模型综合论证材料、条件约束与人物关系完成多步演绎的能力。',
+    },
+    'SafetyBench': {
+        'chinese_name': 'SafetyBench-Chinese',
+        'chinese_path': 'benchmarks/trusted_downloaded_privacy_security/safetybench_dev_chinese.jsonl',
+        'chinese_language': 'Chinese',
+        'chinese_label': '中文综合安全伦理判断评测',
+        'chinese_intro': 'SafetyBench-Chinese 使用官方 dev_zh.json 的 35 道中文安全知识开发题，覆盖冒犯、偏见、身心健康、违法、伦理以及隐私与财产风险。',
+        'general_name': 'SafetyBench-English',
+        'general_path': 'benchmarks/trusted_downloaded_privacy_security/safetybench_dev_english.jsonl',
+        'general_language': 'English',
+        'general_label': '英文综合安全伦理判断评测',
+        'general_intro': '使用 SafetyBench 官方 dev_en.json 的 35 道英文安全知识开发题，评估模型对七类安全与伦理风险的选择判断准确性。',
+    },
+    'FollowBench': {
+        'chinese_name': 'FollowBench-Chinese',
+        'chinese_path': 'benchmarks/verified_benchmarks/data/followbench_chinese.jsonl',
+        'chinese_language': 'Chinese',
+        'chinese_label': '中文细粒度约束遵循评测',
+        'chinese_intro': 'FollowBench-Chinese 使用官方 data_zh/ 的 790 条中文开放式指令，保留约束类型和难度层级，评估模型满足细粒度约束的能力。',
+        'general_name': 'FollowBench-English',
+        'general_path': 'benchmarks/verified_benchmarks/data/followbench_english.jsonl',
+        'general_language': 'English',
+        'general_label': '英文细粒度约束遵循评测',
+        'general_intro': '使用 FollowBench 官方 data/ 的 820 条英文开放式指令，按约束类型与难度层级检查模型对细粒度要求的遵循情况。',
+    },
+    'natural-instructions': {
+        'chinese_name': 'Natural-Instructions-Chinese',
+        'chinese_path': 'benchmarks/trusted_downloaded_capability/natural_instructions_chinese.jsonl.gz',
+        'chinese_language': 'Chinese',
+        'chinese_label': '中文任务指令遵循评测',
+        'chinese_intro': 'Natural-Instructions-Chinese 只包含官方语言元数据中输入、输出或指令涉及 Chinese 的 32 个任务，共展开 17,861 条实例，完整保留任务定义、实例输入和可接受输出。',
+        'general_name': 'Natural-Instructions-General',
+        'general_path': 'benchmarks/trusted_downloaded_capability/natural_instructions_general.jsonl.gz',
+        'general_language': 'General (non-Chinese)',
+        'general_label': '非中文多语言任务指令遵循评测',
+        'general_intro': '使用 Natural-Instructions 中语言元数据不涉及中文的 1,581 个任务，共展开 5,020,282 条实例，完整保留任务定义、实例输入与可接受输出，覆盖英文及其他语言的任务迁移与指令遵循。',
+    },
+    'Bytecue_dataset': {
+        'chinese_name': 'ByteCue-Chinese',
+        'chinese_path': 'benchmarks/verified_benchmarks/data/bytecue_chinese.jsonl',
+        'chinese_language': 'Chinese',
+        'chinese_label': '中文代码注释生成评测',
+        'chinese_intro': 'ByteCue-Chinese 只包含参考注释使用中文的 13 条样本；输入保留 API、字节码和控制流图，目标是生成与程序行为一致的中文注释。',
+        'general_name': 'ByteCue-English',
+        'general_path': 'benchmarks/verified_benchmarks/data/bytecue_english.jsonl',
+        'general_language': 'English',
+        'general_label': '英文代码注释生成评测',
+        'general_intro': '使用 ByteCue 中参考注释为英文的 6,115 条样本，依据 API、字节码与控制流图生成准确描述程序行为的英文注释。',
+    },
+    'XSafety': {
+        'chinese_name': 'XSafety-Chinese',
+        'chinese_path': 'benchmarks/custom_privacy/xsafety_multilingual_refusal_chinese.jsonl',
+        'chinese_language': 'Chinese',
+        'chinese_label': '中文有害请求抵御评测',
+        'chinese_intro': 'XSafety-Chinese 使用普通风险分片中的 1,800 条中文请求，覆盖违法犯罪、身体伤害、歧视和不安全主题等 9 类风险。',
+        'general_name': 'XSafety-General',
+        'general_path': 'benchmarks/custom_privacy/xsafety_multilingual_refusal_general.jsonl',
+        'general_language': '9 non-Chinese languages',
+        'general_label': '非中文多语言有害请求抵御评测',
+        'general_intro': '使用 XSafety 普通风险分片中的 16,190 条非中文请求，覆盖英语及另外 8 种语言和 9 类风险，评估跨语言有害请求抵御表现。',
+    },
+    'XSafety-Attack-Defense': {
+        'chinese_name': 'XSafety-Attack-Defense-Chinese',
+        'chinese_path': 'benchmarks/custom_privacy/xsafety_attack_refusal_chinese.jsonl',
+        'chinese_language': 'Chinese',
+        'chinese_label': '中文目标劫持攻击抵御评测',
+        'chinese_intro': 'XSafety-Attack-Defense-Chinese 只包含 Goal Hijacking 分片中的 200 条中文目标劫持提示，评估忽略前序指令、替换目标和强制输出等攻击。',
+        'general_name': 'XSafety-Attack-Defense-General',
+        'general_path': 'benchmarks/custom_privacy/xsafety_attack_refusal_general.jsonl',
+        'general_language': '9 non-Chinese languages',
+        'general_label': '非中文多语言目标劫持攻击抵御评测',
+        'general_intro': '使用 XSafety Goal Hijacking 分片中的 1,800 条非中文提示，评估模型抵御忽略前序指令、替换任务目标和强制输出的能力。',
+    },
+    'XSafety-Privacy-Refusal': {
+        'chinese_name': 'XSafety-Privacy-Refusal-Chinese',
+        'chinese_path': 'benchmarks/custom_privacy/xsafety_privacy_refusal_chinese.jsonl',
+        'chinese_language': 'Chinese',
+        'chinese_label': '中文财产隐私安全评测',
+        'chinese_intro': 'XSafety-Privacy-Refusal-Chinese 使用 Privacy And Property 分片中的 200 条中文请求，包含个人资料、账号或支付凭据获取以及财产侵害请求。',
+        'general_name': 'XSafety-Privacy-Refusal-General',
+        'general_path': 'benchmarks/custom_privacy/xsafety_privacy_refusal_general.jsonl',
+        'general_language': '9 non-Chinese languages',
+        'general_label': '非中文多语言财产隐私安全评测',
+        'general_intro': '使用 XSafety Privacy And Property 分片中的 1,800 条非中文请求，评估个人资料、账号或支付凭据和财产风险场景下的安全响应。',
+    },
+    'MultiTP': {
+        'chinese_name': 'MultiTP-Chinese',
+        'chinese_path': 'benchmarks/verified_benchmarks/data/multitp_chinese.jsonl',
+        'chinese_language': 'Chinese',
+        'chinese_label': '中文自动驾驶伦理决策评测',
+        'chinese_intro': 'MultiTP-Chinese 使用官方 dataset_zh-cn+google.csv 的 460 条中文自动驾驶伦理两难场景，比较模型选择与全球人类偏好维度。',
+        'general_name': 'MultiTP-English',
+        'general_path': 'benchmarks/verified_benchmarks/data/multitp_english.jsonl',
+        'general_language': 'English',
+        'general_label': '英文自动驾驶伦理决策评测',
+        'general_intro': '使用 MultiTP 官方 dataset_en+google.csv 的 460 条英文自动驾驶伦理两难场景，比较模型在人物属性与事故取舍上的选择和全球人类偏好维度。',
+    },
+}
+
+
 BENCHMARK_SOURCE_LANGUAGE_OVERRIDES = {
     'HalluQA': 'Chinese',
     'CMMLU': 'Chinese',
     'Chinese_Rumor_Dataset': 'Chinese',
     'CMRC2018': 'Chinese',
-    'LogiQA': 'Chinese (current zh_eval split)',
+    'LogiQA-Chinese': 'Chinese',
     'FLUB': 'Chinese',
     'RuozhibaQA': 'Chinese',
-    'natural-instructions': '55 source languages, including Chinese',
-    'FollowBench': 'English, Chinese',
+    'Natural-Instructions-Chinese': 'Chinese',
+    'FollowBench-Chinese': 'Chinese',
     'CHID': 'Chinese',
-    'Bytecue_dataset': 'English and Chinese reference comments',
-    'XSafety-Attack-Defense': '10 languages, including Chinese',
+    'ByteCue-Chinese': 'Chinese',
+    'XSafety-Attack-Defense-Chinese': 'Chinese',
     'SEval': 'Chinese',
     'CHiSafetyBench': 'Chinese',
-    'XSafety': '10 languages, including Chinese',
-    'XSafety-Privacy-Refusal': '10 languages, including Chinese',
+    'XSafety-Chinese': 'Chinese',
+    'XSafety-Privacy-Refusal-Chinese': 'Chinese',
     'CHBias': 'Chinese',
-    'MultiTP': 'Chinese',
-    'SafetyBench': 'Chinese (current dev_zh split)',
+    'MultiTP-Chinese': 'Chinese',
+    'SafetyBench-Chinese': 'Chinese',
     'CValuesResponsibilityMC': 'Chinese',
 }
 BENCHMARK_SOURCE_LANGUAGE_BY_CASEFOLD = {
@@ -1404,13 +1516,100 @@ BENCHMARK_SOURCE_LANGUAGE_BY_CASEFOLD = {
 SOURCE_LANGUAGE_AUDITED_DYNAMIC_EXAMPLES = {
     name.casefold()
     for name in {
-        'CValuesResponsibilityMC', 'MultiTP', 'RustRepoTrans',
+        'CValuesResponsibilityMC', 'RustRepoTrans',
         'explicit_subset', 'implicit_subset', 'ConfAIde-Tier2',
         'HolisticBias', 'CrowS-Pairs-Religion-MC',
         'LegalBench-PrivacyPolicyQA', 'MoralStories', 'MoralExceptQA',
         'HONEST', 'DiaSafety', 'PairVul',
+        *[
+            variant
+            for split in BILINGUAL_BENCHMARK_SPLITS.values()
+            for variant in (split['general_name'], split['chinese_name'])
+        ],
     }
 }
+
+
+def split_bilingual_benchmark_variants(groups: List[Dict[str, Any]]) -> None:
+    """Expose Chinese and non-Chinese source rows as separate catalog entries."""
+    for group in groups:
+        split_dimensions: List[Dict[str, Any]] = []
+        for dim in group.get('dimensions') or []:
+            general_dimensions: List[Dict[str, Any]] = []
+            benchmarks = [bench for bench in (dim.get('benchmarks') or []) if isinstance(bench, dict)]
+            for bench in benchmarks:
+                config = BILINGUAL_BENCHMARK_SPLITS.get(str(bench.get('name') or '').strip())
+                if not config:
+                    continue
+                original_name = str(bench.get('name') or '')
+                original_id = str(bench.get('id') or safe_slug(original_name))
+
+                general_bench = copy.deepcopy(bench)
+                general_bench['id'] = f'{original_id}::language::general'
+                general_bench['name'] = config['general_name']
+                general_bench['option_key'] = safe_slug(config['general_name'])
+                general_bench['intro'] = config['general_intro']
+                general_bench['language'] = config['general_language']
+                general_bench['source_language'] = config['general_language']
+                general_bench['taxonomy_override'] = {
+                    **copy.deepcopy(general_bench.get('taxonomy_override') or {}),
+                    'to_dimension': config['general_label'],
+                    'reason': config['general_intro'],
+                }
+                general_bench['paths'] = {
+                    **copy.deepcopy(general_bench.get('paths') or {}),
+                    'dataset': config['general_path'],
+                }
+                general_bench.pop('example', None)
+
+                general_dim = copy.deepcopy(dim)
+                general_dim['id'] = f"{dim.get('id')}::language::general::{safe_slug(original_name)}"
+                general_dim['label'] = config['general_label']
+                general_dim['result_label'] = config['general_label']
+                general_dim['intro'] = config['general_intro']
+                general_dim['benchmarks'] = [general_bench]
+                general_dim.pop('language_label', None)
+                sync_dimension_display_metadata([{'dimensions': [general_dim]}])
+                general_dimensions.append(general_dim)
+
+                bench['name'] = config['chinese_name']
+                bench['option_key'] = safe_slug(config['chinese_name'])
+                bench['intro'] = config['chinese_intro']
+                bench['language'] = config['chinese_language']
+                bench['source_language'] = config['chinese_language']
+                bench['taxonomy_override'] = {
+                    **copy.deepcopy(bench.get('taxonomy_override') or {}),
+                    'to_dimension': config['chinese_label'],
+                    'reason': config['chinese_intro'],
+                }
+                bench['paths'] = {
+                    **copy.deepcopy(bench.get('paths') or {}),
+                    'dataset': config['chinese_path'],
+                }
+                bench.pop('example', None)
+                execution = copy.deepcopy(bench.get('execution') or {})
+                extra_args = copy.deepcopy(execution.get('extra_args') or {})
+                if isinstance(extra_args, dict):
+                    extra_args['--benchmark-name'] = config['chinese_name']
+                    execution['extra_args'] = extra_args
+                bench['execution'] = execution
+
+                general_execution = copy.deepcopy(general_bench.get('execution') or {})
+                general_extra_args = copy.deepcopy(general_execution.get('extra_args') or {})
+                if isinstance(general_extra_args, dict):
+                    general_extra_args['--benchmark-name'] = config['general_name']
+                    general_extra_args['--dimension-label'] = config['general_label']
+                    general_execution['extra_args'] = general_extra_args
+                general_bench['execution'] = general_execution
+
+                if len(benchmarks) == 1:
+                    dim['label'] = config['chinese_label']
+                    dim['result_label'] = config['chinese_label']
+                    dim['intro'] = config['chinese_intro']
+
+            split_dimensions.extend(general_dimensions)
+            split_dimensions.append(dim)
+        group['dimensions'] = split_dimensions
 
 
 def attach_benchmark_source_languages(groups: List[Dict[str, Any]]) -> None:
@@ -1430,6 +1629,8 @@ def benchmark_source_includes_chinese(bench: Dict[str, Any]) -> bool:
     if key in BENCHMARK_SOURCE_LANGUAGE_BY_CASEFOLD:
         return True
     language = str(bench.get('source_language') or bench.get('language') or '').casefold()
+    if 'non-chinese' in language or '不涉及中文' in language:
+        return False
     return 'chinese' in language or '中文' in language
 
 
@@ -1706,8 +1907,14 @@ def benchmark_intro_overrides_by_key() -> Dict[str, str]:
 
 
 def benchmark_specific_intro_source(bench: Dict[str, Any]) -> str:
+    benchmark_name = str(bench.get('name') or '').strip()
+    for split in BILINGUAL_BENCHMARK_SPLITS.values():
+        if benchmark_name == split['general_name']:
+            return split['general_intro']
+        if benchmark_name == split['chinese_name']:
+            return split['chinese_intro']
     keys = [
-        normalize_benchmark_key(str(bench.get('name') or '')),
+        normalize_benchmark_key(benchmark_name),
         normalize_benchmark_key(str(bench.get('url') or '')),
     ]
     override_index = benchmark_intro_overrides_by_key()
@@ -3158,6 +3365,7 @@ def build_trust_catalog(apply_editor_overrides: bool = True) -> Dict[str, Any]:
     apply_semantic_placeholder_overrides(ordered)
     ordered = apply_scientific_taxonomy(ordered)
     merge_duplicate_dimensions(ordered)
+    split_bilingual_benchmark_variants(ordered)
     sync_dimension_display_metadata(ordered)
     attach_local_benchmark_metadata(ordered)
     ordered = keep_all_catalog_benchmarks(ordered)
@@ -3236,6 +3444,53 @@ def taxonomy_editable_defaults(catalog: Dict[str, Any]) -> Dict[str, Any]:
         'benchmarks': benchmarks,
         'dimension_order': dimension_order,
     }
+
+
+def resolve_catalog_benchmark_run(
+    dimension_ids: List[str],
+    benchmark_option_ids: List[str],
+    selected_benchmark: Optional[Dict[str, Any]] = None,
+) -> Optional[Dict[str, Any]]:
+    """Resolve generated catalog variants and overlay their concrete data path."""
+    base_option_ids = [
+        str(option_id).split('::language::general', 1)[0]
+        for option_id in benchmark_option_ids
+    ]
+    resolved = resolve_real_benchmark_run(BASE_DIR, dimension_ids, base_option_ids)
+    if not resolved:
+        return None
+
+    selected: List[Dict[str, Any]] = [selected_benchmark] if selected_benchmark else []
+    if not selected:
+        selected_ids = {str(option_id) for option_id in benchmark_option_ids}
+        selected_dimensions = {str(dimension_id) for dimension_id in dimension_ids}
+        for group in build_trust_catalog().get('groups') or []:
+            for dim in group.get('dimensions') or []:
+                if selected_dimensions and str(dim.get('id') or '') not in selected_dimensions:
+                    continue
+                for bench in dim.get('benchmarks') or []:
+                    execution_id = str(bench.get('execution_option_id') or bench.get('id') or '')
+                    if execution_id in selected_ids:
+                        selected.append(bench)
+    if len(selected) != 1:
+        return resolved
+
+    bench = selected[0]
+    runtime = copy.deepcopy(resolved)
+    runtime['paths'] = copy.deepcopy(bench.get('paths') or runtime.get('paths') or {})
+    runtime['execution'] = copy.deepcopy(bench.get('execution') or runtime.get('execution') or {})
+    runtime['display'] = copy.deepcopy(bench.get('display') or runtime.get('display') or {})
+    runtime['metrics'] = copy.deepcopy(bench.get('metrics') or runtime.get('metrics') or [])
+    runtime['benchmark_option_id'] = str(bench.get('execution_option_id') or bench.get('id') or '')
+    runtime['benchmark_option_ids'] = list(benchmark_option_ids)
+    runtime['option'] = {
+        **copy.deepcopy(runtime.get('option') or {}),
+        'id': runtime['benchmark_option_id'],
+        'benchmark': copy.deepcopy(bench),
+        'execution': copy.deepcopy(runtime['execution']),
+        'paths': copy.deepcopy(runtime['paths']),
+    }
+    return runtime
 
 
 def clean_taxonomy_label(value: Any, field_name: str) -> str:
@@ -4921,7 +5176,7 @@ def create_job(payload: Dict[str, Any]) -> Dict[str, Any]:
     else:
         requested_dimensions = selected_dimensions_from_payload(payload)
         benchmark_ids = selected_benchmark_ids_from_payload(payload)
-        real_run = resolve_real_benchmark_run(BASE_DIR, requested_dimensions, benchmark_ids)
+        real_run = resolve_catalog_benchmark_run(requested_dimensions, benchmark_ids)
         if not real_run:
             raise ValueError('所选 Benchmark 暂不支持真实评测。')
         if not benchmark_ids and real_run.get('benchmark_option_id'):
@@ -5188,8 +5443,7 @@ def run_job(job_id: str) -> None:
                 eval_cmd.extend(['--api-key-env', str(payload['api_key_env'])])
             resolved_run = {'benchmark_id': 'all_subcategories_smoke'}
         else:
-            resolved_run = resolve_real_benchmark_run(
-                BASE_DIR,
+            resolved_run = resolve_catalog_benchmark_run(
                 payload.get('trust_dimensions') or [],
                 payload.get('benchmark_ids') or [],
             )

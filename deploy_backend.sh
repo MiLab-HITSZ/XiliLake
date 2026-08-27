@@ -37,6 +37,12 @@ fi
 if [[ -d "$BASE_DIR/downloads/datasets/github_repos/allenai__natural-instructions/tasks" ]]; then
   "$PYTHON_BIN" "$BASE_DIR/benchmarks/trusted_downloaded_capability/prepare_natural_instructions.py"
 fi
+if [[ -f "$BASE_DIR/downloads/datasets/github_repos/lgw863__LogiQA-dataset/Eval.txt" ]]; then
+  "$PYTHON_BIN" "$BASE_DIR/benchmarks/trusted_downloaded_reasoning/prepare_logiqa.py"
+fi
+if [[ -f "$BASE_DIR/downloads/datasets/huggingface/thu-coai__SafetyBench/dev_en.json" ]]; then
+  "$PYTHON_BIN" "$BASE_DIR/benchmarks/trusted_downloaded_privacy_security/prepare_safetybench.py"
+fi
 if [[ -d "$BASE_DIR/downloads/datasets/github_repos/xiaoqiao__EvalSafetyLLM/SAFEDataset" ]]; then
   "$PYTHON_BIN" "$BASE_DIR/benchmarks/trusted_downloaded_privacy_security/prepare_safe.py"
 fi

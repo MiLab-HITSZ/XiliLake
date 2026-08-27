@@ -29,7 +29,8 @@
       "label": "中文篇章问答准确性评测"
     },
     "benchmark::reasoning::downloaded::因果推断": {
-      "label": "逻辑因果多跳推理"
+      "label": "中文逻辑阅读推理评测",
+      "intro": "使用 LogiQA 官方 zh_eval.txt 的 651 道中文逻辑阅读选择题，完整保留论证材料、问题与四个选项，评估模型综合条件、约束和人物关系完成多步演绎的能力。"
     },
     "benchmark::verified_benchmarks::verified::reasoning::p0::eval-run::HotpotQA": {
       "label": "文档证据多跳推理"
@@ -41,10 +42,12 @@
       "intro": "实际数据来自 ruozhiba 问答，检查歧义、错误前提和偷换概念下模型能否进行正常推理。"
     },
     "benchmark::capability::downloaded::指令遵循能力": {
-      "label": "自然语言遵循任务"
+      "label": "中文任务指令遵循评测",
+      "intro": "使用 Natural-Instructions 中语言元数据涉及 Chinese 的 32 个任务和 17,861 条实例，完整保留任务定义、实例输入与可接受输出。"
     },
     "benchmark::verified_benchmarks::verified::task_following::p0::eval-run::FollowBench": {
-      "label": "细粒度约束遵循任务"
+      "label": "中文细粒度约束遵循评测",
+      "intro": "使用 FollowBench 官方 data_zh/ 的 790 条中文开放式指令，保留约束类型与难度层级，检查模型能否同时满足内容、情境、风格、格式和示例等细粒度要求。"
     },
     "benchmark::truthfulness::downloaded::历史和文化知识::p0::eval-run::Arxiv-Filtered": {
       "label": "学术文献摘要生成任务"
@@ -56,7 +59,8 @@
       "intro": "评估模型是否会把正常、无害或仅表面敏感的请求错误拒绝。"
     },
     "benchmark::harmful_capability::downloaded::内容安全性评估::p0::eval-run::XSafety": {
-      "intro": "使用 XSafety 的 17,990 条普通风险请求，覆盖 10 种语言和 9 类风险，评估同一拒答策略是否因语言和风险类型变化而弱化。"
+      "label": "中文有害请求抵御评测",
+      "intro": "使用 XSafety 普通风险分片中的 1,800 条中文请求，覆盖违法犯罪、身体伤害、歧视和不安全主题等 9 类风险，评估模型对中文有害请求的抵御表现。"
     },
     "benchmark::verified_benchmarks::verified::fairness::p0::eval-run::CHBias": {
       "label": "中文群体偏见综合评测",
@@ -97,7 +101,7 @@
       "intro": "RMCBench 的 473 条提示覆盖恶意代码生成、代码翻译、补全和改写。当前把每条恶意代码请求的参考行为统一为安全拒答，直接检查模型能否抵御恶意代码请求并拒绝提供可执行的攻击或滥用代码。"
     },
     "benchopt::verified_benchmarks::verified::system_policy::xsafety_multilingual": {
-      "intro": "XSafety 的有害请求抵御入口包含 17,990 条普通风险请求，覆盖 10 种语言和违法犯罪、身体伤害、歧视、不安全主题等 9 类风险。Privacy And Property 的 2,000 条样本归入隐私信息安全性，Goal Hijacking 的 2,000 条样本用于越狱攻击防御。"
+      "intro": "XSafety-Chinese 使用普通风险分片中的 1,800 条中文请求，覆盖违法犯罪、身体伤害、歧视和不安全主题等 9 类风险。Privacy And Property 与 Goal Hijacking 的中文分片分别在隐私信息安全性和攻击抵御鲁棒性的独立子类中评测。"
     }
   },
   "dimension_order": {

@@ -14,8 +14,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List
 
-from benchmarks.adapters import automatic_tasks, build_eval_command, resolve_real_benchmark_run
-from web_backend import BASE_DIR, build_summary_from_records, build_trust_catalog
+from benchmarks.adapters import automatic_tasks, build_eval_command
+from web_backend import BASE_DIR, build_summary_from_records, build_trust_catalog, resolve_catalog_benchmark_run
 
 
 def utc_now_iso() -> str:
@@ -258,7 +258,11 @@ def main() -> int:
         child_progress = item_root / 'progress.json'
         item_root.mkdir(parents=True, exist_ok=True)
         try:
-            resolved = resolve_real_benchmark_run(BASE_DIR, [dimension_id], [selection['execution_id']])
+            resolved = resolve_catalog_benchmark_run(
+                [dimension_id],
+                [selection['execution_id']],
+                selection['benchmark'],
+            )
             if not resolved:
                 raise RuntimeError('Benchmark execution could not be resolved')
             resolved = copy.deepcopy(resolved)
