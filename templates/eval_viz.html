@@ -1126,7 +1126,7 @@ async function refreshJobs(refreshResult){
 async function startSystemSmokeTest(){
     const modelId=document.getElementById('model-select')?.value||selectedModelId||'';
     if(!modelId){alert('请先选择一个模型');return}
-    if(!confirm('将使用当前模型对全部可评测 Benchmark 各运行 1 个真实样例，并替换当前结果。是否继续？'))return;
+    if(!confirm('将只加载一次当前模型，对全部可评测 Benchmark 各运行 1 道真实题目，并替换当前结果。是否继续？'))return;
     const button=document.getElementById('smoke-test-button');
     if(button){button.disabled=true;button.textContent='正在启动...';}
     try{

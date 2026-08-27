@@ -6205,6 +6205,11 @@ def main() -> int:
     ap.add_argument("--output-dir", default=str(BASE_DIR / "result"))
     ap.add_argument("--models", default="")
     ap.add_argument("--tasks", default="qa,mc")
+    ap.add_argument(
+        "--sides",
+        default="commonsense,counterfactual",
+        help="Comma-separated image sides to evaluate: commonsense,counterfactual",
+    )
     ap.add_argument("--categories", default="", help="Comma-separated categories to evaluate")
     ap.add_argument("--subcategories", default="", help="Comma-separated subcategories to evaluate")
     ap.add_argument("--timeout-s", type=int, default=300)
@@ -6883,6 +6888,10 @@ def main() -> int:
     for t in tasks:
         if t not in ("qa", "mc", "caption"):
             raise SystemExit(f"invalid task: {t}")
+    sides = _parse_csv_list(args.sides)
+    if not sides or any(side not in {"commonsense", "counterfactual"} for side in sides):
+        raise SystemExit("invalid sides: use commonsense and/or counterfactual")
+    sides = list(dict.fromkeys(sides))
     cp_vbc_tasks = set(_parse_csv_list(args.cp_vbc_tasks))
     for t in cp_vbc_tasks:
         if t not in ("qa", "mc", "caption"):
@@ -7103,6 +7112,7 @@ def main() -> int:
             "pair_manifest_count": len(pair_manifest),
             "shard_count": args.shard_count,
             "shard_index": args.shard_index,
+            "sides": sides,
             "generation_trace": args.generation_trace,
             "top_logprobs": args.top_logprobs,
             "trace_hidden_states": args.trace_hidden_states,
@@ -7136,6 +7146,7 @@ def main() -> int:
                 "pair_manifest_count": len(pair_manifest),
                 "shard_count": args.shard_count,
                 "shard_index": args.shard_index,
+                "sides": sides,
                 "parallel": args.parallel,
                 "retry": args.retry,
                 "timeout_s": args.timeout_s,
@@ -7259,7 +7270,8 @@ def main() -> int:
             category = str(item.get("category") or "")
             subcategory = str(item.get("subcategory") or "")
             for task_index, t_type in enumerate(tasks):
-                for side_index, side in enumerate(["commonsense", "counterfactual"]):
+                for side in sides:
+                    side_index = 0 if side == "commonsense" else 1
                     if _evaluation_task_shard(
                         item_index,
                         task_index,

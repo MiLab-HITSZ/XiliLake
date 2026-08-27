@@ -288,7 +288,10 @@ def main() -> int:
             )
             script_name = Path(str(execution.get('script') or '')).name
             if script_name == 'evaluate_cdh_bench.py':
-                command.extend(['--limit', '1'])
+                # A normal CDH run evaluates both images in a pair. The system
+                # smoke test uses the anomalous image so every Benchmark makes
+                # exactly one request to the already-running shared model.
+                command.extend(['--limit', '1', '--sides', 'counterfactual'])
             else:
                 command.extend(['--max-cases', '1'])
             log_path = item_root / 'runner.log'
@@ -310,7 +313,11 @@ def main() -> int:
             if not any(row.get('status') == 'ok' for row in child_results):
                 errors = [str(row.get('pred') or row.get('error') or '') for row in child_results]
                 raise RuntimeError('all model calls failed: ' + ' | '.join(errors[:3]))
-            records = annotate_records(child_results, selection, index, args.model, args.display_name)
+            selected_result = next(
+                (row for row in child_results if row.get('status') == 'ok'),
+                child_results[0],
+            )
+            records = annotate_records([selected_result], selection, index, args.model, args.display_name)
             return {'ok': True, 'records': records, 'selection': selection, 'index': index}
         except Exception as exc:
             record = error_record(selection, index, str(exc))
