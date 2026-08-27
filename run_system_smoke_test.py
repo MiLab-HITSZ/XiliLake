@@ -305,7 +305,7 @@ def main() -> int:
             payload = {
                 'tasks': tasks,
                 'parallel': 1,
-                'retry': 0,
+                'retry': 2,
                 'timeout_s': args.timeout_s,
                 'mitigation': 'none',
             }
@@ -439,19 +439,24 @@ def main() -> int:
         f'{"smoke" if is_system_smoke else "scope"}_failed_dimensions': len(failed_dimension_ids),
     })
     write_json(output_dir / 'run_config.json', run_config)
+    has_failures = bool(failures)
     progress.update({
-        'status': 'completed',
-        'phase': 'completed',
+        'status': 'failed' if has_failures else 'completed',
+        'phase': 'failed' if has_failures else 'completed',
         'ended_at': utc_now_iso(),
         'completed': len(selections),
         'percent': 100.0,
-        'message': f'Benchmark evaluation completed: {len(selections) - len(failures)}/{len(selections)} successful',
+        'message': (
+            f'Benchmark evaluation failed: {len(failures)}/{len(selections)} Benchmarks failed'
+            if has_failures else
+            f'Benchmark evaluation completed: {len(selections)}/{len(selections)} successful'
+        ),
         'failure_count': len(failures),
     })
     if progress_path:
         write_json(progress_path, progress)
     shutil.rmtree(work_root, ignore_errors=True)
-    return 0
+    return 1 if has_failures else 0
 
 
 if __name__ == '__main__':

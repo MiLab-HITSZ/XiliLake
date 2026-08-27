@@ -25,6 +25,38 @@ if [[ -z "$PYTHON_BIN" ]]; then
   exit 1
 fi
 
+# A running evaluation owns a local model server and one or more benchmark
+# workers. Restarting the web process would orphan those workers and terminate
+# their model server, so refuse routine deployments until the job is finished.
+if [[ "${XILILAKE_FORCE_RESTART:-0}" != "1" ]]; then
+  ACTIVE_JOB="$($PYTHON_BIN - "$PORT" <<'PY' 2>/dev/null || true
+import json
+import sys
+import urllib.request
+
+port = int(sys.argv[1])
+try:
+    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+    with opener.open(f'http://127.0.0.1:{port}/api/evaluations', timeout=2) as response:
+        jobs = json.load(response)
+except Exception:
+    raise SystemExit(0)
+
+for job in jobs if isinstance(jobs, list) else []:
+    if job.get('status') in {'queued', 'starting', 'running'}:
+        print(f"{job.get('id', 'unknown')}|{job.get('message', 'evaluation in progress')}")
+        break
+PY
+)"
+  if [[ -n "$ACTIVE_JOB" ]]; then
+    ACTIVE_JOB_ID="${ACTIVE_JOB%%|*}"
+    ACTIVE_JOB_MESSAGE="${ACTIVE_JOB#*|}"
+    echo "[ERROR] Evaluation $ACTIVE_JOB_ID is active: $ACTIVE_JOB_MESSAGE"
+    echo "[ERROR] Deployment was not started. Wait for the evaluation to finish."
+    exit 2
+  fi
+fi
+
 echo "[INFO] Using python: $PYTHON_BIN"
 "$PYTHON_BIN" -m pip install -q -r "$BASE_DIR/requirements-web.txt"
 
