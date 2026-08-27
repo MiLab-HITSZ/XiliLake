@@ -3182,6 +3182,12 @@ def parse_csv_param(raw: str) -> List[str]:
     return [part.strip() for part in str(raw or '').split(',') if part.strip()]
 
 
+def parse_request_list(raw: Any) -> List[str]:
+    if isinstance(raw, list):
+        return [str(item).strip() for item in raw if str(item).strip()]
+    return parse_csv_param(raw)
+
+
 def benchmark_metric_defs(raw: Any) -> List[Dict[str, Any]]:
     if isinstance(raw, list):
         out: List[Dict[str, Any]] = []
@@ -5085,6 +5091,12 @@ def get_current_result_info() -> Dict[str, Any]:
         'trust_dimensions': trust_dimensions,
         'benchmark_ids': benchmark_ids,
         'result_selections': result_selections,
+        'scope_type': run_config.get('scope_type') or '',
+        'scope_domain_id': run_config.get('scope_domain_id') or '',
+        'scope_group_id': run_config.get('scope_group_id') or '',
+        'scope_dimension_id': run_config.get('scope_dimension_id') or '',
+        'scope_benchmark_id': run_config.get('scope_benchmark_id') or '',
+        'scope_label': run_config.get('scope_label') or '',
         'real_benchmark_id': run_config.get('real_benchmark_id') or '',
         'real_benchmark_option_id': run_config.get('real_benchmark_option_id') or '',
         'placeholder_dimensions': run_config.get('placeholder_dimensions') or [],
@@ -5524,6 +5536,12 @@ def merge_benchmark_result_cache(
         'trust_dimensions': [item['dimension_id'] for item in merged_selections],
         'benchmark_ids': [item['benchmark_id'] for item in merged_selections],
         'result_selections': merged_selections,
+        'scope_type': payload.get('scope_type') or '',
+        'scope_domain_id': payload.get('scope_domain_id') or '',
+        'scope_group_id': payload.get('scope_group_id') or '',
+        'scope_dimension_id': payload.get('scope_dimension_id') or '',
+        'scope_benchmark_id': payload.get('scope_benchmark_id') or '',
+        'scope_label': payload.get('scope_label') or '',
         'real_benchmark_id': payload.get('real_benchmark_id') or '',
         'real_benchmark_option_id': payload.get('real_benchmark_option_id') or '',
         'placeholder_dimensions': [],
@@ -5650,6 +5668,32 @@ def build_leaderboard_rows(result_name: str = CURRENT_RESULT_NAME) -> Dict[str, 
         'metric_columns': LEADERBOARD_METRIC_COLUMNS,
         'rows': rows,
     }
+
+
+def build_leaderboard_csv(result_name: str = CURRENT_RESULT_NAME) -> BytesIO:
+    leaderboard = build_leaderboard_rows(result_name)
+    metric_columns = leaderboard.get('metric_columns') or []
+    text = StringIO()
+    writer = csv.writer(text)
+    writer.writerow([
+        '评测领域', '评测大类', '评测子类', 'Benchmark', 'Benchmark ID',
+        '评测状态', '任务', *[column.get('label') or column.get('key') for column in metric_columns],
+    ])
+    for row in leaderboard.get('rows') or []:
+        metrics = row.get('metrics') or {}
+        writer.writerow([
+            row.get('major') or '',
+            row.get('secondary') or '',
+            row.get('tertiary') or '',
+            row.get('benchmark') or '',
+            row.get('benchmark_id') or '',
+            '已评测' if row.get('evaluated') else ('可评测' if row.get('implemented') else ''),
+            row.get('task') or '',
+            *[metrics.get(column.get('key')) for column in metric_columns],
+        ])
+    payload = BytesIO(('\ufeff' + text.getvalue()).encode('utf-8'))
+    payload.seek(0)
+    return payload
 
 
 
@@ -5788,14 +5832,30 @@ def resolve_local_model(model_name_or_path: str) -> str:
 
 def catalog_scope_rows(payload: Dict[str, Any]) -> List[Dict[str, Any]]:
     scope_type = str(payload.get('scope_type') or '').strip()
-    if scope_type not in {'group', 'dimension', 'benchmark'}:
+    if scope_type not in {'total', 'domain', 'group', 'dimension', 'benchmark'}:
         return []
+    domain_id = str(payload.get('domain_id') or '').strip()
     group_id = str(payload.get('group_id') or '').strip()
     dimension_id = str(payload.get('dimension_id') or '').strip()
     benchmark_id = str(payload.get('benchmark_id') or '').strip()
+    catalog = build_trust_catalog()
+    domains = {
+        str(domain.get('id') or ''): domain
+        for domain in catalog.get('domains') or []
+    }
+    selected_domain = domains.get(domain_id) if scope_type == 'domain' else None
+    allowed_group_ids = set(selected_domain.get('group_ids') or []) if selected_domain else set()
+    if scope_type == 'domain' and not allowed_group_ids:
+        raise ValueError('所选评测领域不存在或没有可运行的大类。')
     rows: List[Dict[str, Any]] = []
-    for group in build_trust_catalog().get('groups') or []:
-        if str(group.get('id') or '') != group_id:
+    for group in catalog.get('groups') or []:
+        current_group_id = str(group.get('id') or '')
+        if scope_type == 'total':
+            pass
+        elif scope_type == 'domain':
+            if current_group_id not in allowed_group_ids:
+                continue
+        elif current_group_id != group_id:
             continue
         for dimension in group.get('dimensions') or []:
             if scope_type in {'dimension', 'benchmark'} and str(dimension.get('id') or '') != dimension_id:
@@ -5809,7 +5869,9 @@ def catalog_scope_rows(payload: Dict[str, Any]) -> List[Dict[str, Any]]:
                 if not benchmark.get('implemented') or not execution_id:
                     continue
                 rows.append({
-                    'group_id': group_id,
+                    'domain_id': domain_id if scope_type == 'domain' else str(group.get('domain_id') or ''),
+                    'domain_label': str((selected_domain or {}).get('label') or ''),
+                    'group_id': current_group_id,
                     'group_label': str(group.get('label') or ''),
                     'dimension_id': str(dimension.get('id') or ''),
                     'dimension_label': str(dimension.get('label') or ''),
@@ -5835,6 +5897,7 @@ def create_job(payload: Dict[str, Any]) -> Dict[str, Any]:
     scope_rows: List[Dict[str, Any]] = []
     catalog_scope = False
     scope_type = str(payload.get('scope_type') or '').strip()
+    scope_domain_id = str(payload.get('domain_id') or '').strip()
     scope_group_id = str(payload.get('group_id') or '').strip()
     scope_dimension_id = str(payload.get('dimension_id') or '').strip()
     scope_benchmark_id = str(payload.get('benchmark_id') or '').strip()
@@ -5863,7 +5926,11 @@ def create_job(payload: Dict[str, Any]) -> Dict[str, Any]:
         requested_dimensions = [row['dimension_id'] for row in scope_rows]
         benchmark_ids = [row['benchmark_id'] for row in scope_rows]
         catalog_scope = len(scope_rows) > 1
-        if scope_type == 'group':
+        if scope_type == 'total':
+            scope_label = '总测评'
+        elif scope_type == 'domain':
+            scope_label = scope_rows[0]['domain_label']
+        elif scope_type == 'group':
             scope_label = scope_rows[0]['group_label']
         elif scope_type == 'dimension':
             scope_label = scope_rows[0]['dimension_label']
@@ -5912,6 +5979,7 @@ def create_job(payload: Dict[str, Any]) -> Dict[str, Any]:
         'smoke_all': smoke_all,
         'catalog_scope': catalog_scope,
         'scope_type': scope_type or ('all' if smoke_all else 'benchmark'),
+        'scope_domain_id': scope_domain_id,
         'scope_group_id': scope_group_id,
         'scope_dimension_id': scope_dimension_id,
         'scope_benchmark_id': scope_benchmark_id,
@@ -6340,6 +6408,16 @@ def get_leaderboard():
     return jsonify(build_leaderboard_rows(CURRENT_RESULT_NAME))
 
 
+@app.route('/api/leaderboard/export', methods=['GET'])
+def export_leaderboard():
+    return send_file(
+        build_leaderboard_csv(CURRENT_RESULT_NAME),
+        mimetype='text/csv',
+        as_attachment=True,
+        download_name='XiliLake-total-results.csv',
+    )
+
+
 @app.route('/api/models', methods=['GET'])
 def get_models():
     return jsonify([row['label'] for row in discover_supported_models()])
@@ -6444,15 +6522,21 @@ def placeholder_results():
     return jsonify({'status': 'ok', 'items': placeholders, 'current_result': get_current_result_info()}), 201
 
 
-@app.route('/api/summary', methods=['GET'])
+@app.route('/api/summary', methods=['GET', 'POST'])
 def get_summary():
-    model_name = (request.args.get('model') or CURRENT_RESULT_NAME).strip()
-    category = (request.args.get('category') or '').strip()
-    subcategories = set(parse_csv_param(request.args.get('subcategories') or ''))
-    dimension_ids = set(parse_csv_param(request.args.get('dimension_ids') or request.args.get('dimension_id') or ''))
-    benchmark_ids = set(parse_csv_param(request.args.get('benchmark_ids') or request.args.get('benchmark_id') or ''))
+    payload = request.get_json(silent=True) or {} if request.method == 'POST' else request.args
+    model_name = str(payload.get('model') or CURRENT_RESULT_NAME).strip()
+    category = str(payload.get('category') or '').strip()
+    subcategories = set(parse_request_list(payload.get('subcategories') or ''))
+    dimension_ids = set(parse_request_list(payload.get('dimension_ids') or payload.get('dimension_id') or ''))
+    benchmark_ids = set(parse_request_list(payload.get('benchmark_ids') or payload.get('benchmark_id') or ''))
+    selection_keys = {
+        (str(item.get('dimension_id') or ''), str(item.get('benchmark_id') or ''))
+        for item in (payload.get('result_selections') or [])
+        if isinstance(item, dict) and item.get('dimension_id') and item.get('benchmark_id')
+    }
     results_path = RESULT_DIR / model_name / 'results.jsonl'
-    if not category and not subcategories and not dimension_ids and not benchmark_ids:
+    if not category and not subcategories and not dimension_ids and not benchmark_ids and not selection_keys:
         if results_path.exists():
             return jsonify(build_summary_from_records(read_jsonl(results_path)))
         summary = read_json(RESULT_DIR / model_name / 'summary.json', {}) or {}
@@ -6468,22 +6552,35 @@ def get_summary():
         records = [r for r in records if str(r.get('dimension_id') or '') in dimension_ids]
     if benchmark_ids:
         records = [r for r in records if str(r.get('benchmark_id') or '') in benchmark_ids]
+    if selection_keys:
+        selection_records = [
+            row for row in records
+            if (str(row.get('dimension_id') or ''), str(row.get('benchmark_id') or '')) in selection_keys
+        ]
+        if selection_records or any(row.get('dimension_id') or row.get('benchmark_id') for row in records):
+            records = selection_records
     return jsonify(build_summary_from_records(records))
 
 
-@app.route('/api/eval_data', methods=['GET'])
+@app.route('/api/eval_data', methods=['GET', 'POST'])
 def get_eval_data():
-    model_name = (request.args.get('model') or CURRENT_RESULT_NAME).strip()
-    page = int(request.args.get('page', 1))
-    per_page = int(request.args.get('per_page', 10))
-    category = (request.args.get('category') or '').strip()
-    dimension_id = (request.args.get('dimension_id') or '').strip()
-    dimension_ids = set(parse_csv_param(request.args.get('dimension_ids') or ''))
-    subcategory = (request.args.get('subcategory') or '').strip()
-    subcategories = set(parse_csv_param(request.args.get('subcategories') or ''))
-    benchmark_ids = set(parse_csv_param(request.args.get('benchmark_ids') or request.args.get('benchmark_id') or ''))
-    status_filter = (request.args.get('status') or 'all').strip()
-    shuffle = str(request.args.get('shuffle') or '').strip().lower() in {'1', 'true', 'yes', 'y'}
+    payload = request.get_json(silent=True) or {} if request.method == 'POST' else request.args
+    model_name = str(payload.get('model') or CURRENT_RESULT_NAME).strip()
+    page = int(payload.get('page', 1))
+    per_page = int(payload.get('per_page', 10))
+    category = str(payload.get('category') or '').strip()
+    dimension_id = str(payload.get('dimension_id') or '').strip()
+    dimension_ids = set(parse_request_list(payload.get('dimension_ids') or ''))
+    subcategory = str(payload.get('subcategory') or '').strip()
+    subcategories = set(parse_request_list(payload.get('subcategories') or ''))
+    benchmark_ids = set(parse_request_list(payload.get('benchmark_ids') or payload.get('benchmark_id') or ''))
+    selection_keys = {
+        (str(item.get('dimension_id') or ''), str(item.get('benchmark_id') or ''))
+        for item in (payload.get('result_selections') or [])
+        if isinstance(item, dict) and item.get('dimension_id') and item.get('benchmark_id')
+    }
+    status_filter = str(payload.get('status') or 'all').strip()
+    shuffle = str(payload.get('shuffle') or '').strip().lower() in {'1', 'true', 'yes', 'y'}
 
     results_path = RESULT_DIR / model_name / 'results.jsonl'
     if not results_path.exists():
@@ -6517,6 +6614,13 @@ def get_eval_data():
         # category/subcategory filtering behavior instead of hiding valid rows.
         if benchmark_records:
             records = benchmark_records
+    if selection_keys:
+        selection_records = [
+            row for row in records
+            if (str(row.get('dimension_id') or ''), str(row.get('benchmark_id') or '')) in selection_keys
+        ]
+        if selection_records or any(row.get('dimension_id') or row.get('benchmark_id') for row in records):
+            records = selection_records
     data_list = group_results_by_pair(records)
     if category:
         data_list = [row for row in data_list if str(row.get('category') or '') == category]

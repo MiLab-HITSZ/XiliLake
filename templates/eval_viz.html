@@ -144,7 +144,7 @@
             <div class="subtitle" id="catalog-meta">13大类 · 100子类</div>
         </div>
         <div class="head-actions">
-            <button class="btn btn-primary" type="button" onclick="openLeaderboardPopup()">总榜</button>
+            <button class="btn btn-primary" type="button" onclick="openLeaderboardPopup()">总结果</button>
         </div>
     </header>
 
@@ -169,7 +169,7 @@
                 <div class="section-head">
                     <div>
                         <h2>启动评测</h2>
-                        <div class="meta">可直接评测当前大类、子类或单个 Benchmark；综合评测期间模型只加载一次。</div>
+                        <div class="meta">可直接评测全部内容、当前领域、大类、子类或单个 Benchmark；综合评测期间模型只加载一次。</div>
                     </div>
                 </div>
                 <div id="evaluation-launcher"><div class="empty">请选择评测层级。</div></div>
@@ -179,7 +179,7 @@
                 <div class="section-head">
                     <div>
                         <h2>当前选择</h2>
-                        <div class="meta">展示当前大类、子类或 Benchmark 的介绍与覆盖范围。</div>
+                        <div class="meta">展示当前领域、大类、子类或 Benchmark 的介绍与覆盖范围。</div>
                     </div>
                 </div>
                 <div id="group-brief" class="group-brief"></div>
@@ -246,6 +246,7 @@ let activePollingJobId=null;
 let selectedModelId='';
 let selectionTouched=false;
 let taxonomyRevision='default';
+let selectionRevision=0;
 const TASK_LABELS={qa:'直接问答',mc:'选择题',caption:'描述题',catalog_scope:'综合评测'};
 const METRIC_LABELS={CF_Acc:'反常识准确率 CF Acc',CS_Acc:'常识准确率 CS Acc',Gap:'性能差值 Gap',CCR:'一致纠错率 CCR',RPD:'相对性能下降 RPD'};
 const DEFAULT_BENCHMARK_METRICS=[
@@ -281,13 +282,15 @@ function statusClass(s){if(s==='completed')return 'status-completed';if(s==='fai
 function arraysEqualAsSet(a,b){return [...new Set(a||[])].sort().join('|')===[...new Set(b||[])].sort().join('|')}
 function currentDomain(){return domainMap[selectedDomainId]||null}
 function currentGroup(){return groupMap[selectedGroupId]||null}
-function groupsForDomain(){const ids=currentDomain()?.group_ids||[];return ids.map(id=>groupMap[id]).filter(Boolean)}
+function groupsForDomain(){const domain=currentDomain();if(!domain)return catalog.groups||[];return (domain.group_ids||[]).map(id=>groupMap[id]).filter(Boolean)}
 function selectedDimension(){return dimensionMap[selectedDimId]||null}
 function selectedBenchmark(){const dim=selectedDimension();if(!dim)return null;return (dim.benchmarks||[]).find(b=>b.id===selectedBenchmarkId)||null}
 function selectedScopeDimensions(){
     const dim=selectedDimension();
     if(dim)return [dim];
-    return currentGroup()?.dimensions||[];
+    const group=currentGroup();
+    if(group)return group.dimensions||[];
+    return groupsForDomain().flatMap(item=>item.dimensions||[]);
 }
 function selectedScopeSelections(){
     const selectedBench=selectedBenchmark();
@@ -296,7 +299,7 @@ function selectedScopeSelections(){
         (dim.benchmarks||[]).forEach(bench=>{
             if(selectedBench&&bench.id!==selectedBench.id)return;
             const benchmarkId=bench.execution_option_id||bench.id||'';
-            if(bench.implemented&&benchmarkId)rows.push({dimension_id:dim.id,benchmark_id:benchmarkId,dimension:dim,benchmark:bench});
+            if(bench.implemented&&benchmarkId)rows.push({group_id:dim.group_id,dimension_id:dim.id,benchmark_id:benchmarkId,group:groupMap[dim.group_id],dimension:dim,benchmark:bench});
         });
     });
     return rows;
@@ -307,8 +310,8 @@ function selectedBenchmarkIds(){return selectedScopeSelections().map(item=>item.
 function selectedCdhDims(){return selectedDims().filter(isCdh)}
 function selectedPlaceholderDims(){return selectedDims().filter(id=>!isCdh(id))}
 function selectedBenchmarkImplemented(){const rows=selectedScopeSelections();return !!rows.length&&rows.every(item=>item.benchmark.implemented)}
-function evaluationScopeType(){return selectedBenchmark()?'benchmark':(selectedDimension()?'dimension':'group')}
-function evaluationScopeLabel(){return selectedBenchmark()?.name||dimensionDisplayLabel(selectedDimension())||currentGroup()?.label||''}
+function evaluationScopeType(){return selectedBenchmark()?'benchmark':(selectedDimension()?'dimension':(currentGroup()?'group':(currentDomain()?'domain':'total')))}
+function evaluationScopeLabel(){return selectedBenchmark()?.name||dimensionDisplayLabel(selectedDimension())||currentGroup()?.label||currentDomain()?.label||'总测评'}
 function benchmarkMetrics(bench){const rows=bench?.metrics||[];if(Array.isArray(rows)&&rows.length){return rows.map(item=>typeof item==='string'?{label:item,key:item,format:'text'}:item)}return DEFAULT_BENCHMARK_METRICS}
 function benchmarkMetaTags(bench){
     const tags=[];
@@ -327,8 +330,9 @@ function benchmarkMetaTags(bench){
     return [...new Set(tags.filter(Boolean))];
 }
 function setBenchmarkExampleFromSelection(){
-    const key=`${selectedDimId}::${selectedBenchmarkId}`;
+    const key=`${selectedDomainId}::${selectedGroupId}::${selectedDimId}::${selectedBenchmarkId}`;
     if(benchmarkExampleSelectionKey===key)return;
+    selectionRevision+=1;
     benchmarkExampleSelectionKey=key;
     benchmarkExample=null;
     evalSamples=[];
@@ -344,8 +348,10 @@ function captureFormState(){
     if(modelSel&&modelSel.value)selectedModelId=modelSel.value;
 }
 function jobMatchesSelection(job){
-    if(!job||!selectedGroupId)return false;
+    if(!job)return false;
     const payload=job.payload||{};
+    if(payload.scope_type==='total'&&!selectedDomainId)return true;
+    if(payload.scope_type==='domain'&&payload.scope_domain_id===selectedDomainId&&!selectedGroupId)return true;
     if(payload.scope_type==='group'&&payload.scope_group_id===selectedGroupId&&!selectedDimId)return true;
     if(payload.scope_type==='dimension'&&payload.scope_dimension_id===selectedDimId&&!selectedBenchmarkId)return true;
     if(payload.scope_type==='benchmark'&&payload.scope_benchmark_id===selectedExecutionBenchmarkId())return true;
@@ -383,9 +389,10 @@ function ensureSelection(){
     const allGroups=catalog.groups||[];
     if(!domains.length||!allGroups.length){selectedDomainId='';selectedGroupId='';selectedDimId='';selectedBenchmarkId='';return}
     if(groupMap[selectedGroupId]&&!domainMap[selectedDomainId])selectedDomainId=groupMap[selectedGroupId].domain_id||'';
-    if(!domainMap[selectedDomainId])selectedDomainId=domains[0].id;
+    if(selectedDomainId&&!domainMap[selectedDomainId])selectedDomainId='';
     const groups=groupsForDomain();
-    if(!groups.some(group=>group.id===selectedGroupId))selectedGroupId=groups[0]?.id||'';
+    if(selectedGroupId&&!groups.some(group=>group.id===selectedGroupId))selectedGroupId='';
+    if(!selectedGroupId){selectedDimId='';selectedBenchmarkId='';return}
     if(selectedDimId&&!dimensionMap[selectedDimId])selectedDimId='';
     const dim=selectedDimension();
     if(dim&&dim.group_id!==selectedGroupId){selectedDimId='';selectedBenchmarkId='';return}
@@ -411,10 +418,11 @@ function renderDomainGroups(){
     const groupBox=document.getElementById('group-list');
     const groupTitle=document.getElementById('group-section-title');
     const domains=catalog.domains||[];
-    switcher.innerHTML=domains.length?domains.map(domain=>`<button type="button" class="domain-switch ${domain.id===selectedDomainId?'active':''}" onclick="selectDomain('${escapeHtml(domain.id)}')"><span class="name">${escapeHtml(domain.label)}</span><span class="count">${domain.group_count||0}大类 · ${domain.dimension_count||0}子类</span></button>`).join(''):'<div class="empty">暂无评测领域。</div>';
+    const totalSwitch=`<button type="button" class="domain-switch ${selectedDomainId?'':'active'}" onclick="selectTotalEvaluation()"><span class="name">总测评</span><span class="count">${(catalog.groups||[]).length}大类 · ${catalog.total_dimensions||0}子类</span></button>`;
+    switcher.innerHTML=domains.length?totalSwitch+domains.map(domain=>`<button type="button" class="domain-switch ${domain.id===selectedDomainId?'active':''}" onclick="selectDomain('${escapeHtml(domain.id)}')"><span class="name">${escapeHtml(domain.label)}</span><span class="count">${domain.group_count||0}大类 · ${domain.dimension_count||0}子类</span></button>`).join(''):'<div class="empty">暂无评测领域。</div>';
     const domain=currentDomain();
     const groups=groupsForDomain();
-    groupTitle.textContent=domain?.label||'评测大类';
+    groupTitle.textContent=domain?.label||'全部评测大类';
     groupBox.innerHTML=groups.length?groups.map(group=>`<button type="button" class="selector-item ${group.id===selectedGroupId?'active':''}" onclick="selectGroup('${escapeHtml(group.id)}')"><span class="name">${escapeHtml(group.label)}</span><span class="meta">${(group.dimensions||[]).length}子类 · ${(group.dimensions||[]).reduce((sum,dim)=>sum+(dim.benchmarks||[]).length,0)}数据集</span></button>`).join(''):'<div class="empty">当前领域暂无评测大类。</div>';
 }
 
@@ -422,6 +430,7 @@ function renderDimensions(){
     const box=document.getElementById('dimension-list');
     const group=currentGroup();
     const dims=group?.dimensions||[];
+    if(!group){box.innerHTML='<div class="empty">可直接评测当前领域，或选择一个评测大类继续细分。</div>';return}
     if(!dims.length){box.innerHTML='<div class="empty">当前大类下暂无子类。</div>';return}
     const renderDimension=dim=>`<button type="button" class="selector-item ${dim.id===selectedDimId?'active':''}" onclick="selectDimension('${escapeHtml(dim.id)}')"><span class="name dimension-name"><span>${escapeHtml(dimensionDisplayLabel(dim))}</span>${dim.language_label?`<span class="dimension-language">${escapeHtml(dim.language_label)}</span>`:''}</span><span class="meta">${(dim.benchmarks||[]).length} Benchmark</span></button>`;
     const generalDimensions=dims.filter(dim=>dim.language_label!=='中文');
@@ -435,7 +444,24 @@ function renderGroupBrief(){
     if(!box)return;
     const group=currentGroup();
     const domain=currentDomain();
-    if(!group){box.innerHTML='';return}
+    if(!domain){
+        box.innerHTML=`
+            <div class="group-brief-title">
+                总测评
+                <span>${(catalog.groups||[]).length}大类 · ${catalog.total_dimensions||selectedScopeDimensions().length}子类 · ${catalog.total_benchmarks||selectedScopeSelections().length}数据集</span>
+            </div>
+            <div class="group-brief-text">覆盖系统中的全部通用、医疗行业和网络安全行业评测内容，统一汇总各层级 Benchmark 的进度、指标与结果。</div>`;
+        return;
+    }
+    if(!group){
+        box.innerHTML=`
+            <div class="group-brief-title">
+                ${escapeHtml(domain.label)}
+                <span>${domain.group_count||groupsForDomain().length}大类 · ${domain.dimension_count||selectedScopeDimensions().length}子类 · ${domain.benchmark_count||selectedScopeSelections().length}数据集</span>
+            </div>
+            <div class="group-brief-text">${escapeHtml(domain.description||'')}</div>`;
+        return;
+    }
     const dims=group.dimensions||[];
     const benchCount=dims.reduce((sum,dim)=>sum+(dim.benchmarks||[]).length,0);
     box.innerHTML=`
@@ -455,19 +481,21 @@ function renderSelectionDetail(){
     const domain=currentDomain();
     const dim=selectedDimension();
     const bench=selectedBenchmark();
-    if(!group){shell.innerHTML='<div class="empty">暂无评测目录。</div>';launcher.innerHTML='<div class="empty">暂无可启动的评测。</div>';return}
     const scopeRows=selectedScopeSelections();
     const scopeType=evaluationScopeType();
-    const scopeLabel={group:'大类综合评测',dimension:'子类综合评测',benchmark:'Benchmark 评测'}[scopeType];
+    const scopeLabel={total:'全部综合评测',domain:'领域综合评测',group:'大类综合评测',dimension:'子类综合评测',benchmark:'Benchmark 评测'}[scopeType];
     const hierarchy=[
-        {label:domain?.label||''},
-        {label:group.label},
+        {label:'总测评'},
+        domain?{label:domain.label,level:'domain',title:'移除评测领域并返回总测评'}:null,
+        group?{label:group.label,level:'group',title:'移除大类并返回评测领域'}:null,
         dim?{label:dimensionDisplayLabel(dim),level:'dimension',title:'移除子类并返回大类'}:null,
         bench?{label:bench.name||'',level:'benchmark',title:'移除 Benchmark 并返回子类'}:null,
     ].filter(item=>item?.label);
+    const uniqueGroups=new Set(scopeRows.map(item=>item.group_id)).size;
     const uniqueDimensions=new Set(scopeRows.map(item=>item.dimension_id)).size;
-    const launchLabel={group:'启动大类综合评测',dimension:'启动子类综合评测',benchmark:'启动评测'}[scopeType];
-    const benchmarkDimensions=dim?[dim]:(group.dimensions||[]);
+    const scopeCountLabel=scopeType==='total'||scopeType==='domain'?`${uniqueGroups}大类 · ${uniqueDimensions}子类 · ${scopeRows.length} Benchmark`:`${uniqueDimensions}子类 · ${scopeRows.length} Benchmark`;
+    const launchLabel={total:'启动总测评',domain:'启动领域综合评测',group:'启动大类综合评测',dimension:'启动子类综合评测',benchmark:'启动评测'}[scopeType];
+    const benchmarkDimensions=dim?[dim]:(group?(group.dimensions||[]):selectedScopeDimensions());
     const benchmarkCount=benchmarkDimensions.reduce((sum,item)=>sum+(item.benchmarks||[]).length,0);
     const benchmarkOptions=benchmarkDimensions.map(item=>{
         const options=(item.benchmarks||[]).map(candidate=>{
@@ -476,13 +504,14 @@ function renderSelectionDetail(){
             return `<option value="${value}" ${selected}>${escapeHtml(candidate.name||'Benchmark')}</option>`;
         }).join('');
         if(!options)return '';
-        return benchmarkDimensions.length>1?`<optgroup label="${escapeHtml(dimensionDisplayLabel(item))}">${options}</optgroup>`:options;
+        const optionGroupLabel=group?dimensionDisplayLabel(item):`${item.group_label||groupMap[item.group_id]?.label||''} / ${dimensionDisplayLabel(item)}`;
+        return benchmarkDimensions.length>1?`<optgroup label="${escapeHtml(optionGroupLabel)}">${options}</optgroup>`:options;
     }).join('');
     launcher.innerHTML=`
         <div class="scope-box">
             <div class="scope-box-title">当前评测层级</div>
             <div class="scope-box-path">${hierarchy.map((item,index)=>`${index?'<span class="separator">/</span>':''}<span class="tag ${item.level?'scope-tag':''}">${escapeHtml(item.label)}${item.level?`<button class="scope-remove" type="button" title="${escapeHtml(item.title)}" aria-label="${escapeHtml(item.title)}" onclick="clearSelectionLevel('${item.level}')">×</button>`:''}</span>`).join('')}</div>
-            <div class="scope-box-meta">${escapeHtml(scopeLabel)} · ${uniqueDimensions}子类 · ${scopeRows.length} Benchmark</div>
+            <div class="scope-box-meta">${escapeHtml(scopeLabel)} · ${scopeCountLabel}</div>
         </div>
         <div class="form-grid">
             <div>
@@ -501,6 +530,16 @@ function renderSelectionDetail(){
                 <button class="btn btn-outline-danger" type="button" onclick="deleteCurrentResult()">删除当前结果</button>
             </div>
         </div>`;
+    if(!domain){
+        const domainNames=(catalog.domains||[]).map(item=>item.label);
+        shell.innerHTML=`<div class="intro-box"><div class="pathline"><span class="tag">总测评</span></div><h3>总测评</h3><h4>评测介绍</h4><div class="intro-text">覆盖系统中的全部通用、医疗行业和网络安全行业评测内容，统一汇总各层级 Benchmark 的进度、指标与结果。</div><h4 style="margin-top:16px;">覆盖领域</h4><ul class="scope-list">${domainNames.map(name=>`<li>${escapeHtml(name)}</li>`).join('')}</ul></div>`;
+        return;
+    }
+    if(!group){
+        const groupNames=groupsForDomain().map(item=>item.label);
+        shell.innerHTML=`<div class="intro-box"><div class="pathline"><span class="tag">总测评</span><span class="tag">${escapeHtml(domain.label)}</span></div><h3>${escapeHtml(domain.label)}</h3><h4>领域介绍</h4><div class="intro-text">${escapeHtml(domain.description||'')}</div><h4 style="margin-top:16px;">覆盖大类</h4><ul class="scope-list">${groupNames.map(name=>`<li>${escapeHtml(name)}</li>`).join('')}</ul></div>`;
+        return;
+    }
     if(!dim){
         const dimNames=(group.dimensions||[]).map(item=>dimensionDisplayLabel(item));
         shell.innerHTML=`<div class="intro-box"><div class="pathline"><span class="tag">${escapeHtml(domain?.label||'')}</span><span class="tag">${escapeHtml(group.label)}</span></div><h3>${escapeHtml(group.label)}</h3><h4>大类介绍</h4><div class="intro-text">${escapeHtml(group.description||'')}</div><h4 style="margin-top:16px;">覆盖子类</h4><ul class="scope-list">${dimNames.map(name=>`<li>${escapeHtml(name)}</li>`).join('')}</ul></div>`;
@@ -570,7 +609,7 @@ function renderMetrics(){
     const shell=document.getElementById('metrics-shell');
     const meta=document.getElementById('result-meta');
     const bench=selectedBenchmark();
-    if(!currentGroup()){shell.innerHTML='<div class="empty">请选择评测大类。</div>';meta.textContent='尚无结果。';return}
+    if(!(catalog.groups||[]).length){shell.innerHTML='<div class="empty">暂无评测目录。</div>';meta.textContent='尚无结果。';return}
     meta.textContent=currentResult.exists?`当前结果：${currentResult.display_name||'当前结果'}`:`当前未生成结果。`;
     const metricDefs=bench?benchmarkMetrics(bench):DEFAULT_BENCHMARK_METRICS;
     const metricCards=stats=>metricDefs.map(metric=>`<div class="metric-card"><div class="label">${escapeHtml(metric.label||metric.key||'')}</div><div class="value">${formatMetricValue(stats?.[metric.key], metric.format)}</div></div>`).join('');
@@ -889,15 +928,15 @@ function formatMetricValue(value, format){
 async function openLeaderboardPopup(){
     const win=window.open('', 'trusted_eval_leaderboard', 'width=1400,height=900,scrollbars=yes,resizable=yes');
     if(!win){alert('浏览器阻止了弹出窗口，请允许弹窗后重试。');return}
-    win.document.write('<!doctype html><html><head><meta charset="utf-8"><title>评测总榜</title><style>body{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;margin:20px;color:#0f172a;background:#f8fafc}h1{margin:0 0 6px;font-size:26px}.meta{color:#64748b;margin-bottom:18px}table{border-collapse:collapse;width:100%;background:white;font-size:13px}th,td{border:1px solid #dbe4f0;padding:8px 10px;text-align:left;vertical-align:top}th{background:#eef2ff;position:sticky;top:0}tr:nth-child(even){background:#fbfdff}.blank{color:#cbd5e1}.pill{display:inline-block;border-radius:999px;padding:2px 8px;background:#dcfce7;color:#166534;font-weight:700;font-size:12px}</style></head><body><h1>评测总榜</h1><div class="meta">正在加载...</div></body></html>');
+    win.document.write('<!doctype html><html><head><meta charset="utf-8"><title>总结果</title><style>body{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;margin:20px;color:#0f172a;background:#f8fafc}h1{margin:0 0 6px;font-size:26px}.meta{color:#64748b;margin-bottom:18px}</style></head><body><h1>总结果</h1><div class="meta">正在加载...</div></body></html>');
     win.document.close();
     try{
         const res=await fetch('/api/leaderboard');
         const data=await res.json();
         const cols=data.metric_columns||[];
         const rows=data.rows||[];
-        const html=`<!doctype html><html><head><meta charset="utf-8"><title>评测总榜</title><style>body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;margin:20px;color:#0f172a;background:#f8fafc}h1{margin:0 0 6px;font-size:26px}.meta{color:#64748b;margin-bottom:18px}table{border-collapse:collapse;width:100%;background:white;font-size:13px}th,td{border:1px solid #dbe4f0;padding:8px 10px;text-align:left;vertical-align:top}th{background:#eef2ff;position:sticky;top:0}tr:nth-child(even){background:#fbfdff}.blank{color:#cbd5e1}.pill{display:inline-block;border-radius:999px;padding:2px 8px;background:#dcfce7;color:#166534;font-weight:700;font-size:12px}</style></head><body>
-            <h1>评测总榜</h1>
+        const html=`<!doctype html><html><head><meta charset="utf-8"><title>总结果</title><style>body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;margin:20px;color:#0f172a;background:#f8fafc}.titlebar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:6px}h1{margin:0;font-size:26px}.export{display:inline-flex;align-items:center;padding:8px 14px;border:1px solid #2458ff;background:#2458ff;color:white;text-decoration:none;font-weight:800;font-size:14px}.meta{color:#64748b;margin-bottom:18px}table{border-collapse:collapse;width:100%;background:white;font-size:13px}th,td{border:1px solid #dbe4f0;padding:8px 10px;text-align:left;vertical-align:top}th{background:#eef2ff;position:sticky;top:0}tr:nth-child(even){background:#fbfdff}.blank{color:#cbd5e1}.pill{display:inline-block;border-radius:999px;padding:2px 8px;background:#dcfce7;color:#166534;font-weight:700;font-size:12px}</style></head><body>
+            <div class="titlebar"><h1>总结果</h1><a class="export" href="/api/leaderboard/export">导出 CSV</a></div>
             <div class="meta">当前结果：${escapeHtml(data.result?.display_name||'当前结果')}；共 ${rows.length} 条 Benchmark 记录。已评测项目显示指标，未评测项目留空。</div>
             <table><thead><tr><th>评测领域</th><th>评测大类</th><th>评测子类</th><th>Benchmark</th><th>状态</th><th>任务</th>${cols.map(c=>`<th>${escapeHtml(c.label||c.key)}</th>`).join('')}</tr></thead>
             <tbody>${rows.map(row=>`<tr><td>${escapeHtml(row.major||'')}</td><td>${escapeHtml(row.secondary||'')}</td><td>${escapeHtml(row.tertiary||'')}</td><td>${escapeHtml(row.benchmark||'')}</td><td>${row.evaluated?'<span class="pill">已评测</span>':(row.implemented?'可评测':'')}</td><td>${escapeHtml(TASK_LABELS[row.task]||row.task||'')}</td>${cols.map(c=>`<td>${row.evaluated?formatMetricValue(row.metrics?.[c.key],c.format):''}</td>`).join('')}</tr>`).join('')}</tbody></table>
@@ -906,7 +945,7 @@ async function openLeaderboardPopup(){
         win.document.write(html);
         win.document.close();
     }catch(e){
-        win.document.body.innerHTML=`<h1>评测总榜</h1><div class="meta">加载失败：${escapeHtml(e.message||e)}</div>`;
+        win.document.body.innerHTML=`<h1>总结果</h1><div class="meta">加载失败：${escapeHtml(e.message||e)}</div>`;
     }
 }
 
@@ -925,7 +964,7 @@ function renderJob(job){
             <div>
                 <span class="status-pill ${statusClass(job.status)}">${escapeHtml(job.status)}</span>
                 <div class="fw-bold mt-2">${escapeHtml(job.payload?.selected_model_name||'')}</div>
-                <div class="subtle">${escapeHtml(selectedDimension()?.label||'')}</div>
+                <div class="subtle">${escapeHtml(job.payload?.scope_label||evaluationScopeLabel())}</div>
                 <div class="subtle">${escapeHtml(job.message||'')}</div>
             </div>
             ${isActiveJob(job)?`<button class="btn btn-sm btn-outline-danger" type="button" onclick="cancelJob('${job.id}')">取消</button>`:''}
@@ -977,7 +1016,17 @@ async function refreshCurrentResult(resetViews=true){
     if(resetViews)showingRandomBenchmarkExample=false;
     const res=await fetch('/api/current_result');
     currentResult=await res.json();
-    if(!selectionTouched&&!selectedDimId&&currentResult.trust_dimensions?.length){
+    let restoredScope=false;
+    if(!selectionTouched&&currentResult.scope_type==='total'){
+        selectedDomainId='';selectedGroupId='';selectedDimId='';selectedBenchmarkId='';restoredScope=true;
+    }else if(!selectionTouched&&currentResult.scope_type==='domain'&&domainMap[currentResult.scope_domain_id]){
+        selectedDomainId=currentResult.scope_domain_id;selectedGroupId='';selectedDimId='';selectedBenchmarkId='';restoredScope=true;
+    }else if(!selectionTouched&&currentResult.scope_type==='group'&&groupMap[currentResult.scope_group_id]){
+        selectedGroupId=currentResult.scope_group_id;selectedDomainId=groupMap[selectedGroupId].domain_id||'';selectedDimId='';selectedBenchmarkId='';restoredScope=true;
+    }else if(!selectionTouched&&currentResult.scope_type==='dimension'&&dimensionMap[currentResult.scope_dimension_id]){
+        selectedDimId=currentResult.scope_dimension_id;selectedGroupId=dimensionMap[selectedDimId].group_id;selectedDomainId=groupMap[selectedGroupId]?.domain_id||'';selectedBenchmarkId='';restoredScope=true;
+    }
+    if(!selectionTouched&&!restoredScope&&!selectedDimId&&currentResult.trust_dimensions?.length){
         const firstDim=currentResult.trust_dimensions.find(id=>dimensionMap[id]);
         if(firstDim){
             selectedDimId=firstDim;
@@ -985,7 +1034,7 @@ async function refreshCurrentResult(resetViews=true){
             selectedDomainId=groupMap[selectedGroupId]?.domain_id||selectedDomainId;
         }
     }
-    if(!selectionTouched&&!selectedBenchmarkId&&currentResult.benchmark_ids?.length){
+    if(!selectionTouched&&!restoredScope&&!selectedBenchmarkId&&currentResult.benchmark_ids?.length){
         const firstBenchmark=currentResult.benchmark_ids.find(id=>benchmarkMap[id]);
         if(firstBenchmark){
             const mapped=benchmarkMap[firstBenchmark];
@@ -1005,14 +1054,19 @@ async function refreshCurrentResult(resetViews=true){
 }
 
 async function refreshResultViews(){
+    const revision=selectionRevision;
     await fetchSummary();
+    if(revision!==selectionRevision)return;
     await fetchPlaceholderResults();
+    if(revision!==selectionRevision)return;
     await fetchEvalSamples(false);
+    if(revision!==selectionRevision)return;
     renderMetrics();
     renderEvalSamples();
 }
 
 async function fetchSummary(){
+    const revision=selectionRevision;
     fullSummary={};
     if(!(currentResult.exists&&hasRealResultForSelection()))return;
     const parsed=resultFilterForSelection();
@@ -1020,31 +1074,43 @@ async function fetchSummary(){
     if(parsed){
         url.searchParams.set('category',parsed.category);
         url.searchParams.set('subcategories',parsed.subcategory);
+        const res=await fetch(url);
+        const data=await res.json();
+        if(revision!==selectionRevision)return;
+        fullSummary=data;
     }else{
-        url.searchParams.set('dimension_ids',[...new Set(selectedDims())].join(','));
-        url.searchParams.set('benchmark_ids',[...new Set(selectedBenchmarkIds())].join(','));
+        const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+            dimension_ids:[...new Set(selectedDims())],
+            benchmark_ids:[...new Set(selectedBenchmarkIds())],
+            result_selections:selectedScopeSelections().map(item=>({dimension_id:item.dimension_id,benchmark_id:item.benchmark_id})),
+        })});
+        const data=await res.json();
+        if(revision!==selectionRevision)return;
+        fullSummary=data;
     }
-    const res=await fetch(url);
-    fullSummary=await res.json();
 }
 
 async function fetchEvalSamples(force){
+    const revision=selectionRevision;
     const dim=selectedDimension();
     const bench=selectedBenchmark();
     if(!bench){
         benchmarkExample=null;
         evalSamples=[];
         if(currentResult.exists&&hasRealResultForSelection()){
-            const cacheKey=`scope-result::${currentResult.created_at||currentResult.updated_at||''}::${selectedGroupId}::${selectedDimId}::${force?'shuffle':'stable'}`;
+            const cacheKey=`scope-result::${currentResult.created_at||currentResult.updated_at||''}::${selectedDomainId}::${selectedGroupId}::${selectedDimId}::${force?'shuffle':'stable'}`;
             if(!force&&evalSamplesCacheKey===cacheKey){renderEvalSamples();return}
             const url=new URL('/api/eval_data',location.origin);
-            url.searchParams.set('dimension_ids',[...new Set(selectedDims())].join(','));
-            url.searchParams.set('benchmark_ids',[...new Set(selectedBenchmarkIds())].join(','));
-            url.searchParams.set('page','1');
-            url.searchParams.set('per_page','3');
-            if(force)url.searchParams.set('shuffle','1');
-            const res=await fetch(url);
+            const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+                dimension_ids:[...new Set(selectedDims())],
+                benchmark_ids:[...new Set(selectedBenchmarkIds())],
+                result_selections:selectedScopeSelections().map(item=>({dimension_id:item.dimension_id,benchmark_id:item.benchmark_id})),
+                page:1,
+                per_page:3,
+                shuffle:force?'1':'0',
+            })});
             const data=await res.json();
+            if(revision!==selectionRevision)return;
             evalSamples=data.items||[];
             evalSamplesCacheKey=cacheKey;
         }
@@ -1056,7 +1122,7 @@ async function fetchEvalSamples(force){
     if(!force&&showingRandomBenchmarkExample&&benchmarkExample){evalSamples=[];renderEvalSamples();return}
     if(!force&&currentResult.exists&&hasRealResultForSelection()){
         const cacheKey=`result::${currentResult.created_at||''}::${selectedDimId}::${selectedBenchmarkId}`;
-        if(!force && evalSamplesCacheKey===cacheKey && benchmarkExampleSelectionKey===`${selectedDimId}::${selectedBenchmarkId}`){
+        if(!force && evalSamplesCacheKey===cacheKey && benchmarkExampleSelectionKey===`${selectedDomainId}::${selectedGroupId}::${selectedDimId}::${selectedBenchmarkId}`){
             renderEvalSamples();
             return;
         }
@@ -1073,6 +1139,7 @@ async function fetchEvalSamples(force){
         evalSamples=[];
         const res=await fetch(url);
         const data=await res.json();
+        if(revision!==selectionRevision)return;
         evalSamples=data.items||[];
         evalSamplesCacheKey=cacheKey;
         renderEvalSamples();
@@ -1087,6 +1154,7 @@ async function fetchEvalSamples(force){
         if(force)url.searchParams.set('refresh','1');
         const res=await fetch(url);
         const data=await res.json();
+        if(revision!==selectionRevision)return;
         benchmarkExample=data.example||cloneJson(bench.example)||null;
     }
     renderEvalSamples();
@@ -1100,7 +1168,7 @@ async function fetchPlaceholderResults(){
 }
 
 function selectGroup(id){
-    if(selectedGroupId===id&&!selectedDimId)return;
+    if(selectedGroupId===id){clearSelectionLevel('group');return}
     selectionTouched=true;
     selectedGroupId=id;
     selectedDomainId=groupMap[id]?.domain_id||selectedDomainId;
@@ -1115,11 +1183,27 @@ function selectGroup(id){
     refreshJobs(false);
 }
 
+function selectTotalEvaluation(){
+    if(!selectedDomainId&&!selectedGroupId)return;
+    selectionTouched=true;
+    selectedDomainId='';
+    selectedGroupId='';
+    selectedDimId='';
+    selectedBenchmarkId='';
+    setBenchmarkExampleFromSelection();
+    evalSamples=[];
+    renderDomainGroups();
+    renderDimensions();
+    renderSelectionDetail();
+    refreshResultViewsIfNeeded();
+    refreshJobs(false);
+}
+
 function selectDomain(id){
-    if(selectedDomainId===id)return;
+    if(selectedDomainId===id&&!selectedGroupId){clearSelectionLevel('domain');return}
     selectionTouched=true;
     selectedDomainId=id;
-    selectedGroupId=(domainMap[id]?.group_ids||[]).find(groupId=>groupMap[groupId])||'';
+    selectedGroupId='';
     selectedDimId='';
     selectedBenchmarkId='';
     setBenchmarkExampleFromSelection();
@@ -1155,6 +1239,17 @@ function clearSelectionLevel(level){
         selectedBenchmarkId='';
     }else if(level==='dimension'){
         if(!selectedDimId)return;
+        selectedDimId='';
+        selectedBenchmarkId='';
+    }else if(level==='group'){
+        if(!selectedGroupId)return;
+        selectedGroupId='';
+        selectedDimId='';
+        selectedBenchmarkId='';
+    }else if(level==='domain'){
+        if(!selectedDomainId)return;
+        selectedDomainId='';
+        selectedGroupId='';
         selectedDimId='';
         selectedBenchmarkId='';
     }else{
@@ -1196,7 +1291,6 @@ async function refreshResultViewsIfNeeded(){
 async function submitEval(){
     const dims=selectedDims();
     const benchmarkIds=selectedBenchmarkIds();
-    if(!selectedGroupId){alert('请选择评测大类');return}
     if(!dims.length||!benchmarkIds.length){alert('当前层级没有可运行的 Benchmark');return}
     const modelId=document.getElementById('model-select')?.value||'';
     if(!modelId){alert('请选择评测模型');return}
@@ -1207,6 +1301,7 @@ async function submitEval(){
         const res=await fetch('/api/evaluations',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
             model_id:modelId,
             scope_type:evaluationScopeType(),
+            domain_id:selectedDomainId,
             group_id:selectedGroupId,
             dimension_id:selectedDimId,
             benchmark_id:selectedExecutionBenchmarkId(),
@@ -1216,7 +1311,7 @@ async function submitEval(){
         activePollingJobId=data.id;
         await refreshJobs(true);
     }catch(e){alert(e.message||'启动失败');}
-    finally{if(trigger){trigger.disabled=false;trigger.textContent={group:'启动大类综合评测',dimension:'启动子类综合评测',benchmark:'启动评测'}[evaluationScopeType()];}}
+    finally{if(trigger){trigger.disabled=false;trigger.textContent={total:'启动总测评',domain:'启动领域综合评测',group:'启动大类综合评测',dimension:'启动子类综合评测',benchmark:'启动评测'}[evaluationScopeType()];}}
 }
 
 async function refreshJobs(refreshResult){
