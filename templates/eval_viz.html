@@ -244,6 +244,12 @@ let selectionTouched=false;
 let taxonomyRevision='default';
 const TASK_LABELS={qa:'直接问答',mc:'选择题',caption:'描述题',system_smoke:'快速检测'};
 const METRIC_LABELS={CF_Acc:'反常识准确率 CF Acc',CS_Acc:'常识准确率 CS Acc',Gap:'性能差值 Gap',CCR:'一致纠错率 CCR',RPD:'相对性能下降 RPD'};
+const DEFAULT_BENCHMARK_METRICS=[
+    {key:'accuracy',label:'准确率',format:'percent'},
+    {key:'response_rate',label:'响应率',format:'percent'},
+    {key:'avg_latency_ms',label:'平均延迟 ms',format:'number'},
+    {key:'n_total',label:'样本数',format:'number'},
+];
 
 function escapeHtml(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
 function dimensionDisplayLabel(dim){const label=String(dim?.label||'');return dim?.language_label?label.replace(/^中文/,''):label}
@@ -256,7 +262,7 @@ function resultFilterForSelection(){
     const bench=selectedBenchmark();
     if(!dim||!bench)return null;
     if(isCdh(dim.id))return parseCdh(dim.id);
-    return {category:bench.result_label||dim.result_label||dim.label,subcategory:bench.name||dim.result_label||dim.label};
+    return {category:dim.label,subcategory:bench.name||dim.label};
 }
 function hasRealResultForSelection(){
     if(!(selectedBenchmarkImplemented()&&currentResult.has_real_results))return false;
@@ -285,7 +291,7 @@ function selectedBenchmarkIds(){const id=selectedExecutionBenchmarkId();return i
 function selectedCdhDims(){return selectedDims().filter(isCdh)}
 function selectedPlaceholderDims(){return selectedDims().filter(id=>!isCdh(id))}
 function selectedBenchmarkImplemented(){return !!selectedBenchmark()?.implemented}
-function benchmarkMetrics(bench){const rows=bench?.metrics||[];if(Array.isArray(rows)&&rows.length){return rows.map(item=>typeof item==='string'?{label:item,key:item,format:'text'}:item)}return []}
+function benchmarkMetrics(bench){const rows=bench?.metrics||[];if(Array.isArray(rows)&&rows.length){return rows.map(item=>typeof item==='string'?{label:item,key:item,format:'text'}:item)}return DEFAULT_BENCHMARK_METRICS}
 function benchmarkMetaTags(bench){
     const tags=[];
     if(bench?.language)tags.push(`语言：${Array.isArray(bench.language)?bench.language.join('、'):bench.language}`);
@@ -505,22 +511,21 @@ function renderMetrics(){
     const bench=selectedBenchmark();
     if(!dim||!bench){shell.innerHTML='<div class="empty">请选择 Benchmark。</div>';meta.textContent='尚无结果。';return}
     meta.textContent=currentResult.exists?`当前结果：${currentResult.display_name||'当前结果'}`:`当前未生成结果。`;
+    const metricDefs=benchmarkMetrics(bench);
+    const metricCards=stats=>metricDefs.map(metric=>`<div class="metric-card"><div class="label">${escapeHtml(metric.label||metric.key||'')}</div><div class="value">${formatMetricValue(stats?.[metric.key], metric.format)}</div></div>`).join('');
     if(hasRealResultForSelection()){
         const parsed=resultFilterForSelection();
         const byTask=fullSummary.by_subcategory||{};
-        const metricDefs=benchmarkMetrics(bench);
         let html='';
         Object.keys(byTask).forEach(task=>{
             const stats=parsed?byTask[task]?.[`${parsed.category} / ${parsed.subcategory}`]:null;
             if(!stats)return;
-            html+=`<div class="task-metrics"><div class="task-title">${escapeHtml(TASK_LABELS[task]||task)}</div><div class="metric-grid">${metricDefs.map(metric=>`<div class="metric-card"><div class="label">${escapeHtml(metric.label||metric.key||'')}</div><div class="value">${formatMetricValue(stats[metric.key], metric.format)}</div></div>`).join('')}<div class="metric-card"><div class="label">样本数</div><div class="value">${stats.n_total??'—'}</div></div></div></div>`;
+            html+=`<div class="task-metrics"><div class="task-title">${escapeHtml(TASK_LABELS[task]||task)}</div><div class="metric-grid">${metricCards(stats)}${metricDefs.some(metric=>metric.key==='n_total')?'':`<div class="metric-card"><div class="label">样本数</div><div class="value">${stats.n_total??'—'}</div></div>`}</div></div>`;
         });
-        shell.innerHTML=html?`<div class="metrics-section">${html}</div>`:'<div class="empty">当前结果中没有该 Benchmark 的指标。</div>';
+        shell.innerHTML=html?`<div class="metrics-section">${html}</div>`:`<div class="metric-grid">${metricCards(null)}</div>`;
         return;
     }
-    const metricDefs=benchmarkMetrics(bench);
-    if(!metricDefs.length){shell.innerHTML='<div class="empty">当前 Benchmark 未提供指标定义。</div>';return}
-    shell.innerHTML=`<div class="metric-grid">${metricDefs.map(metric=>`<div class="metric-card"><div class="label">${escapeHtml(metric.label||metric.key||'')}</div><div class="value">—</div>${metric.format&&metric.format!=='text'?`<div class="desc">${escapeHtml(metric.format)}</div>`:''}</div>`).join('')}</div>`;
+    shell.innerHTML=`<div class="metric-grid">${metricCards(null)}</div>`;
 }
 
 function firstTaskRecord(item){

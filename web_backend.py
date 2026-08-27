@@ -1,6 +1,7 @@
 # Copyright (c) 2026 MiLab. All rights reserved.
 from __future__ import annotations
 
+import fcntl
 import json
 import os
 import random
@@ -3250,30 +3251,152 @@ def auto_tensor_parallel_size(model_name_or_path: str) -> int:
     return 1
 
 
+def query_gpu_memory() -> List[Dict[str, Any]]:
+    """Return physical GPU memory information reported by nvidia-smi."""
+    out = subprocess.check_output(
+        ['nvidia-smi', '--query-gpu=index,memory.free,memory.total', '--format=csv,noheader,nounits'],
+        text=True,
+        timeout=20,
+    )
+    rows: List[Dict[str, Any]] = []
+    for line in out.splitlines():
+        parts = [x.strip() for x in line.split(',')]
+        if len(parts) < 3:
+            continue
+        try:
+            rows.append({
+                'index': parts[0],
+                'free_mib': int(float(parts[1])),
+                'total_mib': int(float(parts[2])),
+            })
+        except Exception:
+            continue
+    return rows
+
+
 def select_cuda_visible_devices(count: int = 1) -> str:
+    """Select the freest visible GPUs without reserving them."""
+    requested_count = max(1, count)
     override = os.environ.get('TRUSTED_EVAL_CUDA_VISIBLE_DEVICES') or os.environ.get('CUDA_VISIBLE_DEVICES')
-    if override:
-        parts = [x.strip() for x in str(override).split(',') if x.strip()]
-        return ','.join(parts[:max(1, count)]) if parts else str(override)
     try:
-        out = subprocess.check_output(
-            ['nvidia-smi', '--query-gpu=index,memory.free', '--format=csv,noheader,nounits'],
-            text=True,
-            timeout=5,
-        )
-        rows: List[tuple[int, str]] = []
-        for line in out.splitlines():
-            parts = [x.strip() for x in line.split(',')]
-            if len(parts) < 2:
-                continue
-            try:
-                rows.append((int(float(parts[1])), parts[0]))
-            except Exception:
-                continue
-        rows.sort(key=lambda x: x[0], reverse=True)
-        return ','.join(idx for _free, idx in rows[:max(1, count)])
+        rows = query_gpu_memory()
+        allowed = {x.strip() for x in str(override).split(',') if x.strip()} if override else set()
+        if allowed:
+            rows = [row for row in rows if row['index'] in allowed]
+        rows.sort(key=lambda row: row['free_mib'], reverse=True)
+        return ','.join(str(row['index']) for row in rows[:requested_count])
     except Exception:
         return ''
+
+
+def release_gpu_reservations(lock_files: List[Any]) -> None:
+    for lock_file in lock_files:
+        try:
+            fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+        except Exception:
+            pass
+        try:
+            lock_file.close()
+        except Exception:
+            pass
+    lock_files.clear()
+
+
+def reserve_cuda_visible_devices(
+    count: int,
+    gpu_memory_utilization: float,
+) -> tuple[str, List[Any], List[Dict[str, Any]]]:
+    """Atomically reserve sufficiently empty GPUs across local XiliLake deployments."""
+    requested_count = max(1, int(count))
+    utilization = min(1.0, max(0.01, float(gpu_memory_utilization)))
+    override = os.environ.get('TRUSTED_EVAL_CUDA_VISIBLE_DEVICES') or os.environ.get('CUDA_VISIBLE_DEVICES')
+    allowed = {x.strip() for x in str(override).split(',') if x.strip()} if override else set()
+
+    try:
+        candidates = query_gpu_memory()
+    except Exception as exc:
+        raise RuntimeError(f'无法读取 GPU 显存状态: {exc}') from exc
+    if allowed:
+        candidates = [row for row in candidates if row['index'] in allowed]
+    candidates.sort(key=lambda row: row['free_mib'], reverse=True)
+    if len(candidates) < requested_count:
+        scope = f'配置指定的 GPU ({override})' if override else '本机 GPU'
+        raise RuntimeError(f'{scope} 数量不足，需要 {requested_count} 张，检测到 {len(candidates)} 张。')
+
+    reservations: List[Any] = []
+    selected: List[Dict[str, Any]] = []
+    try:
+        for candidate in candidates:
+            # vLLM reserves total memory * utilization. Keep another 512 MiB
+            # free so its startup-time CUDA context does not invalidate the check.
+            required_mib = int(candidate['total_mib'] * utilization) + 512
+            if candidate['free_mib'] < required_mib:
+                continue
+            lock_path = Path('/tmp') / f'xililake-gpu-{candidate["index"]}.lock'
+            fd = os.open(lock_path, os.O_RDONLY | os.O_CREAT, 0o666)
+            lock_file = os.fdopen(fd, 'r')
+            try:
+                fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except BlockingIOError:
+                lock_file.close()
+                continue
+
+            # Refresh memory after taking the lock. This closes the selection/
+            # launch race between the two deployed XiliLake web services.
+            try:
+                refreshed = {row['index']: row for row in query_gpu_memory()}.get(candidate['index'], candidate)
+            except Exception:
+                release_gpu_reservations([lock_file])
+                raise
+            required_mib = int(refreshed['total_mib'] * utilization) + 512
+            if refreshed['free_mib'] < required_mib:
+                release_gpu_reservations([lock_file])
+                continue
+            refreshed['required_mib'] = required_mib
+            reservations.append(lock_file)
+            selected.append(refreshed)
+            if len(selected) == requested_count:
+                break
+
+        if len(selected) != requested_count:
+            availability = ', '.join(
+                f'GPU {row["index"]}: {row["free_mib"] / 1024:.1f}/{row["total_mib"] / 1024:.1f} GiB 空闲'
+                for row in candidates
+            ) or '未检测到可用 GPU'
+            required_gib = max(
+                (row['total_mib'] * utilization + 512) / 1024
+                for row in candidates
+            )
+            raise RuntimeError(
+                f'没有足够空闲显存启动本地模型：需要 {requested_count} 张 GPU，'
+                f'每张至少约 {required_gib:.1f} GiB 空闲；当前 {availability}。'
+            )
+        return ','.join(str(row['index']) for row in selected), reservations, selected
+    except Exception:
+        release_gpu_reservations(reservations)
+        raise
+
+
+def vllm_failure_reason(log_path: Path, fallback: str) -> str:
+    """Extract the actionable vLLM root cause instead of its final wrapper error."""
+    log_text = re.sub(r'\x1b\[[0-9;]*m', '', tail_file(log_path, limit=300))
+    lines = [line.strip() for line in log_text.splitlines() if line.strip()]
+    patterns = (
+        r'(?:ValueError: )?Free memory on device .+',
+        r'(?:torch\.)?OutOfMemoryError: .+',
+        r'.*CUDA out of memory.*',
+        r'ValueError: .+',
+        r'RuntimeError: .+',
+    )
+    for pattern in patterns:
+        matches = [line for line in lines if re.search(pattern, line, flags=re.IGNORECASE)]
+        if matches:
+            reason = matches[-1]
+            reason = re.sub(r'^.*?(ValueError:|RuntimeError:|OutOfMemoryError:)', r'\1', reason)
+            if 'Free memory on device' in reason or 'out of memory' in reason.lower():
+                return f'GPU 显存不足；{reason}'
+            return reason
+    return fallback
 
 
 def cleanup_stale_project_vllm_processes() -> None:
@@ -5106,6 +5229,15 @@ def aggregate_metrics(records: List[Dict[str, Any]]) -> Dict[str, Any]:
     cs_correct = 0
     cf_errors = 0
     cf_commonsense_errors = 0
+    caption_coverage_sum = 0.0
+    caption_coverage_count = 0
+    caption_critical_correct = 0
+    caption_claim_coverage_sum = 0.0
+    caption_claim_coverage_count = 0
+    caption_prior_attraction_count = 0
+    caption_prior_attraction_total = 0
+    caption_forbidden_match_count = 0
+    caption_forbidden_match_total = 0
     for r in records:
         if r.get('status') != 'ok':
             continue
@@ -5132,6 +5264,23 @@ def aggregate_metrics(records: List[Dict[str, Any]]) -> Dict[str, Any]:
             cs_total += 1
             if r.get('correct') is True:
                 cs_correct += 1
+        caption_eval = r.get('caption_eval')
+        if isinstance(caption_eval, dict):
+            caption_coverage_sum += float(caption_eval.get('coverage') or 0.0)
+            caption_coverage_count += 1
+            if caption_eval.get('claim_coverage') is not None:
+                caption_claim_coverage_sum += float(caption_eval.get('claim_coverage') or 0.0)
+                caption_claim_coverage_count += 1
+            if caption_eval.get('critical_match') is True:
+                caption_critical_correct += 1
+            if caption_eval.get('forbidden_match') is not None:
+                caption_forbidden_match_total += 1
+                if caption_eval.get('forbidden_match') is True:
+                    caption_forbidden_match_count += 1
+            if side == 'counterfactual' and caption_eval.get('prior_attraction') is not None:
+                caption_prior_attraction_total += 1
+                if caption_eval.get('prior_attraction') is True:
+                    caption_prior_attraction_count += 1
     cf_acc = (cf_correct / cf_total) if cf_total else None
     cs_acc = (cs_correct / cs_total) if cs_total else None
     gap = (cs_acc - cf_acc) if (cs_acc is not None and cf_acc is not None) else None
@@ -5167,6 +5316,12 @@ def aggregate_metrics(records: List[Dict[str, Any]]) -> Dict[str, Any]:
         'Gap': gap,
         'CCR': ccr,
         'RPD': rpd,
+        'Caption_Coverage': (caption_coverage_sum / caption_coverage_count) if caption_coverage_count else None,
+        'Caption_Critical_Acc': (caption_critical_correct / caption_coverage_count) if caption_coverage_count else None,
+        'Claim_Coverage': (caption_claim_coverage_sum / caption_claim_coverage_count) if caption_claim_coverage_count else None,
+        'Critical_Claim_Acc': (caption_critical_correct / caption_coverage_count) if caption_coverage_count else None,
+        'Prior_Attraction_Rate': (caption_prior_attraction_count / caption_prior_attraction_total) if caption_prior_attraction_total else None,
+        'Forbidden_Claim_Rate': (caption_forbidden_match_count / caption_forbidden_match_total) if caption_forbidden_match_total else None,
         'target_match_rate': optional_rate('target_match'),
         'detection_accuracy': optional_rate('detection_correct'),
         'classification_accuracy': optional_rate('classification_correct'),
@@ -5222,8 +5377,8 @@ def summary_key_for_dimension_benchmark(dim: Dict[str, Any], bench: Dict[str, An
     dim_id = str(dim.get('id') or '')
     if dim_id.startswith('cdh::'):
         return str(dim.get('category') or ''), str(dim.get('name_en') or '')
-    result_label = str(bench.get('result_label') or dim.get('result_label') or dim.get('label') or '')
-    return result_label, str(bench.get('name') or result_label or '')
+    dimension_label = str(dim.get('label') or '')
+    return dimension_label, str(bench.get('name') or dimension_label)
 
 
 def current_result_matches(dim: Dict[str, Any], bench: Dict[str, Any], run_config: Dict[str, Any]) -> bool:
@@ -5600,6 +5755,7 @@ def run_job(job_id: str) -> None:
 
     vllm_proc: Optional[subprocess.Popen] = None
     eval_proc: Optional[subprocess.Popen] = None
+    gpu_reservations: List[Any] = []
 
     try:
         update_job(job_id, status='starting', phase='starting', started_at=utc_now_iso(), message='准备启动评测任务')
@@ -5618,8 +5774,15 @@ def run_job(job_id: str) -> None:
             base_url = f'http://{host}:{port}'
             model_value = payload.get('served_model_name') or model_path
             tensor_parallel_size = max(1, int(payload.get('tensor_parallel_size') or 1))
-            cuda_visible = select_cuda_visible_devices(tensor_parallel_size)
+            cuda_visible, gpu_reservations, selected_gpus = reserve_cuda_visible_devices(
+                tensor_parallel_size,
+                float(payload['gpu_memory_utilization']),
+            )
             payload['cuda_visible_devices'] = cuda_visible
+            gpu_summary = '，'.join(
+                f'GPU {gpu["index"]}（空闲 {gpu["free_mib"] / 1024:.1f} GiB）'
+                for gpu in selected_gpus
+            )
             log(f'Starting local vLLM: model={model_path}, port={port}, cuda_visible_devices={cuda_visible or "default"}, tensor_parallel_size={tensor_parallel_size}, gpu_memory_utilization={payload["gpu_memory_utilization"]}, max_model_len={payload["max_model_len"]}')
             with log_path.open('a', encoding='utf-8') as log_fp:
                 vllm_cmd = [
@@ -5654,14 +5817,14 @@ def run_job(job_id: str) -> None:
                 'percent': 0.0,
                 'indeterminate': True,
                 'elapsed_s': 0,
-                'message': '正在启动本地 vLLM 服务',
+                'message': f'正在使用 {gpu_summary} 启动本地 vLLM 服务',
                 'last_result': None,
             }
             update_job(
                 job_id,
                 status='starting',
                 phase='booting_vllm',
-                message='正在启动本地 vLLM 服务',
+                message=f'正在使用 {gpu_summary} 启动本地 vLLM 服务',
                 progress=boot_progress,
             )
 
@@ -5692,7 +5855,8 @@ def run_job(job_id: str) -> None:
                     update_job(job_id, status='cancelled', phase='cancelled', ended_at=utc_now_iso(), message='任务已取消')
                     log('Job cancelled while booting vLLM')
                     return
-                raise RuntimeError(f'本地 vLLM 服务启动失败: {base_url}; {reason}')
+                root_cause = vllm_failure_reason(log_path, reason)
+                raise RuntimeError(f'本地 vLLM 服务启动失败: {base_url}; {root_cause}')
             update_job(
                 job_id,
                 phase='vllm_ready',
@@ -5825,6 +5989,7 @@ def run_job(job_id: str) -> None:
     finally:
         terminate_process(eval_proc)
         terminate_process(vllm_proc)
+        release_gpu_reservations(gpu_reservations)
         with JOBS_LOCK:
             if job_id in JOBS:
                 JOBS[job_id]['proc'] = None
