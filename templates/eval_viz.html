@@ -50,7 +50,12 @@
         .dimension-language-divider::before,.dimension-language-divider::after{content:"";height:1px;background:#cbd5e1;flex:1;}
         .selector-item .meta{display:block;font-size:12px;color:var(--muted);margin-top:4px;line-height:1.35;}
         .selector-item.active .meta{color:#4f46e5;}
-        .content{padding:22px 28px 32px;}
+        .content{padding:22px 28px 32px;display:flex;flex-direction:column;}
+        #launcher-section{order:1;}#selection-section{order:2;}#progress-section{order:3;}#metrics-section{order:4;}#samples-section{order:5;}
+        .content.result-focus #progress-section{order:2;}
+        .content.result-focus #metrics-section{order:3;}
+        .content.result-focus #samples-section{order:4;}
+        .content.result-focus #selection-section{order:5;}
         .content-section + .content-section{margin-top:22px;padding-top:22px;border-top:1px solid var(--line);}
         .section-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px;}
         .section-head h2{margin:0;font-size:21px;font-weight:900;}
@@ -166,7 +171,7 @@
         </aside>
 
         <main class="content">
-            <section class="content-section">
+            <section class="content-section" id="launcher-section">
                 <div class="section-head">
                     <div>
                         <h2>启动评测</h2>
@@ -176,7 +181,7 @@
                 <div id="evaluation-launcher"><div class="empty">请选择评测层级。</div></div>
             </section>
 
-            <section class="content-section">
+            <section class="content-section" id="selection-section">
                 <div class="section-head">
                     <div>
                         <h2>当前选择</h2>
@@ -187,7 +192,7 @@
                 <div id="selection-detail"><div class="empty">请选择评测层级。</div></div>
             </section>
 
-            <section class="content-section">
+            <section class="content-section" id="progress-section">
                 <div class="section-head">
                     <div>
                         <h2>评测进度</h2>
@@ -198,7 +203,7 @@
                 <div id="job-shell"><div class="empty">当前没有运行中的评测任务。</div></div>
             </section>
 
-            <section class="content-section">
+            <section class="content-section" id="metrics-section">
                 <div class="section-head">
                     <div>
                         <h2>指标展示</h2>
@@ -209,7 +214,7 @@
                 <div id="metrics-shell"><div class="empty">请选择评测层级。</div></div>
             </section>
 
-            <section class="content-section">
+            <section class="content-section" id="samples-section">
                 <div class="section-head">
                     <div>
                         <h2>评测样例</h2>
@@ -357,6 +362,9 @@ function cleanBenchmarkIntro(text){
 function captureFormState(){
     const modelSel=document.getElementById('model-select');
     if(modelSel&&modelSel.value)selectedModelId=modelSel.value;
+}
+function setResultFocusedLayout(active){
+    document.querySelector('main.content')?.classList.toggle('result-focus',Boolean(active));
 }
 function jobMatchesSelection(job){
     if(!job)return false;
@@ -1024,6 +1032,7 @@ async function refreshCurrentResult(resetViews=true){
     if(resetViews)showingRandomBenchmarkExample=false;
     const res=await fetch('/api/current_result');
     currentResult=await res.json();
+    setResultFocusedLayout(currentResult.exists||Boolean(activePollingJobId));
     let restoredScope=false;
     if(!selectionTouched&&currentResult.scope_type==='total'){
         selectedDomainId='';selectedGroupId='';selectedDimId='';selectedBenchmarkId='';restoredScope=true;
@@ -1321,6 +1330,7 @@ async function submitEval(){
         const data=await res.json();
         if(!res.ok)throw new Error(data.error||'启动失败');
         activePollingJobId=data.id;
+        setResultFocusedLayout(true);
         await refreshJobs(true);
     }catch(e){alert(e.message||'启动失败');}
     finally{if(trigger){trigger.disabled=false;trigger.textContent={total:'启动总评测',domain:'启动领域综合评测',group:'启动大类综合评测',dimension:'启动子类综合评测',benchmark:'启动评测'}[evaluationScopeType()];}}
@@ -1335,6 +1345,7 @@ async function refreshJobs(refreshResult){
     renderJob(selectedJob);
     activePollingJobId=globalActive?.id||null;
     if(refreshResult||!activePollingJobId)await refreshCurrentResult(false);
+    setResultFocusedLayout(Boolean(globalActive)||currentResult.exists);
 }
 
 async function cancelJob(id){
