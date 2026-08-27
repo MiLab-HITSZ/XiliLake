@@ -8,6 +8,13 @@ from typing import Any, Dict, List, Optional
 from .registry import load_benchmark_configs, make_benchmark_option_id, merge_nested_dicts, parse_dimension_id
 
 
+SCRIPT_DISPLAY_EXTRA_ARGS = {
+    'evaluate_generic_benchmark.py': {'--benchmark-name', '--dimension-label', '--benchmark-url'},
+    'evaluate_ehrperturb.py': {'--benchmark-name', '--dimension-label', '--benchmark-url'},
+    'evaluate_cdh_bench.py': set(),
+}
+
+
 def benchmark_config_map(base_dir: Path) -> Dict[str, Dict[str, Any]]:
     return {str(cfg.get('id') or ''): cfg for cfg in load_benchmark_configs(base_dir) if str(cfg.get('id') or '').strip()}
 
@@ -207,7 +214,12 @@ def build_eval_command(
 
     extra_args = execution.get('extra_args') or {}
     if isinstance(extra_args, dict):
+        script_name = Path(script_path).name
+        display_args = {'--benchmark-name', '--dimension-label', '--benchmark-url'}
+        supported_display_args = SCRIPT_DISPLAY_EXTRA_ARGS.get(script_name, display_args)
         for flag, value in extra_args.items():
+            if flag in display_args and flag not in supported_display_args:
+                continue
             _append_arg(cmd, str(flag), value)
 
     return cmd

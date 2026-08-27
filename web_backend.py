@@ -35,7 +35,12 @@ from benchmarks.registry import (
     load_benchmark_configs,
     parse_dimension_id,
 )
-from benchmarks.adapters import automatic_tasks, build_eval_command, resolve_real_benchmark_run
+from benchmarks.adapters import (
+    SCRIPT_DISPLAY_EXTRA_ARGS,
+    automatic_tasks,
+    build_eval_command,
+    resolve_real_benchmark_run,
+)
 from evaluate_generic_benchmark import (
     ANSWER_KEYS as GENERIC_ANSWER_KEYS,
     QUESTION_KEYS as GENERIC_QUESTION_KEYS,
@@ -2098,6 +2103,24 @@ def sync_dimension_display_metadata(groups: List[Dict[str, Any]]) -> None:
                     bench['example'] = {**bench['example'], 'dimension': dimension_label}
 
 
+def sanitize_execution_display_args(groups: List[Dict[str, Any]]) -> None:
+    """Remove taxonomy display flags that a benchmark runner cannot parse."""
+    display_args = {'--benchmark-name', '--dimension-label', '--benchmark-url'}
+    for group in groups:
+        for dim in group.get('dimensions') or []:
+            for bench in dim.get('benchmarks') or []:
+                execution = copy.deepcopy(bench.get('execution') or {})
+                script_name = Path(str(execution.get('script') or '')).name
+                supported = SCRIPT_DISPLAY_EXTRA_ARGS.get(script_name, display_args)
+                extra_args = copy.deepcopy(execution.get('extra_args') or {})
+                if not isinstance(extra_args, dict):
+                    continue
+                for flag in display_args - supported:
+                    extra_args.pop(flag, None)
+                execution['extra_args'] = extra_args
+                bench['execution'] = execution
+
+
 def enrich_benchmark_intros(groups: List[Dict[str, Any]]) -> None:
     for group in groups:
         for dim in group.get('dimensions') or []:
@@ -3624,6 +3647,7 @@ def build_trust_catalog(apply_editor_overrides: bool = True) -> Dict[str, Any]:
     ordered = [group for group in ordered if group.get('dimensions')]
     if apply_editor_overrides:
         apply_taxonomy_editor_overrides(ordered)
+    sanitize_execution_display_args(ordered)
     attach_benchmark_source_languages(ordered)
     attach_dimension_language_labels(ordered)
     group_chinese_dimensions_last(ordered)
