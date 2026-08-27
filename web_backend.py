@@ -1829,6 +1829,18 @@ def write_json_atomic(path: Path, payload: Any) -> None:
         temporary.unlink(missing_ok=True)
 
 
+def write_jsonl_atomic(path: Path, rows: List[Dict[str, Any]]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(f'.{path.name}.{uuid.uuid4().hex}.tmp')
+    try:
+        with temporary.open('w', encoding='utf-8') as handle:
+            for row in rows:
+                handle.write(json.dumps(row, ensure_ascii=False) + '\n')
+        os.replace(temporary, path)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
 def taxonomy_editor_state() -> Dict[str, Any]:
     state = read_json(TAXONOMY_OVERRIDES_PATH, {}) or {}
     return state if isinstance(state, dict) else {}
@@ -5384,6 +5396,121 @@ def build_summary_from_records(records: List[Dict[str, Any]]) -> Dict[str, Any]:
     return out
 
 
+def result_selections_from_config(config: Dict[str, Any]) -> List[Dict[str, str]]:
+    selections = config.get('result_selections') or []
+    cleaned = [
+        {
+            'dimension_id': str(item.get('dimension_id') or ''),
+            'benchmark_id': str(item.get('benchmark_id') or ''),
+        }
+        for item in selections
+        if isinstance(item, dict) and item.get('dimension_id') and item.get('benchmark_id')
+    ]
+    if cleaned:
+        return cleaned
+    dimensions = config.get('trust_dimensions') or []
+    benchmarks = config.get('benchmark_ids') or []
+    if len(dimensions) != len(benchmarks):
+        return []
+    return [
+        {'dimension_id': str(dimension_id), 'benchmark_id': str(benchmark_id)}
+        for dimension_id, benchmark_id in zip(dimensions, benchmarks)
+        if dimension_id and benchmark_id
+    ]
+
+
+def annotate_cached_result_records(
+    records: List[Dict[str, Any]],
+    selections: List[Dict[str, str]],
+) -> List[Dict[str, Any]]:
+    """Attach stable catalog ids so cached Benchmarks can be replaced independently."""
+    if len(selections) != 1:
+        return [dict(row) for row in records]
+    selection = selections[0]
+    annotated: List[Dict[str, Any]] = []
+    for source in records:
+        row = dict(source)
+        row.setdefault('dimension_id', selection['dimension_id'])
+        row.setdefault('benchmark_id', selection['benchmark_id'])
+        annotated.append(row)
+    return annotated
+
+
+def merge_benchmark_result_cache(
+    staging_result_dir: Path,
+    result_dir: Path,
+    payload: Dict[str, Any],
+    staged_run_config: Dict[str, Any],
+) -> Dict[str, Any]:
+    """Merge one completed Benchmark into the selected model's result cache."""
+    staging_records_path = staging_result_dir / 'results.jsonl'
+    if not staging_records_path.exists():
+        raise RuntimeError('评测脚本完成但没有生成结果记录')
+
+    new_selections = result_selections_from_config(payload)
+    new_records = annotate_cached_result_records(read_jsonl(staging_records_path), new_selections)
+    existing_config = read_json(result_dir / 'run_config.json', {}) or {}
+    existing_selections = result_selections_from_config(existing_config)
+    existing_records = annotate_cached_result_records(
+        read_jsonl(result_dir / 'results.jsonl'),
+        existing_selections,
+    )
+    selected_model_id = str(payload.get('selected_model_id') or '')
+    existing_model_id = str(existing_config.get('selected_model_id') or '')
+    same_model = bool(selected_model_id and selected_model_id == existing_model_id)
+    if not selected_model_id or not existing_model_id:
+        same_model = (
+            str(payload.get('selected_model_name') or '')
+            == str(existing_config.get('selected_model_name') or existing_config.get('display_name') or '')
+        )
+
+    replace_all = bool(payload.get('smoke_all')) or not same_model
+    if replace_all:
+        merged_records = new_records
+        merged_selections = new_selections
+    else:
+        new_keys = {
+            (item['dimension_id'], item['benchmark_id'])
+            for item in new_selections
+        }
+        retained_records = [
+            row for row in existing_records
+            if (str(row.get('dimension_id') or ''), str(row.get('benchmark_id') or '')) not in new_keys
+        ]
+        merged_records = retained_records + new_records
+        merged_selections = new_selections + [
+            item for item in existing_selections
+            if (item['dimension_id'], item['benchmark_id']) not in new_keys
+        ]
+
+    merged_config = {
+        **staged_run_config,
+        'selected_model_name': payload.get('selected_model_name'),
+        'selected_model_id': payload.get('selected_model_id'),
+        'selected_backend_mode': payload.get('backend_mode'),
+        'trust_dimensions': [item['dimension_id'] for item in merged_selections],
+        'benchmark_ids': [item['benchmark_id'] for item in merged_selections],
+        'result_selections': merged_selections,
+        'real_benchmark_id': payload.get('real_benchmark_id') or '',
+        'real_benchmark_option_id': payload.get('real_benchmark_option_id') or '',
+        'placeholder_dimensions': [],
+        'mitigation': payload.get('mitigation') or 'none',
+        'cached_benchmark_count': len(merged_selections),
+        'updated_at': utc_now_iso(),
+    }
+    result_dir.mkdir(parents=True, exist_ok=True)
+    write_jsonl_atomic(result_dir / 'results.jsonl', merged_records)
+    write_json_atomic(result_dir / 'summary.json', build_summary_from_records(merged_records))
+    (result_dir / 'placeholder_results.json').unlink(missing_ok=True)
+    # Commit metadata last so readers never see a selection before its records.
+    write_json_atomic(result_dir / 'run_config.json', merged_config)
+    return {
+        'records': len(merged_records),
+        'benchmarks': len(merged_selections),
+        'replaced_all': replace_all,
+    }
+
+
 LEADERBOARD_METRIC_COLUMNS = [
     {'key': 'accuracy', 'label': '准确率', 'format': 'percent'},
     {'key': 'response_rate', 'label': '响应率', 'format': 'percent'},
@@ -5786,6 +5913,7 @@ def run_job(job_id: str) -> None:
         log('Job started')
 
         result_dir = RESULT_DIR / job['result_model']
+        staging_result_dir = job_dir / 'result_stage' / job['result_model']
         python_bin = find_python_bin()
         base_url = ''
         model_value = ''
@@ -5902,9 +6030,8 @@ def run_job(job_id: str) -> None:
             model_value = payload['api_model']
             log(f'Using remote API: {base_url} model={model_value}')
 
-        if result_dir.exists():
-            log(f'Removing existing result directory: {result_dir}')
-            shutil.rmtree(result_dir)
+        if staging_result_dir.parent.exists():
+            shutil.rmtree(staging_result_dir.parent)
 
         models_cfg = [{
             'name': job['result_model'],
@@ -5924,7 +6051,7 @@ def run_job(job_id: str) -> None:
                 '--base-url', base_url,
                 '--model', model_value,
                 '--display-name', str(payload.get('selected_model_name') or job['result_model']),
-                '--output-dir', str(result_dir),
+                '--output-dir', str(staging_result_dir),
                 '--progress-file', str(progress_path),
                 '--python-bin', python_bin,
                 '--workers', str(max(1, int(os.environ.get('TRUSTED_EVAL_SMOKE_WORKERS', '4')))),
@@ -5941,6 +6068,9 @@ def run_job(job_id: str) -> None:
             )
             if not resolved_run:
                 raise RuntimeError('未能解析当前评测任务对应的 Benchmark 配置')
+            resolved_run = copy.deepcopy(resolved_run)
+            resolved_run['paths'] = copy.deepcopy(resolved_run.get('paths') or {})
+            resolved_run['paths']['results'] = str(staging_result_dir.parent)
             eval_cmd = build_eval_command(
                 BASE_DIR,
                 resolved_run,
@@ -5948,7 +6078,7 @@ def run_job(job_id: str) -> None:
                 models_cfg,
                 payload,
                 str(progress_path),
-                result_dir,
+                staging_result_dir,
             )
 
         log(f"Launching benchmark runner: {resolved_run.get('benchmark_id')}")
@@ -5982,28 +6112,19 @@ def run_job(job_id: str) -> None:
             update_job(job_id, status='cancelled', phase='cancelled', ended_at=utc_now_iso(), message='任务已取消')
             log('Job cancelled')
         elif returncode == 0:
-            run_config_path = result_dir / 'run_config.json'
+            run_config_path = staging_result_dir / 'run_config.json'
             run_config = read_json(run_config_path, {}) or {}
-            run_config['selected_model_name'] = payload.get('selected_model_name')
-            run_config['selected_model_id'] = payload.get('selected_model_id')
-            run_config['selected_backend_mode'] = payload.get('backend_mode')
-            run_config['trust_dimensions'] = payload.get('trust_dimensions') or []
-            run_config['benchmark_ids'] = payload.get('benchmark_ids') or []
-            run_config['result_selections'] = payload.get('result_selections') or []
-            run_config['real_benchmark_id'] = payload.get('real_benchmark_id') or ''
-            run_config['real_benchmark_option_id'] = payload.get('real_benchmark_option_id') or ''
-            run_config['placeholder_dimensions'] = payload.get('placeholder_dimensions') or []
-            run_config['mitigation'] = payload.get('mitigation') or 'none'
-            if payload.get('placeholder_dimensions'):
-                placeholders = placeholder_results_for_dimensions(
-                    payload.get('placeholder_dimensions') or [],
-                    payload.get('selected_model_name') or '',
-                    payload.get('benchmark_ids') or [],
-                )
-                write_json(result_dir / 'placeholder_results.json', placeholders)
-            write_json(run_config_path, run_config)
+            cache_state = merge_benchmark_result_cache(
+                staging_result_dir,
+                result_dir,
+                payload,
+                run_config,
+            )
             update_job(job_id, status='completed', phase='completed', ended_at=utc_now_iso(), message='评测完成')
-            log('Job completed successfully')
+            log(
+                'Job completed successfully; '
+                f'cached_benchmarks={cache_state["benchmarks"]}, records={cache_state["records"]}'
+            )
         else:
             raise RuntimeError(f'评测脚本退出码异常: {returncode}')
 

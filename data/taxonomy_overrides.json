@@ -1,6 +1,6 @@
 {
   "version": 3,
-  "updated_at": "2026-08-27T15:04:11.782830+00:00",
+  "updated_at": "2026-08-27T15:26:15.494322+00:00",
   "groups": {
     "epistemic_reliability": {
       "description": "判断模型回答是否忠实于外部事实、题目给定材料和图像可见内容，覆盖一般与学科知识、科学知识、篇章证据问答、常识真实性、视觉属性幻觉和视觉计数幻觉。关注“答案是否有事实或证据依据”。"
@@ -91,11 +91,26 @@
       "label": "法律适用能力评测",
       "intro": "覆盖商标、管辖权、传闻证据、继受责任及统一商法典等规则适用于具体事实并判断法律结论。这里已知待适用的规则，评测将规则适用于新事实后的结论。"
     },
+    "benchmark::medical_end_to_end::ehr_end_to_end_auditing::ehr_temporal_end_to_end": {
+      "label": "病历时序准确性评测"
+    },
+    "benchmark::medical_end_to_end::ehr_end_to_end_auditing::clinical_representation_end_to_end": {
+      "label": "临床表征准确性评测"
+    },
+    "benchmark::medical_end_to_end::ehr_end_to_end_auditing::physiological_plausibility_end_to_end": {
+      "label": "临床生理准确性评测"
+    },
+    "benchmark::medical_end_to_end::ehr_end_to_end_auditing::treatment_logic_end_to_end": {
+      "label": "临床治疗准确性评测"
+    },
+    "benchmark::medical_end_to_end::ehr_end_to_end_auditing::documentation_evidence_end_to_end": {
+      "label": "诊疗文档准确性评测"
+    },
     "benchmark::verified_benchmarks::verified::cybersecurity::p0::eval-run::WMDP-Cyber": {
-      "label": "基础网络安全知识"
+      "label": "基础网络安全知识评测"
     },
     "benchmark::privacy_security::downloaded::代码漏洞安全评测": {
-      "label": "基础代码漏洞识别"
+      "label": "基础代码漏洞识别评测"
     }
   },
   "benchmarks": {
