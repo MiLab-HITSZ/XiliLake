@@ -243,6 +243,7 @@ let benchmarkExample=null;
 let benchmarkExampleSelectionKey='';
 let evalSamplesCacheKey='';
 let showingRandomBenchmarkExample=false;
+const scopedResultCache=new Map();
 let activePollingJobId=null;
 let selectedModelId='';
 let selectionTouched=false;
@@ -261,15 +262,6 @@ function escapeHtml(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'
 function dimensionDisplayLabel(dim){const label=String(dim?.label||'');return dim?.language_label?label.replace(/^中文/,''):label}
 function cloneJson(v){return v?JSON.parse(JSON.stringify(v)):null}
 function formatPct(v){if(v===null||v===undefined||Number.isNaN(Number(v)))return '—';return `${(Number(v)*100).toFixed(1)}%`}
-function isCdh(id){return String(id||'').startsWith('cdh::')}
-function parseCdh(id){const p=String(id||'').split('::');return p.length===3?{category:p[1],subcategory:p[2]}:null}
-function resultFilterForSelection(){
-    const dim=selectedDimension();
-    const bench=selectedBenchmark();
-    if(!dim||!bench)return null;
-    if(isCdh(dim.id))return parseCdh(dim.id);
-    return {category:dim.label,subcategory:bench.name||dim.label};
-}
 function hasRealResultForSelection(){
     if(!(selectedBenchmarkImplemented()&&currentResult.has_real_results))return false;
     const wanted=new Set(selectedScopeSelections().map(item=>`${item.dimension_id}::${item.benchmark_id}`));
@@ -308,8 +300,6 @@ function selectedScopeSelections(){
 function selectedDims(){return selectedScopeSelections().map(item=>item.dimension_id)}
 function selectedExecutionBenchmarkId(){const bench=selectedBenchmark();return bench?.execution_option_id||selectedBenchmarkId}
 function selectedBenchmarkIds(){return selectedScopeSelections().map(item=>item.benchmark_id)}
-function selectedCdhDims(){return selectedDims().filter(isCdh)}
-function selectedPlaceholderDims(){return selectedDims().filter(id=>!isCdh(id))}
 function selectedBenchmarkImplemented(){const rows=selectedScopeSelections();return !!rows.length&&rows.every(item=>item.benchmark.implemented)}
 function evaluationScopeType(){return selectedBenchmark()?'benchmark':(selectedDimension()?'dimension':(currentGroup()?'group':(currentDomain()?'domain':'total')))}
 function evaluationScopeLabel(){return selectedBenchmark()?.name||dimensionDisplayLabel(selectedDimension())||currentGroup()?.label||currentDomain()?.label||'总评测'}
@@ -330,8 +320,28 @@ function benchmarkMetaTags(bench){
     }
     return [...new Set(tags.filter(Boolean))];
 }
+function selectionPathKey(){return `${selectedDomainId}::${selectedGroupId}::${selectedDimId}::${selectedBenchmarkId}`}
+function scopedResultCacheKey(){return `${currentResult.created_at||'no-result'}::${selectionPathKey()}`}
+function restoreScopedResultView(){
+    const cached=scopedResultCache.get(scopedResultCacheKey());
+    if(!cached){fullSummary={};placeholderItems=[];evalSamples=[];evalSamplesCacheKey='';return false}
+    fullSummary=cloneJson(cached.fullSummary)||{};
+    placeholderItems=cloneJson(cached.placeholderItems)||[];
+    evalSamples=cloneJson(cached.evalSamples)||[];
+    evalSamplesCacheKey=cached.evalSamplesCacheKey||'';
+    return true;
+}
+function cacheScopedResultView(){
+    if(!currentResult.exists)return;
+    scopedResultCache.set(scopedResultCacheKey(),{
+        fullSummary:cloneJson(fullSummary)||{},
+        placeholderItems:cloneJson(placeholderItems)||[],
+        evalSamples:cloneJson(evalSamples)||[],
+        evalSamplesCacheKey,
+    });
+}
 function setBenchmarkExampleFromSelection(){
-    const key=`${selectedDomainId}::${selectedGroupId}::${selectedDimId}::${selectedBenchmarkId}`;
+    const key=selectionPathKey();
     if(benchmarkExampleSelectionKey===key)return;
     selectionRevision+=1;
     benchmarkExampleSelectionKey=key;
@@ -613,11 +623,10 @@ function renderMetrics(){
     const metricDefs=bench?benchmarkMetrics(bench):DEFAULT_BENCHMARK_METRICS;
     const metricCards=stats=>metricDefs.map(metric=>`<div class="metric-card"><div class="label">${escapeHtml(metric.label||metric.key||'')}</div><div class="value">${formatMetricValue(stats?.[metric.key], metric.format)}</div></div>`).join('');
     if(hasRealResultForSelection()){
-        const parsed=bench?resultFilterForSelection():null;
-        const byTask=bench?(fullSummary.by_subcategory||{}):(fullSummary.overall||{});
+        const byTask=fullSummary.overall||{};
         let html='';
         Object.keys(byTask).forEach(task=>{
-            const stats=bench?(parsed?byTask[task]?.[`${parsed.category} / ${parsed.subcategory}`]:null):byTask[task];
+            const stats=byTask[task];
             if(!stats)return;
             html+=`<div class="task-metrics"><div class="task-title">${escapeHtml(TASK_LABELS[task]||task)}</div><div class="metric-grid">${metricCards(stats)}${metricDefs.some(metric=>metric.key==='n_total')?'':`<div class="metric-card"><div class="label">样本数</div><div class="value">${stats.n_total??'—'}</div></div>`}</div></div>`;
         });
@@ -1048,7 +1057,11 @@ async function refreshCurrentResult(resetViews=true){
     renderDomainGroups();
     renderDimensions();
     renderSelectionDetail();
-    if(!currentResult.exists){fullSummary={};placeholderItems=[];renderMetrics();await fetchEvalSamples(false);return}
+    const restored=restoreScopedResultView();
+    renderMetrics();
+    renderEvalSamples();
+    if(!currentResult.exists){await fetchEvalSamples(false);return}
+    if(restored)return;
     await refreshResultViews();
 }
 
@@ -1060,6 +1073,7 @@ async function refreshResultViews(){
     if(revision!==selectionRevision)return;
     await fetchEvalSamples(false);
     if(revision!==selectionRevision)return;
+    cacheScopedResultView();
     renderMetrics();
     renderEvalSamples();
 }
@@ -1068,25 +1082,15 @@ async function fetchSummary(){
     const revision=selectionRevision;
     fullSummary={};
     if(!(currentResult.exists&&hasRealResultForSelection()))return;
-    const parsed=resultFilterForSelection();
     const url=new URL('/api/summary',location.origin);
-    if(parsed){
-        url.searchParams.set('category',parsed.category);
-        url.searchParams.set('subcategories',parsed.subcategory);
-        const res=await fetch(url);
-        const data=await res.json();
-        if(revision!==selectionRevision)return;
-        fullSummary=data;
-    }else{
-        const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-            dimension_ids:[...new Set(selectedDims())],
-            benchmark_ids:[...new Set(selectedBenchmarkIds())],
-            result_selections:selectedScopeSelections().map(item=>({dimension_id:item.dimension_id,benchmark_id:item.benchmark_id})),
-        })});
-        const data=await res.json();
-        if(revision!==selectionRevision)return;
-        fullSummary=data;
-    }
+    const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+        dimension_ids:[...new Set(selectedDims())],
+        benchmark_ids:[...new Set(selectedBenchmarkIds())],
+        result_selections:selectedScopeSelections().map(item=>({dimension_id:item.dimension_id,benchmark_id:item.benchmark_id})),
+    })});
+    const data=await res.json();
+    if(revision!==selectionRevision)return;
+    fullSummary=data;
 }
 
 async function fetchEvalSamples(force){
@@ -1121,22 +1125,20 @@ async function fetchEvalSamples(force){
     if(!force&&showingRandomBenchmarkExample&&benchmarkExample){evalSamples=[];renderEvalSamples();return}
     if(!force&&currentResult.exists&&hasRealResultForSelection()){
         const cacheKey=`result::${currentResult.created_at||''}::${selectedDimId}::${selectedBenchmarkId}`;
-        if(!force && evalSamplesCacheKey===cacheKey && benchmarkExampleSelectionKey===`${selectedDomainId}::${selectedGroupId}::${selectedDimId}::${selectedBenchmarkId}`){
+        if(!force && evalSamplesCacheKey===cacheKey && benchmarkExampleSelectionKey===selectionPathKey()){
             renderEvalSamples();
             return;
         }
-        const parsed=resultFilterForSelection();
-        if(!parsed){renderEvalSamples();return}
         const url=new URL('/api/eval_data',location.origin);
-        url.searchParams.set('category',parsed.category);
-        url.searchParams.set('subcategories',parsed.subcategory);
-        url.searchParams.set('dimension_id',bench.result_dimension_id||selectedDimId);
-        const executionId=selectedExecutionBenchmarkId();
-        if(executionId)url.searchParams.set('benchmark_id',executionId);
-        url.searchParams.set('page','1');
-        url.searchParams.set('per_page','3');
         evalSamples=[];
-        const res=await fetch(url);
+        const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+            dimension_ids:[selectedDimId],
+            benchmark_ids:[selectedExecutionBenchmarkId()],
+            result_selections:[{dimension_id:selectedDimId,benchmark_id:selectedExecutionBenchmarkId()}],
+            page:1,
+            per_page:3,
+            shuffle:force?'1':'0',
+        })});
         const data=await res.json();
         if(revision!==selectionRevision)return;
         evalSamples=data.items||[];
@@ -1288,8 +1290,14 @@ function selectBenchmark(id,dimensionId=''){
 }
 
 async function refreshResultViewsIfNeeded(){
-    if(currentResult.exists)await refreshResultViews();
-    else{renderMetrics();await fetchEvalSamples(false);}
+    const restored=restoreScopedResultView();
+    renderMetrics();
+    renderEvalSamples();
+    if(currentResult.exists){
+        if(!restored)await refreshResultViews();
+    }else{
+        await fetchEvalSamples(false);
+    }
 }
 
 async function submitEval(){
