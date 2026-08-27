@@ -25,7 +25,7 @@
         .sidebar-title,.content-title{font-size:16px;font-weight:900;margin:0 0 9px;}
         .selector-block + .selector-block{margin-top:14px;padding-top:14px;border-top:1px solid var(--line);}
         .selector-list{display:grid;gap:6px;}
-        #group-list,#dimension-list,#benchmark-list{grid-template-columns:repeat(2,minmax(0,1fr));}
+        #group-list,#dimension-list{grid-template-columns:repeat(2,minmax(0,1fr));}
         .domain-switch-block{padding:14px;border:1px solid #b8c8e6;background:#eef3fb;}
         .domain-switch-block .sidebar-title{margin-bottom:10px;color:#1e3a5f;}
         .domain-switch-block + .selector-block{margin-top:14px;padding-top:14px;border-top:1px solid var(--line);}
@@ -75,7 +75,7 @@
         .intro-text{white-space:pre-wrap;line-height:1.8;color:#334155;font-size:16px;}
         .dataset-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
         .dataset-meta span{display:inline-flex;align-items:center;padding:5px 11px;border:1px solid #dbe4f0;border-radius:999px;background:#fff;font-size:13px;color:#475569;}
-        .form-grid{display:grid;grid-template-columns:minmax(260px,420px) minmax(0,1fr);gap:14px;align-items:end;margin-top:16px;padding-top:16px;border-top:1px solid var(--line);}
+        .form-grid{display:grid;grid-template-columns:minmax(240px,1fr) minmax(240px,1fr) auto;gap:14px;align-items:end;margin-top:16px;padding-top:16px;border-top:1px solid var(--line);}
         .toolbar{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;}
         .empty{padding:18px 0;color:#94a3b8;font-size:14px;}
         .status-pill{display:inline-flex;border-radius:999px;padding:5px 10px;font-weight:800;font-size:12px;background:#dbeafe;color:#1d4ed8;}
@@ -112,7 +112,7 @@
         @media (max-width: 1180px){
             .workspace{grid-template-columns:1fr;}
             .sidebar{border-right:0;border-bottom:1px solid var(--line);}
-            #group-list,#dimension-list,#benchmark-list{grid-template-columns:repeat(2,minmax(0,1fr));}
+            #group-list,#dimension-list{grid-template-columns:repeat(2,minmax(0,1fr));}
             .intro-grid,.form-grid{grid-template-columns:1fr;}
             .toolbar{justify-content:flex-start;}
             .example-images{grid-template-columns:1fr;}
@@ -123,7 +123,7 @@
             .page-head h1{font-size:30px;}
             .head-actions{width:100%;padding-top:0;flex-wrap:wrap;}
             .head-actions .btn{flex:1 1 150px;}
-            #group-list,#dimension-list,#benchmark-list{grid-template-columns:1fr;}
+            #group-list,#dimension-list{grid-template-columns:1fr;}
             .domain-switch .name{font-size:13px;}
             .domain-switch .count{font-size:10px;}
             .content{padding:16px 12px 24px;}
@@ -158,10 +158,6 @@
             <section class="selector-block">
                 <h2 class="sidebar-title">评测子类</h2>
                 <div class="selector-list" id="dimension-list"><div class="empty">请先选择评测大类。</div></div>
-            </section>
-            <section class="selector-block">
-                <h2 class="sidebar-title">评测数据集</h2>
-                <div class="selector-list" id="benchmark-list"><div class="empty">请先选择子类。</div></div>
             </section>
         </aside>
 
@@ -431,16 +427,6 @@ function renderDimensions(){
     box.innerHTML=generalDimensions.map(renderDimension).join('')+divider+chineseDimensions.map(renderDimension).join('');
 }
 
-function renderBenchmarks(){
-    const box=document.getElementById('benchmark-list');
-    const dim=selectedDimension();
-    const benches=dim?.benchmarks||[];
-    if(!dim){box.innerHTML='<div class="empty">请先选择子类。</div>';return}
-    if(!benches.length){box.innerHTML='<div class="empty">当前子类下暂无 Benchmark。</div>';return}
-    const aggregate=`<button type="button" class="selector-item ${selectedBenchmarkId?'':'active'}" onclick="selectBenchmark('')"><span class="name">全部数据集</span><span class="meta">${benches.length} Benchmark 综合评测</span></button>`;
-    box.innerHTML=aggregate+benches.map(bench=>`<button type="button" class="selector-item ${bench.id===selectedBenchmarkId?'active':''}" onclick="selectBenchmark('${escapeHtml(bench.id)}')"><span class="name">${escapeHtml(bench.name||'Benchmark')}</span><span class="meta">${bench.implemented?'可评测':'资料展示'}</span></button>`).join('');
-}
-
 function renderGroupBrief(){
     const box=document.getElementById('group-brief');
     if(!box)return;
@@ -473,6 +459,17 @@ function renderSelectionDetail(){
     const hierarchy=[domain?.label,group.label,dim?dimensionDisplayLabel(dim):'',bench?.name||''].filter(Boolean);
     const uniqueDimensions=new Set(scopeRows.map(item=>item.dimension_id)).size;
     const launchLabel={group:'启动大类综合评测',dimension:'启动子类综合评测',benchmark:'启动评测'}[scopeType];
+    const benchmarkDimensions=dim?[dim]:(group.dimensions||[]);
+    const benchmarkCount=benchmarkDimensions.reduce((sum,item)=>sum+(item.benchmarks||[]).length,0);
+    const benchmarkOptions=benchmarkDimensions.map(item=>{
+        const options=(item.benchmarks||[]).map(candidate=>{
+            const value=escapeHtml(JSON.stringify([item.id,candidate.id]));
+            const selected=item.id===selectedDimId&&candidate.id===selectedBenchmarkId?'selected':'';
+            return `<option value="${value}" ${selected}>${escapeHtml(candidate.name||'Benchmark')}</option>`;
+        }).join('');
+        if(!options)return '';
+        return benchmarkDimensions.length>1?`<optgroup label="${escapeHtml(dimensionDisplayLabel(item))}">${options}</optgroup>`:options;
+    }).join('');
     launcher.innerHTML=`
         <div class="scope-box">
             <div class="scope-box-title">当前评测层级</div>
@@ -483,6 +480,13 @@ function renderSelectionDetail(){
             <div>
                 <label class="form-label fw-semibold">评测模型</label>
                 <select id="model-select" class="form-select" onchange="onModelChange()">${modelOptionsHtml()}</select>
+            </div>
+            <div>
+                <label class="form-label fw-semibold">评测 Benchmark</label>
+                <select id="benchmark-select" class="form-select" onchange="onBenchmarkChange()">
+                    <option value="" ${selectedBenchmarkId?'':'selected'}>全部 Benchmark（${benchmarkCount}）</option>
+                    ${benchmarkOptions}
+                </select>
             </div>
             <div class="toolbar">
                 <button class="btn btn-primary" type="button" onclick="submitEval()" ${scopeRows.length?'':'disabled'}>${escapeHtml(launchLabel)}</button>
@@ -540,6 +544,18 @@ function modelOptionsHtml(){
 function onModelChange(){
     const modelSel=document.getElementById('model-select');
     if(modelSel)selectedModelId=modelSel.value;
+}
+
+function onBenchmarkChange(){
+    const select=document.getElementById('benchmark-select');
+    if(!select)return;
+    if(!select.value){selectBenchmark('');return}
+    try{
+        const [dimensionId,benchmarkId]=JSON.parse(select.value);
+        selectBenchmark(benchmarkId,dimensionId);
+    }catch(error){
+        console.error('无法解析 Benchmark 选项',error);
+    }
 }
 
 function renderMetrics(){
@@ -945,7 +961,6 @@ async function refreshOptions(){
     renderHeaderMeta();
     renderDomainGroups();
     renderDimensions();
-    renderBenchmarks();
     renderSelectionDetail();
     await refreshCurrentResult(false);
 }
@@ -976,7 +991,6 @@ async function refreshCurrentResult(resetViews=true){
     setBenchmarkExampleFromSelection();
     renderDomainGroups();
     renderDimensions();
-    renderBenchmarks();
     renderSelectionDetail();
     if(!currentResult.exists){fullSummary={};placeholderItems=[];renderMetrics();await fetchEvalSamples(false);return}
     await refreshResultViews();
@@ -1087,7 +1101,6 @@ function selectGroup(id){
     setBenchmarkExampleFromSelection();
     renderDomainGroups();
     renderDimensions();
-    renderBenchmarks();
     renderSelectionDetail();
     evalSamples=[];
     refreshResultViewsIfNeeded();
@@ -1105,7 +1118,6 @@ function selectDomain(id){
     evalSamples=[];
     renderDomainGroups();
     renderDimensions();
-    renderBenchmarks();
     renderSelectionDetail();
     refreshResultViewsIfNeeded();
     refreshJobs(false);
@@ -1123,19 +1135,24 @@ function selectDimension(id){
     evalSamples=[];
     renderDomainGroups();
     renderDimensions();
-    renderBenchmarks();
     renderSelectionDetail();
     refreshResultViewsIfNeeded();
     refreshJobs(false);
 }
 
-function selectBenchmark(id){
-    if(selectedBenchmarkId===id)return;
+function selectBenchmark(id,dimensionId=''){
+    if(selectedBenchmarkId===id&&(!dimensionId||selectedDimId===dimensionId))return;
     selectionTouched=true;
+    if(dimensionId&&dimensionMap[dimensionId]){
+        selectedDimId=dimensionId;
+        selectedGroupId=dimensionMap[dimensionId].group_id;
+        selectedDomainId=groupMap[selectedGroupId]?.domain_id||selectedDomainId;
+    }
     selectedBenchmarkId=id;
     setBenchmarkExampleFromSelection();
     evalSamples=[];
-    renderBenchmarks();
+    renderDomainGroups();
+    renderDimensions();
     renderSelectionDetail();
     refreshResultViewsIfNeeded();
     refreshJobs(false);
