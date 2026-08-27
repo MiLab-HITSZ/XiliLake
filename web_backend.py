@@ -5927,7 +5927,7 @@ def create_job(payload: Dict[str, Any]) -> Dict[str, Any]:
         benchmark_ids = [row['benchmark_id'] for row in scope_rows]
         catalog_scope = len(scope_rows) > 1
         if scope_type == 'total':
-            scope_label = '总测评'
+            scope_label = '总评测'
         elif scope_type == 'domain':
             scope_label = scope_rows[0]['domain_label']
         elif scope_type == 'group':

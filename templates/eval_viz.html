@@ -144,7 +144,8 @@
             <div class="subtitle" id="catalog-meta">13大类 · 100子类</div>
         </div>
         <div class="head-actions">
-            <button class="btn btn-primary" type="button" onclick="openLeaderboardPopup()">总结果</button>
+            <button class="btn btn-primary" type="button" onclick="openTotalEvaluation()">总评测</button>
+            <button class="btn btn-outline-secondary" type="button" onclick="openLeaderboardPopup()">总结果</button>
         </div>
     </header>
 
@@ -311,7 +312,7 @@ function selectedCdhDims(){return selectedDims().filter(isCdh)}
 function selectedPlaceholderDims(){return selectedDims().filter(id=>!isCdh(id))}
 function selectedBenchmarkImplemented(){const rows=selectedScopeSelections();return !!rows.length&&rows.every(item=>item.benchmark.implemented)}
 function evaluationScopeType(){return selectedBenchmark()?'benchmark':(selectedDimension()?'dimension':(currentGroup()?'group':(currentDomain()?'domain':'total')))}
-function evaluationScopeLabel(){return selectedBenchmark()?.name||dimensionDisplayLabel(selectedDimension())||currentGroup()?.label||currentDomain()?.label||'总测评'}
+function evaluationScopeLabel(){return selectedBenchmark()?.name||dimensionDisplayLabel(selectedDimension())||currentGroup()?.label||currentDomain()?.label||'总评测'}
 function benchmarkMetrics(bench){const rows=bench?.metrics||[];if(Array.isArray(rows)&&rows.length){return rows.map(item=>typeof item==='string'?{label:item,key:item,format:'text'}:item)}return DEFAULT_BENCHMARK_METRICS}
 function benchmarkMetaTags(bench){
     const tags=[];
@@ -418,8 +419,7 @@ function renderDomainGroups(){
     const groupBox=document.getElementById('group-list');
     const groupTitle=document.getElementById('group-section-title');
     const domains=catalog.domains||[];
-    const totalSwitch=`<button type="button" class="domain-switch ${selectedDomainId?'':'active'}" onclick="selectTotalEvaluation()"><span class="name">总测评</span><span class="count">${(catalog.groups||[]).length}大类 · ${catalog.total_dimensions||0}子类</span></button>`;
-    switcher.innerHTML=domains.length?totalSwitch+domains.map(domain=>`<button type="button" class="domain-switch ${domain.id===selectedDomainId?'active':''}" onclick="selectDomain('${escapeHtml(domain.id)}')"><span class="name">${escapeHtml(domain.label)}</span><span class="count">${domain.group_count||0}大类 · ${domain.dimension_count||0}子类</span></button>`).join(''):'<div class="empty">暂无评测领域。</div>';
+    switcher.innerHTML=domains.length?domains.map(domain=>`<button type="button" class="domain-switch ${domain.id===selectedDomainId?'active':''}" onclick="selectDomain('${escapeHtml(domain.id)}')"><span class="name">${escapeHtml(domain.label)}</span><span class="count">${domain.group_count||0}大类 · ${domain.dimension_count||0}子类</span></button>`).join(''):'<div class="empty">暂无评测领域。</div>';
     const domain=currentDomain();
     const groups=groupsForDomain();
     groupTitle.textContent=domain?.label||'全部评测大类';
@@ -447,7 +447,7 @@ function renderGroupBrief(){
     if(!domain){
         box.innerHTML=`
             <div class="group-brief-title">
-                总测评
+                总评测
                 <span>${(catalog.groups||[]).length}大类 · ${catalog.total_dimensions||selectedScopeDimensions().length}子类 · ${catalog.total_benchmarks||selectedScopeSelections().length}数据集</span>
             </div>
             <div class="group-brief-text">覆盖系统中的全部通用、医疗行业和网络安全行业评测内容，统一汇总各层级 Benchmark 的进度、指标与结果。</div>`;
@@ -485,8 +485,7 @@ function renderSelectionDetail(){
     const scopeType=evaluationScopeType();
     const scopeLabel={total:'全部综合评测',domain:'领域综合评测',group:'大类综合评测',dimension:'子类综合评测',benchmark:'Benchmark 评测'}[scopeType];
     const hierarchy=[
-        {label:'总测评'},
-        domain?{label:domain.label,level:'domain',title:'移除评测领域并返回总测评'}:null,
+        domain?{label:domain.label,level:'domain',title:'移除评测领域并返回总评测'}:{label:'总评测'},
         group?{label:group.label,level:'group',title:'移除大类并返回评测领域'}:null,
         dim?{label:dimensionDisplayLabel(dim),level:'dimension',title:'移除子类并返回大类'}:null,
         bench?{label:bench.name||'',level:'benchmark',title:'移除 Benchmark 并返回子类'}:null,
@@ -494,7 +493,7 @@ function renderSelectionDetail(){
     const uniqueGroups=new Set(scopeRows.map(item=>item.group_id)).size;
     const uniqueDimensions=new Set(scopeRows.map(item=>item.dimension_id)).size;
     const scopeCountLabel=scopeType==='total'||scopeType==='domain'?`${uniqueGroups}大类 · ${uniqueDimensions}子类 · ${scopeRows.length} Benchmark`:`${uniqueDimensions}子类 · ${scopeRows.length} Benchmark`;
-    const launchLabel={total:'启动总测评',domain:'启动领域综合评测',group:'启动大类综合评测',dimension:'启动子类综合评测',benchmark:'启动评测'}[scopeType];
+    const launchLabel={total:'启动总评测',domain:'启动领域综合评测',group:'启动大类综合评测',dimension:'启动子类综合评测',benchmark:'启动评测'}[scopeType];
     const benchmarkDimensions=dim?[dim]:(group?(group.dimensions||[]):selectedScopeDimensions());
     const benchmarkCount=benchmarkDimensions.reduce((sum,item)=>sum+(item.benchmarks||[]).length,0);
     const benchmarkOptions=benchmarkDimensions.map(item=>{
@@ -532,12 +531,12 @@ function renderSelectionDetail(){
         </div>`;
     if(!domain){
         const domainNames=(catalog.domains||[]).map(item=>item.label);
-        shell.innerHTML=`<div class="intro-box"><div class="pathline"><span class="tag">总测评</span></div><h3>总测评</h3><h4>评测介绍</h4><div class="intro-text">覆盖系统中的全部通用、医疗行业和网络安全行业评测内容，统一汇总各层级 Benchmark 的进度、指标与结果。</div><h4 style="margin-top:16px;">覆盖领域</h4><ul class="scope-list">${domainNames.map(name=>`<li>${escapeHtml(name)}</li>`).join('')}</ul></div>`;
+        shell.innerHTML=`<div class="intro-box"><div class="pathline"><span class="tag">总评测</span></div><h3>总评测</h3><h4>评测介绍</h4><div class="intro-text">覆盖系统中的全部通用、医疗行业和网络安全行业评测内容，统一汇总各层级 Benchmark 的进度、指标与结果。</div><h4 style="margin-top:16px;">覆盖领域</h4><ul class="scope-list">${domainNames.map(name=>`<li>${escapeHtml(name)}</li>`).join('')}</ul></div>`;
         return;
     }
     if(!group){
         const groupNames=groupsForDomain().map(item=>item.label);
-        shell.innerHTML=`<div class="intro-box"><div class="pathline"><span class="tag">总测评</span><span class="tag">${escapeHtml(domain.label)}</span></div><h3>${escapeHtml(domain.label)}</h3><h4>领域介绍</h4><div class="intro-text">${escapeHtml(domain.description||'')}</div><h4 style="margin-top:16px;">覆盖大类</h4><ul class="scope-list">${groupNames.map(name=>`<li>${escapeHtml(name)}</li>`).join('')}</ul></div>`;
+        shell.innerHTML=`<div class="intro-box"><div class="pathline"><span class="tag">${escapeHtml(domain.label)}</span></div><h3>${escapeHtml(domain.label)}</h3><h4>领域介绍</h4><div class="intro-text">${escapeHtml(domain.description||'')}</div><h4 style="margin-top:16px;">覆盖大类</h4><ul class="scope-list">${groupNames.map(name=>`<li>${escapeHtml(name)}</li>`).join('')}</ul></div>`;
         return;
     }
     if(!dim){
@@ -1199,6 +1198,11 @@ function selectTotalEvaluation(){
     refreshJobs(false);
 }
 
+function openTotalEvaluation(){
+    selectTotalEvaluation();
+    document.getElementById('evaluation-launcher')?.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
 function selectDomain(id){
     if(selectedDomainId===id&&!selectedGroupId){clearSelectionLevel('domain');return}
     selectionTouched=true;
@@ -1311,7 +1315,7 @@ async function submitEval(){
         activePollingJobId=data.id;
         await refreshJobs(true);
     }catch(e){alert(e.message||'启动失败');}
-    finally{if(trigger){trigger.disabled=false;trigger.textContent={total:'启动总测评',domain:'启动领域综合评测',group:'启动大类综合评测',dimension:'启动子类综合评测',benchmark:'启动评测'}[evaluationScopeType()];}}
+    finally{if(trigger){trigger.disabled=false;trigger.textContent={total:'启动总评测',domain:'启动领域综合评测',group:'启动大类综合评测',dimension:'启动子类综合评测',benchmark:'启动评测'}[evaluationScopeType()];}}
 }
 
 async function refreshJobs(refreshResult){
