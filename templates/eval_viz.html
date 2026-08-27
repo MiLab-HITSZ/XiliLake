@@ -64,6 +64,9 @@
         .scope-box-title{font-size:13px;font-weight:900;color:#475569;margin-bottom:9px;}
         .scope-box-path{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
         .scope-box-path .separator{color:#94a3b8;font-weight:900;}
+        .scope-box-path .scope-tag{gap:5px;padding-right:5px;}
+        .scope-remove{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;padding:0;border:0;border-radius:50%;background:transparent;color:#6366f1;font:900 18px/1 system-ui;cursor:pointer;}
+        .scope-remove:hover,.scope-remove:focus-visible{background:#dbe4ff;color:#312e81;outline:none;}
         .scope-box-meta{margin-top:9px;color:#475569;font-size:13px;font-weight:700;}
         .scope-list{margin:10px 0 0;padding-left:20px;color:#334155;line-height:1.75;}
         .intro-box{padding:16px 18px;border:1px solid var(--line);background:#fbfdff;}
@@ -456,7 +459,12 @@ function renderSelectionDetail(){
     const scopeRows=selectedScopeSelections();
     const scopeType=evaluationScopeType();
     const scopeLabel={group:'大类综合评测',dimension:'子类综合评测',benchmark:'Benchmark 评测'}[scopeType];
-    const hierarchy=[domain?.label,group.label,dim?dimensionDisplayLabel(dim):'',bench?.name||''].filter(Boolean);
+    const hierarchy=[
+        {label:domain?.label||''},
+        {label:group.label},
+        dim?{label:dimensionDisplayLabel(dim),level:'dimension',title:'移除子类并返回大类'}:null,
+        bench?{label:bench.name||'',level:'benchmark',title:'移除 Benchmark 并返回子类'}:null,
+    ].filter(item=>item?.label);
     const uniqueDimensions=new Set(scopeRows.map(item=>item.dimension_id)).size;
     const launchLabel={group:'启动大类综合评测',dimension:'启动子类综合评测',benchmark:'启动评测'}[scopeType];
     const benchmarkDimensions=dim?[dim]:(group.dimensions||[]);
@@ -473,7 +481,7 @@ function renderSelectionDetail(){
     launcher.innerHTML=`
         <div class="scope-box">
             <div class="scope-box-title">当前评测层级</div>
-            <div class="scope-box-path">${hierarchy.map((label,index)=>`${index?'<span class="separator">/</span>':''}<span class="tag">${escapeHtml(label)}</span>`).join('')}</div>
+            <div class="scope-box-path">${hierarchy.map((item,index)=>`${index?'<span class="separator">/</span>':''}<span class="tag ${item.level?'scope-tag':''}">${escapeHtml(item.label)}${item.level?`<button class="scope-remove" type="button" title="${escapeHtml(item.title)}" aria-label="${escapeHtml(item.title)}" onclick="clearSelectionLevel('${item.level}')">×</button>`:''}</span>`).join('')}</div>
             <div class="scope-box-meta">${escapeHtml(scopeLabel)} · ${uniqueDimensions}子类 · ${scopeRows.length} Benchmark</div>
         </div>
         <div class="form-grid">
@@ -1126,11 +1134,33 @@ function selectDomain(id){
 function selectDimension(id){
     const dim=dimensionMap[id];
     if(!dim)return;
+    if(selectedDimId===id){clearSelectionLevel('dimension');return}
     selectionTouched=true;
     selectedGroupId=dim.group_id;
     selectedDomainId=groupMap[selectedGroupId]?.domain_id||selectedDomainId;
     selectedDimId=id;
     selectedBenchmarkId='';
+    setBenchmarkExampleFromSelection();
+    evalSamples=[];
+    renderDomainGroups();
+    renderDimensions();
+    renderSelectionDetail();
+    refreshResultViewsIfNeeded();
+    refreshJobs(false);
+}
+
+function clearSelectionLevel(level){
+    if(level==='benchmark'){
+        if(!selectedBenchmarkId)return;
+        selectedBenchmarkId='';
+    }else if(level==='dimension'){
+        if(!selectedDimId)return;
+        selectedDimId='';
+        selectedBenchmarkId='';
+    }else{
+        return;
+    }
+    selectionTouched=true;
     setBenchmarkExampleFromSelection();
     evalSamples=[];
     renderDomainGroups();
