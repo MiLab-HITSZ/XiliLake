@@ -9,6 +9,7 @@ import shutil
 import subprocess
 import sys
 import threading
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from pathlib import Path
@@ -32,6 +33,14 @@ def write_json(path: Path, payload: Any) -> None:
     tmp = path.with_suffix(path.suffix + '.tmp')
     tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
     tmp.replace(path)
+
+
+def read_json(path: Path) -> Dict[str, Any]:
+    try:
+        payload = json.loads(path.read_text(encoding='utf-8'))
+    except Exception:
+        return {}
+    return payload if isinstance(payload, dict) else {}
 
 
 def read_jsonl(path: Path) -> List[Dict[str, Any]]:
@@ -213,8 +222,9 @@ def main() -> int:
     selections = filter_catalog_rows(selected_catalog_rows(), args.selections_file)
     if not selections:
         raise RuntimeError('No evaluable Benchmarks were found')
-    cases_per_benchmark = max(1, int(args.cases_per_benchmark or 1))
     is_system_smoke = not bool(args.selections_file)
+    requested_cases = int(args.cases_per_benchmark or 0)
+    cases_per_benchmark = max(1, requested_cases) if is_system_smoke else max(0, requested_cases)
 
     output_dir = Path(args.output_dir).resolve()
     if output_dir.exists():
@@ -229,6 +239,7 @@ def main() -> int:
     lock = threading.Lock()
     completed = 0
     failures: List[Dict[str, Any]] = []
+    active_sample_progress: Dict[int, Dict[str, Any]] = {}
     dimension_ids = [str(row['dimension'].get('id') or '') for row in selections]
     benchmark_ids = [row['execution_id'] for row in selections]
     unique_dimension_count = len(set(dimension_ids))
@@ -240,6 +251,7 @@ def main() -> int:
         'catalog_scope': not is_system_smoke,
         'scope_label': args.scope_label,
         'cases_per_benchmark': cases_per_benchmark,
+        'full_dataset': not is_system_smoke and cases_per_benchmark == 0,
         'smoke_cases_per_benchmark': cases_per_benchmark if is_system_smoke else None,
         'trust_dimensions': dimension_ids,
         'benchmark_ids': benchmark_ids,
@@ -329,14 +341,47 @@ def main() -> int:
                 command.extend(['--max-cases', str(cases_per_benchmark)])
             log_path = item_root / 'runner.log'
             with log_path.open('w', encoding='utf-8') as log_handle:
-                process = subprocess.run(
+                process = subprocess.Popen(
                     command,
                     cwd=str(BASE_DIR),
                     stdout=log_handle,
                     stderr=subprocess.STDOUT,
-                    timeout=max(args.timeout_s + 120, 300),
-                    check=False,
                 )
+                deadline = None if cases_per_benchmark == 0 else time.monotonic() + max(args.timeout_s + 120, 300)
+                while process.poll() is None:
+                    if deadline is not None and time.monotonic() >= deadline:
+                        process.kill()
+                        process.wait()
+                        raise TimeoutError('benchmark runner exceeded its time limit')
+                    child_state = read_json(child_progress)
+                    child_total = max(0, int(child_state.get('total') or 0))
+                    child_completed = max(0, int(child_state.get('completed') or 0))
+                    with lock:
+                        active_sample_progress[index] = {
+                            'completed': child_completed,
+                            'total': child_total,
+                            'dimension': dimension.get('label') or '',
+                            'benchmark': benchmark.get('name') or '',
+                        }
+                        fractions = [
+                            min(1.0, state['completed'] / state['total'])
+                            for state in active_sample_progress.values()
+                            if state['total'] > 0
+                        ]
+                        progress.update({
+                            'percent': round((completed + sum(fractions)) / len(selections) * 100.0, 2),
+                            'message': (
+                                f'{completed}/{len(selections)} Benchmarks completed; '
+                                f'{sum(state["completed"] for state in active_sample_progress.values())}/'
+                                f'{sum(state["total"] for state in active_sample_progress.values())} active samples'
+                            ),
+                            'active_samples': list(active_sample_progress.values()),
+                        })
+                        if progress_path:
+                            write_json(progress_path, progress)
+                    time.sleep(1)
+                with lock:
+                    active_sample_progress.pop(index, None)
             child_results = read_jsonl(output_root / 'current' / 'results.jsonl')
             if process.returncode != 0:
                 tail = log_path.read_text(encoding='utf-8', errors='replace')[-4000:]

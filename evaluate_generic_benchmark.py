@@ -1751,7 +1751,9 @@ def main() -> int:
     args = ap.parse_args()
 
     dataset = Path(args.dataset)
-    rows = [] if args.max_cases == 0 else load_dataset_rows(dataset, max_cases=max(0, args.max_cases))
+    # A zero limit means the complete dataset. This is used by full
+    # domain/group evaluations; positive values are reserved for smoke runs.
+    rows = load_dataset_rows(dataset, max_cases=max(0, args.max_cases))
     cases = [build_case(row, idx, args.benchmark_name, args.dimension_label) for idx, row in enumerate(rows)]
     requested_tasks = {t.strip() for t in str(args.tasks or 'qa').split(',') if t.strip()}
     if requested_tasks:

@@ -6370,7 +6370,9 @@ def run_job(job_id: str) -> None:
                 '--timeout-s', str(int(payload.get('timeout_s') or 300)),
                 '--max-tokens', str(min(2048, int(payload.get('max_tokens') or 1024))),
                 '--selections-file', str(selections_path),
-                '--cases-per-benchmark', str(max(1, int(os.environ.get('TRUSTED_EVAL_SCOPE_CASES', '20')))),
+                # Zero is the explicit full-dataset mode. Smoke tests keep
+                # their independent one-case limit in the branch above.
+                '--cases-per-benchmark', str(max(0, int(os.environ.get('TRUSTED_EVAL_SCOPE_CASES', '0')))),
                 '--scope-label', str(payload.get('scope_label') or ''),
             ]
             if payload.get('api_key_env'):
