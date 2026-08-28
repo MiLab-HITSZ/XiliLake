@@ -1078,6 +1078,7 @@ async function refreshResultViews(){
     const revision=selectionRevision;
     await fetchSummary();
     if(revision!==selectionRevision)return;
+    renderMetrics();
     await fetchPlaceholderResults();
     if(revision!==selectionRevision)return;
     await fetchEvalSamples(false);
@@ -1337,6 +1338,7 @@ async function submitEval(){
 }
 
 async function refreshJobs(refreshResult){
+    const wasActive=Boolean(activePollingJobId);
     const jobs=await fetchJobs();
     const globalActive=jobs.find(isActiveJob)||null;
     const selectedJob=jobs.find(job=>isActiveJob(job)&&jobMatchesSelection(job))
@@ -1344,7 +1346,8 @@ async function refreshJobs(refreshResult){
         ||null;
     renderJob(selectedJob);
     activePollingJobId=globalActive?.id||null;
-    if(refreshResult||!activePollingJobId)await refreshCurrentResult(false);
+    const justFinished=wasActive&&!activePollingJobId;
+    if(refreshResult||justFinished||(!activePollingJobId&&!currentResult.exists))await refreshCurrentResult(false);
     setResultFocusedLayout(Boolean(globalActive)||currentResult.exists);
 }
 

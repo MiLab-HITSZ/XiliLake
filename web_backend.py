@@ -6592,7 +6592,10 @@ def get_eval_data():
             'total_pages': 0,
         })
 
-    records = normalize_result_records_for_metrics(read_jsonl(results_path))
+    # Scope ids are persisted directly on result rows. Filter the inexpensive
+    # raw records first so opening one child scope does not normalize every
+    # Benchmark cached by its parent evaluation.
+    records = read_jsonl(results_path)
     if dimension_id:
         dimension_records = [
             row for row in records
@@ -6621,6 +6624,7 @@ def get_eval_data():
         ]
         if selection_records or any(row.get('dimension_id') or row.get('benchmark_id') for row in records):
             records = selection_records
+    records = normalize_result_records_for_metrics(records)
     data_list = group_results_by_pair(records)
     if category:
         data_list = [row for row in data_list if str(row.get('category') or '') == category]
