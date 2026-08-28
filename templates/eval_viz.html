@@ -146,7 +146,7 @@
     <header class="page-head">
         <div class="page-head-main">
             <h1>多模态大模型可信测评系统-XiliLake v0.1</h1>
-            <div class="subtitle" id="catalog-meta">13大类 · 100子类</div>
+            <div class="subtitle" id="catalog-meta">13大类 · 100子类 · 113数据集</div>
         </div>
         <div class="head-actions">
             <button class="btn btn-primary" type="button" onclick="openTotalEvaluation()">总评测</button>
@@ -343,7 +343,7 @@ function benchmarkMetaTags(bench){
     return [...new Set(tags.filter(Boolean))];
 }
 function selectionPathKey(){return `${selectedDomainId}::${selectedGroupId}::${selectedDimId}::${selectedBenchmarkId}`}
-function scopedResultCacheKey(){return `${currentResult.created_at||'no-result'}::${selectionPathKey()}`}
+function scopedResultCacheKey(){return `${currentResult.folder||'no-model'}::${currentResult.created_at||'no-result'}::${selectionPathKey()}`}
 function restoreScopedResultView(){
     const cached=scopedResultCache.get(scopedResultCacheKey());
     if(!cached){fullSummary={};placeholderItems=[];evalSamples=[];evalSamplesCacheKey='';return false}
@@ -386,6 +386,7 @@ function setResultFocusedLayout(active){
 function jobMatchesSelection(job){
     if(!job)return false;
     const payload=job.payload||{};
+    if(selectedModelId&&payload.selected_model_id&&payload.selected_model_id!==selectedModelId)return false;
     if(payload.scope_type==='total'&&!selectedDomainId)return true;
     if(payload.scope_type==='domain'&&payload.scope_domain_id===selectedDomainId&&!selectedGroupId)return true;
     if(payload.scope_type==='group'&&payload.scope_group_id===selectedGroupId&&!selectedDimId)return true;
@@ -446,7 +447,8 @@ function renderHeaderMeta(){
     const totalGroups=(catalog.groups||[]).length;
     const domainDimensionTotal=(catalog.domains||[]).reduce((sum,domain)=>sum+Number(domain.dimension_count||0),0);
     const totalDims=domainDimensionTotal||catalog.total_dimensions||0;
-    document.getElementById('catalog-meta').textContent=`${totalGroups}大类 · ${totalDims}子类`;
+    const totalBenchmarks=Number(catalog.total_benchmarks||selectedScopeSelections().length||0);
+    document.getElementById('catalog-meta').textContent=`${totalGroups}大类 · ${totalDims}子类 · ${totalBenchmarks}数据集`;
 }
 
 function renderDomainGroups(){
@@ -454,7 +456,7 @@ function renderDomainGroups(){
     const groupBox=document.getElementById('group-list');
     const groupTitle=document.getElementById('group-section-title');
     const domains=catalog.domains||[];
-    switcher.innerHTML=domains.length?domains.map(domain=>`<button type="button" class="domain-switch ${domain.id===selectedDomainId?'active':''}" onclick="selectDomain('${escapeHtml(domain.id)}')"><span class="name">${escapeHtml(domain.label)}</span><span class="count">${domain.group_count||0}大类 · ${domain.dimension_count||0}子类</span></button>`).join(''):'<div class="empty">暂无评测领域。</div>';
+    switcher.innerHTML=domains.length?domains.map(domain=>`<button type="button" class="domain-switch ${domain.id===selectedDomainId?'active':''}" onclick="selectDomain('${escapeHtml(domain.id)}')"><span class="name">${escapeHtml(domain.label)}</span><span class="count">${domain.group_count||0}大类 · ${domain.dimension_count||0}子类 · ${domain.benchmark_count||0}数据集</span></button>`).join(''):'<div class="empty">暂无评测领域。</div>';
     const domain=currentDomain();
     const groups=groupsForDomain();
     groupTitle.textContent=domain?.label||'全部评测大类';
@@ -622,9 +624,22 @@ function modelOptionsHtml(){
     return rows.map(item=>`<option value="${escapeHtml(item.id)}" ${item.id===activeId?'selected':''}>${escapeHtml(item.label)}</option>`).join('');
 }
 
-function onModelChange(){
+async function onModelChange(){
     const modelSel=document.getElementById('model-select');
-    if(modelSel)selectedModelId=modelSel.value;
+    if(!modelSel||selectedModelId===modelSel.value)return;
+    selectedModelId=modelSel.value;
+    selectionTouched=true;
+    selectionRevision+=1;
+    scopedResultCache.clear();
+    fullSummary={};
+    placeholderItems=[];
+    evalSamples=[];
+    evalSamplesCacheKey='';
+    currentResult={exists:false,display_name:modelSel.options[modelSel.selectedIndex]?.text||''};
+    renderMetrics();
+    renderEvalSamples();
+    await refreshCurrentResult(false);
+    await refreshJobs(false);
 }
 
 function onBenchmarkChange(){
@@ -966,12 +981,19 @@ async function openLeaderboardPopup(){
     win.document.write('<!doctype html><html><head><meta charset="utf-8"><title>总结果</title><style>body{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;margin:20px;color:#0f172a;background:#f8fafc}h1{margin:0 0 6px;font-size:26px}.meta{color:#64748b;margin-bottom:18px}</style></head><body><h1>总结果</h1><div class="meta">正在加载...</div></body></html>');
     win.document.close();
     try{
-        const res=await fetch('/api/leaderboard');
+        const leaderboardUrl=new URL('/api/leaderboard',location.origin);
+        if(currentResult.folder)leaderboardUrl.searchParams.set('model',currentResult.folder);
+        else if(selectedModelId)leaderboardUrl.searchParams.set('model_id',selectedModelId);
+        const res=await fetch(leaderboardUrl);
         const data=await res.json();
+        if(!res.ok)throw new Error(data.error||'加载失败');
         const cols=data.metric_columns||[];
         const rows=data.rows||[];
+        const exportUrl=new URL('/api/leaderboard/export',location.origin);
+        if(currentResult.folder)exportUrl.searchParams.set('model',currentResult.folder);
+        else if(selectedModelId)exportUrl.searchParams.set('model_id',selectedModelId);
         const html=`<!doctype html><html><head><meta charset="utf-8"><title>总结果</title><style>body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;margin:20px;color:#0f172a;background:#f8fafc}.titlebar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:6px}h1{margin:0;font-size:26px}.export{display:inline-flex;align-items:center;padding:8px 14px;border:1px solid #2458ff;background:#2458ff;color:white;text-decoration:none;font-weight:800;font-size:14px}.meta{color:#64748b;margin-bottom:18px}table{border-collapse:collapse;width:100%;background:white;font-size:13px}th,td{border:1px solid #dbe4f0;padding:8px 10px;text-align:left;vertical-align:top}th{background:#eef2ff;position:sticky;top:0}tr:nth-child(even){background:#fbfdff}.blank{color:#cbd5e1}.pill{display:inline-block;border-radius:999px;padding:2px 8px;background:#dcfce7;color:#166534;font-weight:700;font-size:12px}</style></head><body>
-            <div class="titlebar"><h1>总结果</h1><a class="export" href="/api/leaderboard/export">导出 CSV</a></div>
+            <div class="titlebar"><h1>总结果</h1><a class="export" href="${escapeHtml(exportUrl.toString())}">导出 CSV</a></div>
             <div class="meta">当前结果：${escapeHtml(data.result?.display_name||'当前结果')}；共 ${rows.length} 条 Benchmark 记录。已评测项目显示指标，未评测项目留空。</div>
             <table><thead><tr><th>评测领域</th><th>评测大类</th><th>评测子类</th><th>Benchmark</th><th>状态</th><th>任务</th>${cols.map(c=>`<th>${escapeHtml(c.label||c.key)}</th>`).join('')}</tr></thead>
             <tbody>${rows.map(row=>`<tr><td>${escapeHtml(row.major||'')}</td><td>${escapeHtml(row.secondary||'')}</td><td>${escapeHtml(row.tertiary||'')}</td><td>${escapeHtml(row.benchmark||'')}</td><td>${row.evaluated?'<span class="pill">已评测</span>':(row.implemented?'可评测':'')}</td><td>${escapeHtml(TASK_LABELS[row.task]||row.task||'')}</td>${cols.map(c=>`<td>${row.evaluated?formatMetricValue(row.metrics?.[c.key],c.format):''}</td>`).join('')}</tr>`).join('')}</tbody></table>
@@ -1054,7 +1076,9 @@ async function refreshOptions(){
 
 async function refreshCurrentResult(resetViews=true){
     if(resetViews)showingRandomBenchmarkExample=false;
-    const res=await fetch('/api/current_result');
+    const url=new URL('/api/current_result',location.origin);
+    if(selectedModelId)url.searchParams.set('model_id',selectedModelId);
+    const res=await fetch(url);
     currentResult=await res.json();
     setResultFocusedLayout(currentResult.exists||Boolean(activePollingJobId));
     let restoredScope=false;
@@ -1118,6 +1142,7 @@ async function fetchSummary(){
     if(!(currentResult.exists&&hasRealResultForSelection()))return;
     const url=new URL('/api/summary',location.origin);
     const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+        model:currentResult.folder||'current',
         dimension_ids:[...new Set(selectedDims())],
         benchmark_ids:[...new Set(selectedBenchmarkIds())],
         result_selections:selectedScopeSelections().map(item=>({dimension_id:item.dimension_id,benchmark_id:item.benchmark_id})),
@@ -1135,10 +1160,11 @@ async function fetchEvalSamples(force){
         benchmarkExample=null;
         evalSamples=[];
         if(currentResult.exists&&hasRealResultForSelection()){
-            const cacheKey=`scope-result::${currentResult.created_at||currentResult.updated_at||''}::${selectedDomainId}::${selectedGroupId}::${selectedDimId}::${force?'shuffle':'stable'}`;
+            const cacheKey=`scope-result::${currentResult.folder||''}::${currentResult.created_at||currentResult.updated_at||''}::${selectedDomainId}::${selectedGroupId}::${selectedDimId}::${force?'shuffle':'stable'}`;
             if(!force&&evalSamplesCacheKey===cacheKey){renderEvalSamples();return}
             const url=new URL('/api/eval_data',location.origin);
             const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+                model:currentResult.folder||'current',
                 dimension_ids:[...new Set(selectedDims())],
                 benchmark_ids:[...new Set(selectedBenchmarkIds())],
                 result_selections:selectedScopeSelections().map(item=>({dimension_id:item.dimension_id,benchmark_id:item.benchmark_id})),
@@ -1158,7 +1184,7 @@ async function fetchEvalSamples(force){
     if(force)showingRandomBenchmarkExample=true;
     if(!force&&showingRandomBenchmarkExample&&benchmarkExample){evalSamples=[];renderEvalSamples();return}
     if(!force&&currentResult.exists&&hasRealResultForSelection()){
-        const cacheKey=`result::${currentResult.created_at||''}::${selectedDimId}::${selectedBenchmarkId}`;
+        const cacheKey=`result::${currentResult.folder||''}::${currentResult.created_at||''}::${selectedDimId}::${selectedBenchmarkId}`;
         if(!force && evalSamplesCacheKey===cacheKey && benchmarkExampleSelectionKey===selectionPathKey()){
             renderEvalSamples();
             return;
@@ -1166,6 +1192,7 @@ async function fetchEvalSamples(force){
         const url=new URL('/api/eval_data',location.origin);
         evalSamples=[];
         const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+            model:currentResult.folder||'current',
             dimension_ids:[selectedDimId],
             benchmark_ids:[selectedExecutionBenchmarkId()],
             result_selections:[{dimension_id:selectedDimId,benchmark_id:selectedExecutionBenchmarkId()}],
@@ -1197,7 +1224,9 @@ async function fetchEvalSamples(force){
 
 async function fetchPlaceholderResults(){
     if(!currentResult.exists){placeholderItems=[];return}
-    const res=await fetch('/api/placeholder_results');
+    const url=new URL('/api/placeholder_results',location.origin);
+    if(currentResult.folder)url.searchParams.set('model',currentResult.folder);
+    const res=await fetch(url);
     const data=await res.json();
     placeholderItems=data.items||[];
 }
@@ -1386,7 +1415,10 @@ async function cancelJob(id){
 async function deleteCurrentResult(){
     if(!currentResult.exists){alert('当前没有可删除的结果');return}
     if(!confirm('确定删除当前结果吗？'))return;
-    const res=await fetch('/api/current_result',{method:'DELETE'});
+    const url=new URL('/api/current_result',location.origin);
+    if(currentResult.folder)url.searchParams.set('model',currentResult.folder);
+    else if(selectedModelId)url.searchParams.set('model_id',selectedModelId);
+    const res=await fetch(url,{method:'DELETE'});
     const data=await res.json();
     if(!res.ok){alert(data.error||'删除失败');return}
     await refreshCurrentResult(true);
@@ -1395,7 +1427,10 @@ async function deleteCurrentResult(){
 
 function exportCurrentResult(){
     if(!currentResult.exists){alert('当前没有可导出的结果');return}
-    window.open('/api/current_result/export', '_blank');
+    const url=new URL('/api/current_result/export',location.origin);
+    if(currentResult.folder)url.searchParams.set('model',currentResult.folder);
+    else if(selectedModelId)url.searchParams.set('model_id',selectedModelId);
+    window.open(url.toString(), '_blank');
 }
 
 async function pollLoop(){

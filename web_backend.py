@@ -5051,12 +5051,120 @@ def discover_result_models() -> List[Dict[str, Any]]:
     return rows
 
 
-def current_result_dir() -> Path:
-    return RESULT_DIR / CURRENT_RESULT_NAME
+def validated_result_name(value: Any, default: str = CURRENT_RESULT_NAME) -> str:
+    """Return a direct child name of RESULT_DIR, never an arbitrary path."""
+    name = str(value or default).strip()
+    if not name:
+        name = default
+    if name in {'.', '..'} or Path(name).name != name or '/' in name or '\\' in name:
+        raise ValueError('无效的结果目录')
+    return name
 
 
-def get_current_result_info() -> Dict[str, Any]:
-    model_dir = current_result_dir()
+def current_result_dir(result_name: str = CURRENT_RESULT_NAME) -> Path:
+    return RESULT_DIR / validated_result_name(result_name)
+
+
+def first_result_record(model_dir: Path) -> Dict[str, Any]:
+    results_path = model_dir / 'results.jsonl'
+    if not results_path.exists():
+        return {}
+    try:
+        with results_path.open('r', encoding='utf-8') as handle:
+            for line in handle:
+                try:
+                    row = json.loads(line)
+                except Exception:
+                    continue
+                if isinstance(row, dict):
+                    return row
+    except Exception:
+        pass
+    return {}
+
+
+def result_model_identity(result_name: str) -> Dict[str, str]:
+    model_dir = current_result_dir(result_name)
+    run_config = read_json(model_dir / 'run_config.json', {}) or {}
+    first_record = first_result_record(model_dir)
+    display_name = (
+        run_config.get('selected_model_name')
+        or run_config.get('display_name')
+        or first_record.get('model_name')
+        or run_config.get('model')
+        or first_record.get('model')
+        or result_name
+    )
+    display_name = str(display_name or result_name)
+    if '/' in display_name or '\\' in display_name:
+        display_name = Path(display_name).name or display_name
+    return {
+        'model_id': str(run_config.get('selected_model_id') or ''),
+        'display_name': display_name,
+    }
+
+
+def resolve_result_name(model_id: str = '', requested_name: str = '') -> str:
+    """Resolve the persistent cache belonging to a UI model selection."""
+    if requested_name:
+        return validated_result_name(requested_name)
+
+    model_id = str(model_id or '').strip()
+    preset = supported_models_map().get(model_id) if model_id else None
+    if not preset:
+        return CURRENT_RESULT_NAME
+
+    target_name = str(preset.get('name') or '').strip()
+    candidates: List[str] = []
+    if current_result_dir().exists():
+        candidates.append(CURRENT_RESULT_NAME)
+    if target_name and current_result_dir(target_name).exists():
+        candidates.append(target_name)
+    if RESULT_DIR.exists():
+        candidates.extend(
+            child.name
+            for child in RESULT_DIR.iterdir()
+            if child.is_dir() and child.name not in candidates
+        )
+
+    for candidate in candidates:
+        identity = result_model_identity(candidate)
+        if identity.get('model_id') == model_id:
+            return candidate
+    for candidate in candidates:
+        if result_model_identity(candidate).get('display_name') == target_name:
+            return candidate
+    return validated_result_name(safe_slug(target_name or model_id))
+
+
+def infer_legacy_cdh_selections(model_dir: Path) -> List[Dict[str, str]]:
+    """Map pre-taxonomy CDH result rows onto their current stable catalog ids."""
+    pairs = {
+        (str(row.get('category') or ''), str(row.get('subcategory') or ''))
+        for row in read_jsonl(model_dir / 'results.jsonl')
+        if row.get('category') and row.get('subcategory')
+    }
+    valid_pairs = {
+        (category, subcategory)
+        for category, subcategory in pairs
+        if category in CDH_CATEGORY_LABELS and subcategory in CDH_SUBCATEGORY_LABELS
+    }
+    return [
+        {
+            'dimension_id': f'cdh::{category}::{subcategory}',
+            'benchmark_id': f'benchopt::cdh_hallucination::{category}::{subcategory}::default',
+        }
+        for category, subcategory in sorted(valid_pairs)
+    ]
+
+
+def get_current_result_info(
+    result_name: str = CURRENT_RESULT_NAME,
+    display_name_hint: str = '',
+    model_id_hint: str = '',
+) -> Dict[str, Any]:
+    result_name = validated_result_name(result_name)
+    model_dir = current_result_dir(result_name)
     run_config = read_json(model_dir / 'run_config.json', {}) or {}
     summary = read_json(model_dir / 'summary.json', {}) or {}
     results_exists = (model_dir / 'results.jsonl').exists()
@@ -5068,7 +5176,8 @@ def get_current_result_info() -> Dict[str, Any]:
             created_at = datetime.fromtimestamp(result_file.stat().st_mtime, timezone.utc).isoformat()
         except Exception:
             created_at = None
-    display_name = run_config.get('selected_model_name') or run_config.get('model') or CURRENT_RESULT_NAME
+    identity = result_model_identity(result_name)
+    display_name = display_name_hint or identity.get('display_name') or result_name
     if isinstance(display_name, str) and ('/' in display_name or '\\' in display_name):
         display_name = Path(display_name).name or display_name
     trust_dimensions = run_config.get('trust_dimensions') or []
@@ -5079,11 +5188,16 @@ def get_current_result_info() -> Dict[str, Any]:
             {'dimension_id': dimension_id, 'benchmark_id': benchmark_id}
             for dimension_id, benchmark_id in zip(trust_dimensions, benchmark_ids)
         ]
+    if results_exists and not result_selections:
+        result_selections = infer_legacy_cdh_selections(model_dir)
+        trust_dimensions = [item['dimension_id'] for item in result_selections]
+        benchmark_ids = [item['benchmark_id'] for item in result_selections]
     return {
         'exists': results_exists or placeholder_exists,
         'has_real_results': results_exists,
         'has_placeholder_results': placeholder_exists,
-        'folder': CURRENT_RESULT_NAME,
+        'folder': result_name,
+        'selected_model_id': run_config.get('selected_model_id') or model_id_hint or identity.get('model_id') or '',
         'display_name': display_name,
         'backend': run_config.get('selected_backend_mode') or run_config.get('backend'),
         'overall': extract_overall_metrics(summary),
@@ -5249,7 +5363,29 @@ def build_export_bundle(result_name: str = CURRENT_RESULT_NAME) -> tuple[BytesIO
 
 
 
-def normalize_result_record_for_metrics(row: Dict[str, Any]) -> Dict[str, Any]:
+def annotate_legacy_result_records(records: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Add catalog ids to legacy CDH rows without changing their source fields."""
+    annotated: List[Dict[str, Any]] = []
+    for source in records:
+        row = dict(source)
+        category = str(row.get('category') or '')
+        subcategory = str(row.get('subcategory') or '')
+        if (
+            not row.get('dimension_id')
+            and category in CDH_CATEGORY_LABELS
+            and subcategory in CDH_SUBCATEGORY_LABELS
+        ):
+            row['dimension_id'] = f'cdh::{category}::{subcategory}'
+            row['benchmark_id'] = f'benchopt::cdh_hallucination::{category}::{subcategory}::default'
+        annotated.append(row)
+    return annotated
+
+
+def normalize_result_record_for_metrics(
+    row: Dict[str, Any],
+    *,
+    mark_normalized: bool = False,
+) -> Dict[str, Any]:
     rec = dict(row)
     if isinstance(rec.get('case_raw'), dict):
         try:
@@ -5277,7 +5413,8 @@ def normalize_result_record_for_metrics(row: Dict[str, Any]) -> Dict[str, Any]:
     if rec.get('status') == 'ok' and rec.get('gt'):
         if not rec.get('model_answer'):
             rec['model_answer'] = generic_extract_model_answer(str(rec.get('pred') or ''), str(rec.get('gt') or ''))
-        should_rescore = rec.get('correct') is None or generic_looks_like_code(str(rec.get('gt') or '')) or '代码' in str(rec.get('category') or '')
+        code_result = generic_looks_like_code(str(rec.get('gt') or '')) or '代码' in str(rec.get('category') or '')
+        should_rescore = rec.get('correct') is None or (code_result and not rec.get('_metrics_normalized'))
         if should_rescore:
             try:
                 rescored = generic_score_prediction(
@@ -5292,11 +5429,20 @@ def normalize_result_record_for_metrics(row: Dict[str, Any]) -> Dict[str, Any]:
                     rec['correct'] = rescored
             except Exception:
                 pass
+    if mark_normalized:
+        rec['_metrics_normalized'] = True
     return rec
 
 
-def normalize_result_records_for_metrics(records: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    return [normalize_result_record_for_metrics(r) for r in records]
+def normalize_result_records_for_metrics(
+    records: List[Dict[str, Any]],
+    *,
+    mark_normalized: bool = False,
+) -> List[Dict[str, Any]]:
+    return [
+        normalize_result_record_for_metrics(row, mark_normalized=mark_normalized)
+        for row in annotate_legacy_result_records(records)
+    ]
 
 def aggregate_metrics(records: List[Dict[str, Any]]) -> Dict[str, Any]:
     total = len(records)
@@ -5496,17 +5642,25 @@ def merge_benchmark_result_cache(
     new_records = annotate_cached_result_records(read_jsonl(staging_records_path), new_selections)
     existing_config = read_json(result_dir / 'run_config.json', {}) or {}
     existing_selections = result_selections_from_config(existing_config)
+    if not existing_selections and (result_dir / 'results.jsonl').exists():
+        existing_selections = infer_legacy_cdh_selections(result_dir)
     existing_records = annotate_cached_result_records(
-        read_jsonl(result_dir / 'results.jsonl'),
+        annotate_legacy_result_records(read_jsonl(result_dir / 'results.jsonl')),
         existing_selections,
     )
     selected_model_id = str(payload.get('selected_model_id') or '')
     existing_model_id = str(existing_config.get('selected_model_id') or '')
     same_model = bool(selected_model_id and selected_model_id == existing_model_id)
     if not selected_model_id or not existing_model_id:
+        existing_identity = result_model_identity(result_dir.name) if result_dir.exists() else {}
         same_model = (
             str(payload.get('selected_model_name') or '')
-            == str(existing_config.get('selected_model_name') or existing_config.get('display_name') or '')
+            == str(
+                existing_config.get('selected_model_name')
+                or existing_config.get('display_name')
+                or existing_identity.get('display_name')
+                or ''
+            )
         )
 
     replace_all = bool(payload.get('smoke_all')) or not same_model
@@ -5527,6 +5681,10 @@ def merge_benchmark_result_cache(
             item for item in existing_selections
             if (item['dimension_id'], item['benchmark_id']) not in new_keys
         ]
+
+    # Persist score normalization once. Scope summaries can then aggregate
+    # hundreds of Benchmarks without repeatedly executing code-based scorers.
+    merged_records = normalize_result_records_for_metrics(merged_records, mark_normalized=True)
 
     merged_config = {
         **staged_run_config,
@@ -5618,9 +5776,18 @@ def current_result_matches(dim: Dict[str, Any], bench: Dict[str, Any], run_confi
 
 
 def build_leaderboard_rows(result_name: str = CURRENT_RESULT_NAME) -> Dict[str, Any]:
+    result_name = validated_result_name(result_name)
     catalog = build_trust_catalog()
     result_dir = RESULT_DIR / result_name
     run_config = read_json(result_dir / 'run_config.json', {}) or {}
+    result_info = get_current_result_info(result_name)
+    if not result_selections_from_config(run_config) and result_info.get('result_selections'):
+        run_config = {
+            **run_config,
+            'trust_dimensions': result_info.get('trust_dimensions') or [],
+            'benchmark_ids': result_info.get('benchmark_ids') or [],
+            'result_selections': result_info.get('result_selections') or [],
+        }
     results_path = result_dir / 'results.jsonl'
     summary = build_summary_from_records(read_jsonl(results_path)) if results_path.exists() else (read_json(result_dir / 'summary.json', {}) or {})
     rows: List[Dict[str, Any]] = []
@@ -5664,7 +5831,7 @@ def build_leaderboard_rows(result_name: str = CURRENT_RESULT_NAME) -> Dict[str, 
                         'metrics': {col['key']: None for col in LEADERBOARD_METRIC_COLUMNS},
                     })
     return {
-        'result': get_current_result_info(),
+        'result': result_info,
         'metric_columns': LEADERBOARD_METRIC_COLUMNS,
         'rows': rows,
     }
@@ -5972,7 +6139,9 @@ def create_job(payload: Dict[str, Any]) -> Dict[str, Any]:
     job_id = uuid.uuid4().hex[:12]
     job_dir = JOBS_DIR / job_id
     job_dir.mkdir(parents=True, exist_ok=True)
-    result_model = CURRENT_RESULT_NAME
+    # Each model owns an independent cache. Existing compatible folders are
+    # reused so historical results remain available when the UI model changes.
+    result_model = resolve_result_name(model_id=model_id)
 
     clean_payload = {
         'run_name': result_model,
@@ -6405,13 +6574,27 @@ def taxonomy_editor_api():
 
 @app.route('/api/leaderboard', methods=['GET'])
 def get_leaderboard():
-    return jsonify(build_leaderboard_rows(CURRENT_RESULT_NAME))
+    try:
+        result_name = resolve_result_name(
+            model_id=str(request.args.get('model_id') or ''),
+            requested_name=str(request.args.get('model') or ''),
+        )
+    except ValueError as exc:
+        return jsonify({'error': str(exc)}), 400
+    return jsonify(build_leaderboard_rows(result_name))
 
 
 @app.route('/api/leaderboard/export', methods=['GET'])
 def export_leaderboard():
+    try:
+        result_name = resolve_result_name(
+            model_id=str(request.args.get('model_id') or ''),
+            requested_name=str(request.args.get('model') or ''),
+        )
+    except ValueError as exc:
+        return jsonify({'error': str(exc)}), 400
     return send_file(
-        build_leaderboard_csv(CURRENT_RESULT_NAME),
+        build_leaderboard_csv(result_name),
         mimetype='text/csv',
         as_attachment=True,
         download_name='XiliLake-total-results.csv',
@@ -6425,46 +6608,82 @@ def get_models():
 
 @app.route('/api/result_models', methods=['GET'])
 def get_result_models():
-    current = get_current_result_info()
-    return jsonify([current] if current.get('exists') else [])
+    rows = []
+    for item in discover_result_models():
+        try:
+            info = get_current_result_info(str(item.get('name') or ''))
+        except ValueError:
+            continue
+        if info.get('exists'):
+            rows.append(info)
+    return jsonify(rows)
 
 
 @app.route('/api/result_models/<path:model_name>', methods=['DELETE'])
 def delete_result_model(model_name: str):
-    model_name = (model_name or '').strip()
-    if model_name and model_name != CURRENT_RESULT_NAME:
-        return jsonify({'error': 'Only current result is supported'}), 400
-
-    result_dir = current_result_dir()
+    try:
+        model_name = validated_result_name(model_name)
+    except ValueError as exc:
+        return jsonify({'error': str(exc)}), 400
+    result_dir = current_result_dir(model_name)
     if not result_dir.exists():
         return jsonify({'error': 'Result model not found'}), 404
 
     with JOBS_LOCK:
         for job in JOBS.values():
-            if job.get('result_model') == CURRENT_RESULT_NAME and job.get('status') in {'queued', 'starting', 'running'}:
+            if job.get('result_model') == model_name and job.get('status') in {'queued', 'starting', 'running'}:
                 return jsonify({'error': '该结果关联的评测任务仍在运行，无法删除'}), 409
 
     shutil.rmtree(result_dir)
     with JOBS_LOCK:
-        removable = [job_id for job_id, job in JOBS.items() if job.get('status') not in {'queued', 'starting', 'running'}]
+        removable = [
+            job_id for job_id, job in JOBS.items()
+            if job.get('result_model') == model_name
+            and job.get('status') not in {'queued', 'starting', 'running'}
+        ]
         for job_id in removable:
             remove_job_record(job_id)
-    return jsonify({'status': 'ok', 'deleted': CURRENT_RESULT_NAME})
+    return jsonify({'status': 'ok', 'deleted': model_name})
 
 
 @app.route('/api/current_result', methods=['GET', 'DELETE'])
 def current_result():
     if request.method == 'GET':
-        return jsonify(get_current_result_info())
-    return delete_result_model(CURRENT_RESULT_NAME)
+        model_id = str(request.args.get('model_id') or '').strip()
+        requested_name = str(request.args.get('model') or '').strip()
+        try:
+            result_name = resolve_result_name(model_id=model_id, requested_name=requested_name)
+        except ValueError as exc:
+            return jsonify({'error': str(exc)}), 400
+        preset = supported_models_map().get(model_id) if model_id else None
+        return jsonify(get_current_result_info(
+            result_name,
+            display_name_hint=str((preset or {}).get('name') or ''),
+            model_id_hint=model_id,
+        ))
+    try:
+        result_name = resolve_result_name(
+            model_id=str(request.args.get('model_id') or ''),
+            requested_name=str(request.args.get('model') or ''),
+        )
+    except ValueError as exc:
+        return jsonify({'error': str(exc)}), 400
+    return delete_result_model(result_name)
 
 
 @app.route('/api/current_result/export', methods=['GET'])
 def export_current_result():
-    info = get_current_result_info()
+    try:
+        result_name = resolve_result_name(
+            model_id=str(request.args.get('model_id') or ''),
+            requested_name=str(request.args.get('model') or ''),
+        )
+    except ValueError as exc:
+        return jsonify({'error': str(exc)}), 400
+    info = get_current_result_info(result_name)
     if not info.get('exists'):
         return jsonify({'error': '当前没有可导出的结果'}), 404
-    bundle, filename = build_export_bundle(CURRENT_RESULT_NAME)
+    bundle, filename = build_export_bundle(result_name)
     return send_file(
         bundle,
         mimetype='application/zip',
@@ -6481,7 +6700,14 @@ def get_categories():
 @app.route('/api/placeholder_results', methods=['GET', 'POST'])
 def placeholder_results():
     if request.method == 'GET':
-        rows = read_json(current_result_dir() / 'placeholder_results.json', []) or []
+        try:
+            result_name = resolve_result_name(
+                model_id=str(request.args.get('model_id') or ''),
+                requested_name=str(request.args.get('model') or ''),
+            )
+        except ValueError as exc:
+            return jsonify({'error': str(exc)}), 400
+        rows = read_json(current_result_dir(result_name) / 'placeholder_results.json', []) or []
         return jsonify({'items': rows})
 
     if has_active_job():
@@ -6498,7 +6724,8 @@ def placeholder_results():
     placeholders = placeholder_results_for_dimensions(dims, selected_model_name, benchmark_ids)
     if not placeholders:
         return jsonify({'error': '所选维度没有可展示的数据集'}), 400
-    result_dir = current_result_dir()
+    result_name = resolve_result_name(model_id=model_id)
+    result_dir = current_result_dir(result_name)
     if result_dir.exists():
         shutil.rmtree(result_dir)
     result_dir.mkdir(parents=True, exist_ok=True)
@@ -6519,13 +6746,20 @@ def placeholder_results():
     write_json(result_dir / 'run_config.json', run_config)
     write_json(result_dir / 'summary.json', {'overall': {}, 'placeholder_count': len(placeholders)})
     write_json(result_dir / 'placeholder_results.json', placeholders)
-    return jsonify({'status': 'ok', 'items': placeholders, 'current_result': get_current_result_info()}), 201
+    return jsonify({
+        'status': 'ok',
+        'items': placeholders,
+        'current_result': get_current_result_info(result_name),
+    }), 201
 
 
 @app.route('/api/summary', methods=['GET', 'POST'])
 def get_summary():
     payload = request.get_json(silent=True) or {} if request.method == 'POST' else request.args
-    model_name = str(payload.get('model') or CURRENT_RESULT_NAME).strip()
+    try:
+        model_name = validated_result_name(payload.get('model') or CURRENT_RESULT_NAME)
+    except ValueError as exc:
+        return jsonify({'error': str(exc)}), 400
     category = str(payload.get('category') or '').strip()
     subcategories = set(parse_request_list(payload.get('subcategories') or ''))
     dimension_ids = set(parse_request_list(payload.get('dimension_ids') or payload.get('dimension_id') or ''))
@@ -6543,7 +6777,7 @@ def get_summary():
         return jsonify(summary)
     if not results_path.exists():
         return jsonify({})
-    records = read_jsonl(results_path)
+    records = annotate_legacy_result_records(read_jsonl(results_path))
     if category:
         records = [r for r in records if str(r.get('category') or '') == category]
     if subcategories:
@@ -6565,7 +6799,10 @@ def get_summary():
 @app.route('/api/eval_data', methods=['GET', 'POST'])
 def get_eval_data():
     payload = request.get_json(silent=True) or {} if request.method == 'POST' else request.args
-    model_name = str(payload.get('model') or CURRENT_RESULT_NAME).strip()
+    try:
+        model_name = validated_result_name(payload.get('model') or CURRENT_RESULT_NAME)
+    except ValueError as exc:
+        return jsonify({'error': str(exc)}), 400
     page = int(payload.get('page', 1))
     per_page = int(payload.get('per_page', 10))
     category = str(payload.get('category') or '').strip()
@@ -6595,7 +6832,7 @@ def get_eval_data():
     # Scope ids are persisted directly on result rows. Filter the inexpensive
     # raw records first so opening one child scope does not normalize every
     # Benchmark cached by its parent evaluation.
-    records = read_jsonl(results_path)
+    records = annotate_legacy_result_records(read_jsonl(results_path))
     if dimension_id:
         dimension_records = [
             row for row in records
