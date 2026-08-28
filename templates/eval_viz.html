@@ -663,16 +663,10 @@ function renderMetrics(){
     const metricDefs=selectedScopeMetricDefs();
     const metricCards=(stats,defs=metricDefs)=>defs.map(metric=>`<div class="metric-card"><div class="label">${escapeHtml(metric.label||metric.key||'')}</div><div class="value">${formatMetricValue(stats?.[metric.key], metric.format)}</div></div>`).join('');
     if(hasRealResultForSelection()){
-        const byTask=fullSummary.overall||{};
-        let html='';
-        Object.keys(byTask).forEach(task=>{
-            const stats=byTask[task];
-            if(!stats)return;
-            const availableDefs=metricDefs.filter(metric=>stats?.[metric.key]!==null&&stats?.[metric.key]!==undefined);
-            const taskDefs=availableDefs.length?availableDefs:metricDefs;
-            html+=`<div class="task-metrics"><div class="task-title">${escapeHtml(TASK_LABELS[task]||task)}</div><div class="metric-grid">${metricCards(stats,taskDefs)}${taskDefs.some(metric=>metric.key==='n_total')?'':`<div class="metric-card"><div class="label">样本数</div><div class="value">${stats.n_total??'—'}</div></div>`}</div></div>`;
-        });
-        shell.innerHTML=html?`<div class="metrics-section">${html}</div>`:`<div class="metric-grid">${metricCards(null)}</div>`;
+        const stats=fullSummary.combined||{};
+        const availableDefs=metricDefs.filter(metric=>stats?.[metric.key]!==null&&stats?.[metric.key]!==undefined);
+        const shownDefs=availableDefs.length?availableDefs:metricDefs;
+        shell.innerHTML=`<div class="metric-grid">${metricCards(stats,shownDefs)}${shownDefs.some(metric=>metric.key==='n_total')?'':`<div class="metric-card"><div class="label">样本数</div><div class="value">${stats.n_total??'—'}</div></div>`}</div>`;
         return;
     }
     shell.innerHTML=`<div class="metric-grid">${metricCards(null)}</div>`;
@@ -995,8 +989,8 @@ async function openLeaderboardPopup(){
         const html=`<!doctype html><html><head><meta charset="utf-8"><title>总结果</title><style>body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;margin:20px;color:#0f172a;background:#f8fafc}.titlebar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:6px}h1{margin:0;font-size:26px}.export{display:inline-flex;align-items:center;padding:8px 14px;border:1px solid #2458ff;background:#2458ff;color:white;text-decoration:none;font-weight:800;font-size:14px}.meta{color:#64748b;margin-bottom:18px}table{border-collapse:collapse;width:100%;background:white;font-size:13px}th,td{border:1px solid #dbe4f0;padding:8px 10px;text-align:left;vertical-align:top}th{background:#eef2ff;position:sticky;top:0}tr:nth-child(even){background:#fbfdff}.blank{color:#cbd5e1}.pill{display:inline-block;border-radius:999px;padding:2px 8px;background:#dcfce7;color:#166534;font-weight:700;font-size:12px}</style></head><body>
             <div class="titlebar"><h1>总结果</h1><a class="export" href="${escapeHtml(exportUrl.toString())}">导出 CSV</a></div>
             <div class="meta">当前结果：${escapeHtml(data.result?.display_name||'当前结果')}；共 ${rows.length} 条 Benchmark 记录。已评测项目显示指标，未评测项目留空。</div>
-            <table><thead><tr><th>评测领域</th><th>评测大类</th><th>评测子类</th><th>Benchmark</th><th>状态</th><th>任务</th>${cols.map(c=>`<th>${escapeHtml(c.label||c.key)}</th>`).join('')}</tr></thead>
-            <tbody>${rows.map(row=>`<tr><td>${escapeHtml(row.major||'')}</td><td>${escapeHtml(row.secondary||'')}</td><td>${escapeHtml(row.tertiary||'')}</td><td>${escapeHtml(row.benchmark||'')}</td><td>${row.evaluated?'<span class="pill">已评测</span>':(row.implemented?'可评测':'')}</td><td>${escapeHtml(TASK_LABELS[row.task]||row.task||'')}</td>${cols.map(c=>`<td>${row.evaluated?formatMetricValue(row.metrics?.[c.key],c.format):''}</td>`).join('')}</tr>`).join('')}</tbody></table>
+            <table><thead><tr><th>评测领域</th><th>评测大类</th><th>评测子类</th><th>Benchmark</th><th>状态</th>${cols.map(c=>`<th>${escapeHtml(c.label||c.key)}</th>`).join('')}</tr></thead>
+            <tbody>${rows.map(row=>`<tr><td>${escapeHtml(row.major||'')}</td><td>${escapeHtml(row.secondary||'')}</td><td>${escapeHtml(row.tertiary||'')}</td><td>${escapeHtml(row.benchmark||'')}</td><td>${row.evaluated?'<span class="pill">已评测</span>':(row.implemented?'可评测':'')}</td>${cols.map(c=>`<td>${row.evaluated?formatMetricValue(row.metrics?.[c.key],c.format):''}</td>`).join('')}</tr>`).join('')}</tbody></table>
         </body></html>`;
         win.document.open();
         win.document.write(html);

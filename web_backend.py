@@ -5572,7 +5572,12 @@ def build_summary_from_records(records: List[Dict[str, Any]]) -> Dict[str, Any]:
     by_task: Dict[str, List[Dict[str, Any]]] = {}
     for r in records:
         by_task.setdefault(str(r.get('task')), []).append(r)
-    out: Dict[str, Any] = {'overall': {}, 'by_category': {}, 'by_subcategory': {}}
+    out: Dict[str, Any] = {
+        'combined': aggregate_metrics(records),
+        'overall': {},
+        'by_category': {},
+        'by_subcategory': {},
+    }
     for task, recs in by_task.items():
         out['overall'][task] = aggregate_metrics(recs)
         cat_map: Dict[str, List[Dict[str, Any]]] = {}
@@ -5733,103 +5738,51 @@ LEADERBOARD_METRIC_COLUMNS = [
 ]
 
 
-def summary_key_for_dimension_benchmark(dim: Dict[str, Any], bench: Dict[str, Any]) -> tuple[str, str]:
-    dim_id = str(dim.get('id') or '')
-    if dim_id.startswith('cdh::'):
-        return str(dim.get('category') or ''), str(dim.get('name_en') or '')
-    dimension_label = str(dim.get('label') or '')
-    return dimension_label, str(bench.get('name') or dimension_label)
-
-
-def current_result_matches(dim: Dict[str, Any], bench: Dict[str, Any], run_config: Dict[str, Any]) -> bool:
-    dims = {str(x) for x in (run_config.get('trust_dimensions') or [])}
-    benches = {str(x) for x in (run_config.get('benchmark_ids') or [])}
-    dim_id = str(dim.get('id') or '')
-    bench_id = str(bench.get('execution_option_id') or bench.get('id') or '')
-    result_dimension_ids = {
-        dim_id,
-        str(bench.get('result_dimension_id') or ''),
-        *[str(item) for item in (dim.get('result_dimension_ids') or [])],
-    }
-    result_dimension_ids.discard('')
-    selections = run_config.get('result_selections') or []
-    if not selections and run_config.get('smoke_all'):
-        dim_rows = run_config.get('trust_dimensions') or []
-        bench_rows = run_config.get('benchmark_ids') or []
-        if len(dim_rows) == len(bench_rows):
-            selections = [
-                {'dimension_id': selected_dim, 'benchmark_id': selected_bench}
-                for selected_dim, selected_bench in zip(dim_rows, bench_rows)
-            ]
-    if selections:
-        return any(
-            str(item.get('dimension_id') or '') in result_dimension_ids
-            and str(item.get('benchmark_id') or '') == bench_id
-            for item in selections
-            if isinstance(item, dict)
-        )
-    if not (result_dimension_ids & dims):
-        return False
-    if benches and bench_id not in benches:
-        return False
-    return True
-
-
 def build_leaderboard_rows(result_name: str = CURRENT_RESULT_NAME) -> Dict[str, Any]:
     result_name = validated_result_name(result_name)
     catalog = build_trust_catalog()
     result_dir = RESULT_DIR / result_name
-    run_config = read_json(result_dir / 'run_config.json', {}) or {}
     result_info = get_current_result_info(result_name)
-    if not result_selections_from_config(run_config) and result_info.get('result_selections'):
-        run_config = {
-            **run_config,
-            'trust_dimensions': result_info.get('trust_dimensions') or [],
-            'benchmark_ids': result_info.get('benchmark_ids') or [],
-            'result_selections': result_info.get('result_selections') or [],
-        }
     results_path = result_dir / 'results.jsonl'
-    summary = build_summary_from_records(read_jsonl(results_path)) if results_path.exists() else (read_json(result_dir / 'summary.json', {}) or {})
+    records = normalize_result_records_for_metrics(read_jsonl(results_path)) if results_path.exists() else []
+    record_index: Dict[tuple[str, str], List[Dict[str, Any]]] = {}
+    for record in records:
+        key = (str(record.get('dimension_id') or ''), str(record.get('benchmark_id') or ''))
+        if key != ('', ''):
+            record_index.setdefault(key, []).append(record)
     rows: List[Dict[str, Any]] = []
     for group in catalog.get('groups') or []:
         for dim in group.get('dimensions') or []:
             benches = dim.get('benchmarks') or []
             for bench in benches:
-                category, subcategory = summary_key_for_dimension_benchmark(dim, bench)
-                evaluated = current_result_matches(dim, bench, run_config)
-                stats_by_task: Dict[str, Any] = {}
-                if evaluated:
-                    for task, bucket in ((summary.get('by_subcategory') or {}).items()):
-                        stats = (bucket or {}).get(f'{category} / {subcategory}')
-                        if stats:
-                            stats_by_task[str(task)] = stats
-                if stats_by_task:
-                    for task, stats in sorted(stats_by_task.items()):
-                        rows.append({
-                            'major': group.get('domain_label') or '',
-                            'secondary': group.get('label') or '',
-                            'tertiary': dim.get('label') or '',
-                            'benchmark': bench.get('name') or '',
-                            'benchmark_id': bench.get('id') or '',
-                            'dimension_id': dim.get('id') or '',
-                            'implemented': bool(bench.get('implemented')),
-                            'evaluated': True,
-                            'task': task,
-                            'metrics': {col['key']: stats.get(col['key']) for col in LEADERBOARD_METRIC_COLUMNS},
-                        })
-                else:
-                    rows.append({
-                        'major': group.get('domain_label') or '',
-                        'secondary': group.get('label') or '',
-                        'tertiary': dim.get('label') or '',
-                        'benchmark': bench.get('name') or '',
-                        'benchmark_id': bench.get('id') or '',
-                        'dimension_id': dim.get('id') or '',
-                        'implemented': bool(bench.get('implemented')),
-                        'evaluated': False,
-                        'task': '',
-                        'metrics': {col['key']: None for col in LEADERBOARD_METRIC_COLUMNS},
-                    })
+                benchmark_id = str(bench.get('execution_option_id') or bench.get('id') or '')
+                dimension_ids = {
+                    str(dim.get('id') or ''),
+                    str(bench.get('result_dimension_id') or ''),
+                    *[str(item) for item in (dim.get('result_dimension_ids') or [])],
+                }
+                dimension_ids.discard('')
+                benchmark_records = [
+                    record
+                    for dimension_id in dimension_ids
+                    for record in record_index.get((dimension_id, benchmark_id), [])
+                ]
+                stats = aggregate_metrics(benchmark_records) if benchmark_records else {}
+                evaluated = bool(benchmark_records)
+                rows.append({
+                    'major': group.get('domain_label') or '',
+                    'secondary': group.get('label') or '',
+                    'tertiary': dim.get('label') or '',
+                    'benchmark': bench.get('name') or '',
+                    'benchmark_id': bench.get('id') or '',
+                    'dimension_id': dim.get('id') or '',
+                    'implemented': bool(bench.get('implemented')),
+                    'evaluated': evaluated,
+                    'metrics': {
+                        column['key']: stats.get(column['key']) if evaluated else None
+                        for column in LEADERBOARD_METRIC_COLUMNS
+                    },
+                })
     return {
         'result': result_info,
         'metric_columns': LEADERBOARD_METRIC_COLUMNS,
@@ -5844,7 +5797,7 @@ def build_leaderboard_csv(result_name: str = CURRENT_RESULT_NAME) -> BytesIO:
     writer = csv.writer(text)
     writer.writerow([
         '评测领域', '评测大类', '评测子类', 'Benchmark', 'Benchmark ID',
-        '评测状态', '任务', *[column.get('label') or column.get('key') for column in metric_columns],
+        '评测状态', *[column.get('label') or column.get('key') for column in metric_columns],
     ])
     for row in leaderboard.get('rows') or []:
         metrics = row.get('metrics') or {}
@@ -5855,7 +5808,6 @@ def build_leaderboard_csv(result_name: str = CURRENT_RESULT_NAME) -> BytesIO:
             row.get('benchmark') or '',
             row.get('benchmark_id') or '',
             '已评测' if row.get('evaluated') else ('可评测' if row.get('implemented') else ''),
-            row.get('task') or '',
             *[metrics.get(column.get('key')) for column in metric_columns],
         ])
     payload = BytesIO(('\ufeff' + text.getvalue()).encode('utf-8'))
