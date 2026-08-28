@@ -309,6 +309,23 @@ function selectedBenchmarkImplemented(){const rows=selectedScopeSelections();ret
 function evaluationScopeType(){return selectedBenchmark()?'benchmark':(selectedDimension()?'dimension':(currentGroup()?'group':(currentDomain()?'domain':'total')))}
 function evaluationScopeLabel(){return selectedBenchmark()?.name||dimensionDisplayLabel(selectedDimension())||currentGroup()?.label||currentDomain()?.label||'总评测'}
 function benchmarkMetrics(bench){const rows=bench?.metrics||[];if(Array.isArray(rows)&&rows.length){return rows.map(item=>typeof item==='string'?{label:item,key:item,format:'text'}:item)}return DEFAULT_BENCHMARK_METRICS}
+function selectedScopeMetricDefs(){
+    const bench=selectedBenchmark();
+    if(bench)return benchmarkMetrics(bench);
+    const dim=selectedDimension();
+    if(!dim)return DEFAULT_BENCHMARK_METRICS;
+    const merged=[];
+    const seen=new Set();
+    (dim.benchmarks||[]).filter(item=>item.implemented).forEach(item=>{
+        benchmarkMetrics(item).forEach(metric=>{
+            const key=metric?.key||metric?.label||'';
+            if(!key||seen.has(key))return;
+            seen.add(key);
+            merged.push(metric);
+        });
+    });
+    return merged.length?merged:DEFAULT_BENCHMARK_METRICS;
+}
 function benchmarkMetaTags(bench){
     const tags=[];
     if(bench?.language)tags.push(`语言：${Array.isArray(bench.language)?bench.language.join('、'):bench.language}`);
@@ -628,15 +645,17 @@ function renderMetrics(){
     const bench=selectedBenchmark();
     if(!(catalog.groups||[]).length){shell.innerHTML='<div class="empty">暂无评测目录。</div>';meta.textContent='尚无结果。';return}
     meta.textContent=currentResult.exists?`当前结果：${currentResult.display_name||'当前结果'}`:`当前未生成结果。`;
-    const metricDefs=bench?benchmarkMetrics(bench):DEFAULT_BENCHMARK_METRICS;
-    const metricCards=stats=>metricDefs.map(metric=>`<div class="metric-card"><div class="label">${escapeHtml(metric.label||metric.key||'')}</div><div class="value">${formatMetricValue(stats?.[metric.key], metric.format)}</div></div>`).join('');
+    const metricDefs=selectedScopeMetricDefs();
+    const metricCards=(stats,defs=metricDefs)=>defs.map(metric=>`<div class="metric-card"><div class="label">${escapeHtml(metric.label||metric.key||'')}</div><div class="value">${formatMetricValue(stats?.[metric.key], metric.format)}</div></div>`).join('');
     if(hasRealResultForSelection()){
         const byTask=fullSummary.overall||{};
         let html='';
         Object.keys(byTask).forEach(task=>{
             const stats=byTask[task];
             if(!stats)return;
-            html+=`<div class="task-metrics"><div class="task-title">${escapeHtml(TASK_LABELS[task]||task)}</div><div class="metric-grid">${metricCards(stats)}${metricDefs.some(metric=>metric.key==='n_total')?'':`<div class="metric-card"><div class="label">样本数</div><div class="value">${stats.n_total??'—'}</div></div>`}</div></div>`;
+            const availableDefs=metricDefs.filter(metric=>stats?.[metric.key]!==null&&stats?.[metric.key]!==undefined);
+            const taskDefs=availableDefs.length?availableDefs:metricDefs;
+            html+=`<div class="task-metrics"><div class="task-title">${escapeHtml(TASK_LABELS[task]||task)}</div><div class="metric-grid">${metricCards(stats,taskDefs)}${taskDefs.some(metric=>metric.key==='n_total')?'':`<div class="metric-card"><div class="label">样本数</div><div class="value">${stats.n_total??'—'}</div></div>`}</div></div>`;
         });
         shell.innerHTML=html?`<div class="metrics-section">${html}</div>`:`<div class="metric-grid">${metricCards(null)}</div>`;
         return;
@@ -967,8 +986,13 @@ async function openLeaderboardPopup(){
 
 function renderJob(job){
     const shell=document.getElementById('job-shell');
+    const section=document.getElementById('progress-section');
+    const progress=job?.progress||{};
+    const completed=job?.status==='completed'&&Number(progress.percent??100)>=100;
+    const hidden=completed||(!job&&currentResult.exists);
+    if(section)section.hidden=hidden;
+    if(completed){shell.innerHTML='';return}
     if(!job){shell.innerHTML=`<div class="empty">${selectedDimId?'当前选择没有运行中的评测任务。':'当前没有运行中的评测任务。'}</div>`;return}
-    const progress=job.progress||{};
     const percent=Number(progress.percent??0).toFixed(1);
     const indeterminate=Boolean(progress.indeterminate);
     const progressCaption=indeterminate
