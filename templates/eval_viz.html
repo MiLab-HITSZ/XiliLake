@@ -456,7 +456,7 @@ function renderDomainGroups(){
     const groupBox=document.getElementById('group-list');
     const groupTitle=document.getElementById('group-section-title');
     const domains=catalog.domains||[];
-    switcher.innerHTML=domains.length?domains.map(domain=>`<button type="button" class="domain-switch ${domain.id===selectedDomainId?'active':''}" onclick="selectDomain('${escapeHtml(domain.id)}')"><span class="name">${escapeHtml(domain.label)}</span><span class="count">${domain.group_count||0}大类 · ${domain.dimension_count||0}子类 · ${domain.benchmark_count||0}数据集</span></button>`).join(''):'<div class="empty">暂无评测领域。</div>';
+    switcher.innerHTML=domains.length?domains.map(domain=>`<button type="button" class="domain-switch ${domain.id===selectedDomainId?'active':''}" onclick="selectDomain('${escapeHtml(domain.id)}')"><span class="name">${escapeHtml(domain.label)}</span><span class="count">${domain.group_count||0}大类 · ${domain.dimension_count||0}子类</span></button>`).join(''):'<div class="empty">暂无评测领域。</div>';
     const domain=currentDomain();
     const groups=groupsForDomain();
     groupTitle.textContent=domain?.label||'全部评测大类';
